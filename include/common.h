@@ -15,19 +15,16 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <gps.h>
-#include "common.h"
-#include "record-track.h"
+#ifndef COMMON_H
+#define COMMON_H
 
-void record_track(cmd_args args)
-{
-	int fd;
-	struct gps_data_t gps_data;
+typedef struct cmd_args {
+	enum { NONE, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
+	char *server;
+	char *port;
+	char *gpx;
+} cmd_args;
 
-	gps_data = connect_to_gpsd(args);
+struct gps_data_t connect_to_gpsd(cmd_args args);
 
-	gps_close(&gps_data);
-}
+#endif /* COMMON_H */

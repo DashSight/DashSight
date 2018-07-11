@@ -14,8 +14,8 @@
 # THE SOFTWARE.
 
 CC ?= gcc
-CFLAGS ?= -g -Wall
-LFLAGS ?= -lgps
+CFLAGS ?= -g
+LFLAGS ?= -lm -lgps
 
 .PHONY: all
 all: lap-timer

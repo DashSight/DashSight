@@ -19,21 +19,21 @@
 #define ARG_PARSER_H
 
 #include <argp.h>
-
-struct arguments {
-	enum { NONE, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
-};
+#include "common.h"
 
 static struct argp_option options[] = { 
 	{ "record-track", 'r', 0, 0, "Record a new track"},
 	{ "circle-drive", 'c', 0, 0, "Drive a track"},
-	{ "single-drive", 's', 0, 0, "Drive a single track"},
+	{ "single-drive", '1', 0, 0, "Drive a single track"},
+	{ "gpsd-server",  's', "server", 0, "Specify the GPSd server"},
+	{ "gpsd-port",    'p', "port", 0, "Specify the GPSd port"},
+	{ "track-gpx",    't', "file", 0, "File to read/write the track GPX data from/to"},
 	{ 0 } 
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 
-	struct arguments *arguments = state->input;
+	cmd_args *arguments = state->input;
 
 	switch (key) {
 	case 'r':
@@ -42,10 +42,20 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	case 'c':
 		arguments->mode = CIRC_DRIVE;
 		break;
-	case 's':
+	case '1':
 		arguments->mode = SINGLE_DRIVE;
 		break;
-	default: return ARGP_ERR_UNKNOWN;
+	case 's':
+		arguments->server = arg;
+		break;
+	case 'p':
+		arguments->port = arg;
+		break;
+	case 't':
+		arguments->gpx = arg;
+		break;
+	default:
+		return ARGP_ERR_UNKNOWN;
 	}
 	return 0;
 }

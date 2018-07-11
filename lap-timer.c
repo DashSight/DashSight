@@ -18,11 +18,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gps.h>
+#include "common.h"
 #include "arg-parser.h"
+
+struct gps_data_t connect_to_gpsd(cmd_args args)
+{
+	struct gps_data_t gps_data;
+	int err;
+
+	err = gps_open(args.server, args.port, &gps_data);
+
+	/* Do error checking */
+
+	/* This needs to be closed with gps_close() */
+	return gps_data;
+}
 
 int main(int argc, char **argv)
 {
-	struct arguments arguments;
+	cmd_args arguments;
 
 	arguments.mode = NONE;
 
