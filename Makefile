@@ -21,7 +21,7 @@ LFLAGS ?= -lgps
 all: lap-timer
 
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-HEADERS = $(wildcard *.h)
+HEADERS = $(wildcard include/*.h)
 
 .PRECIOUS: lap-timer $(OBJECTS)
 
@@ -29,7 +29,7 @@ lap-timer: $(OBJECTS)
 	$(CC) $(OBJECTS) -Wall $(LFLAGS) -o $@
 
 %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -Iinclude -c $< -o $@
 
 .PHONY: clean
 clean:

@@ -16,11 +16,22 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include "arg-parser.h"
 
 int main(int argc, char **argv)
 {
-	/* Argument Parsing */
+	struct arguments arguments;
+
+	arguments.mode = NONE;
+
+	argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
+	if (arguments.mode == NONE) {
+		fprintf(stderr, "You need to specify a mode\n");
+		exit(1);
+	}
 
 	/* Call subfunctions */
 
