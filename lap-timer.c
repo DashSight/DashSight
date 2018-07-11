@@ -46,6 +46,9 @@ int main(int argc, char **argv)
 	cmd_args args;
 
 	args.mode = NONE;
+	args.server = NULL;
+	args.port = NULL;
+	args.gpx = NULL;
 
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 
