@@ -18,4 +18,6 @@
 #ifndef RECORD_TRACK_H
 #define RECORD_TRACK_H
 
+void record_track(cmd_args args);
+
 #endif /* RECORD_TRACK_H */

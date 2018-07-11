@@ -24,10 +24,20 @@
 
 void record_track(cmd_args args)
 {
-	int fd;
+	FILE *fd;
 	struct gps_data_t gps_data;
 
 	gps_data = connect_to_gpsd(args);
+
+	fd = fopen(args.gpx, "r");
+
+	if (fd == NULL) {
+		fprintf(stderr, "Unable to open GPX file %s for reading\n",
+			    args.gpx);
+		exit(-1);
+	}
+
+	/* Read data and write to file until user interrupts us*/
 
 	gps_close(&gps_data);
 }

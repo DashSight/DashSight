@@ -21,6 +21,7 @@
 #include <gps.h>
 #include "common.h"
 #include "arg-parser.h"
+#include "record-track.h"
 
 struct gps_data_t connect_to_gpsd(cmd_args args)
 {
@@ -30,6 +31,11 @@ struct gps_data_t connect_to_gpsd(cmd_args args)
 	err = gps_open(args.server, args.port, &gps_data);
 
 	/* Do error checking */
+	if (err) {
+		fprintf(stderr, "Failed to conncet to %s:%s, error: %d\n",
+			    args.server, args.port, err);
+		exit(-1);
+	}
 
 	/* This needs to be closed with gps_close() */
 	return gps_data;
@@ -37,18 +43,22 @@ struct gps_data_t connect_to_gpsd(cmd_args args)
 
 int main(int argc, char **argv)
 {
-	cmd_args arguments;
+	cmd_args args;
 
-	arguments.mode = NONE;
+	args.mode = NONE;
 
-	argp_parse(&argp, argc, argv, 0, 0, &arguments);
+	argp_parse(&argp, argc, argv, 0, 0, &args);
 
-	if (arguments.mode == NONE) {
+	if (args.mode == NONE) {
 		fprintf(stderr, "You need to specify a mode\n");
 		exit(1);
 	}
 
-	/* Call subfunctions */
+	/* Do more argument error checking */
+
+	if (args.mode == RECORD_TRACK) {
+		record_track(args);
+	}
 
 	return 0;
 }
