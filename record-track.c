@@ -65,12 +65,15 @@ void record_track(cmd_args args)
 				printf("gps_data.fix.speed:        %f\n", gps_data.fix.speed);
 				printf("gps_data.fix.track:        %f\n", gps_data.fix.track);
 				printf("gps_data.dop.pdop:         %f\n", gps_data.dop.pdop);
-			}
-		}
 
-		sleep(2);
+				/* Write this data to the file */
+			}
+		} else {
+			sleep(1);
+		}
 	}
 
+	fclose(fd);
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
 }
