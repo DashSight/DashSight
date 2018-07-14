@@ -21,7 +21,6 @@
 #include <gps.h>
 #include "common.h"
 #include "arg-parser.h"
-#include "record-track.h"
 
 struct gps_data_t connect_to_gpsd(cmd_args args)
 {

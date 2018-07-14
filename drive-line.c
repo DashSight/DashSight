@@ -22,7 +22,6 @@
 #include <math.h>
 #include <gps.h>
 #include "common.h"
-#include "record-track.h"
 
 void drive_line(cmd_args args)
 {

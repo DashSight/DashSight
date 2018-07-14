@@ -25,11 +25,15 @@ typedef struct cmd_args {
 	char *gpx;
 } cmd_args;
 
-struct gps_data_t connect_to_gpsd(cmd_args args);
-
 typedef struct track_info
 {
 	int64_t lon, lat;
 } track_info;
+
+struct gps_data_t connect_to_gpsd(cmd_args args);
+
+void record_track(cmd_args args);
+
+void drive_line(cmd_args args);
 
 #endif /* COMMON_H */
