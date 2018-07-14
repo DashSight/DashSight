@@ -45,6 +45,7 @@ void drive_line(cmd_args args)
 	// gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
 	/* Find the start and end position from the recorded line */
+	/* This is untested and probably unsecure */
 	first_line = (char*) malloc(256 * sizeof(char));
 	fgets(first_line, 256, fd);
 
