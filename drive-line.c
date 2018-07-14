@@ -98,6 +98,8 @@ void drive_line(cmd_args args)
 		}
 	}
 
+	fprintf(stderr, "Starting the drive\n");
+
 	/* Poll until we hit the end line and do stuff */
 	while (1) {
 		if (gps_waiting(&gps_data, 500)) {
@@ -116,6 +118,8 @@ void drive_line(cmd_args args)
 			sleep(1);
 		}
 	}
+
+	fprintf(stderr, "Finished the drive\n");
 
 	free(first_line);
 	free(last_line);
