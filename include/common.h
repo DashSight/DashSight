@@ -27,4 +27,9 @@ typedef struct cmd_args {
 
 struct gps_data_t connect_to_gpsd(cmd_args args);
 
+typedef struct track_info
+{
+	int64_t lon, lat;
+} track_info;
+
 #endif /* COMMON_H */

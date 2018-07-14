@@ -53,20 +53,16 @@ void record_track(cmd_args args)
 			}
 
 			if (gps_data.set) {
-				printf("\n--- GPS ---\n");
-				printf("gps_data.online:           %10.0f\n", gps_data.online);
-				printf("gps_data.status:           %d\n", gps_data.status);
-				printf("gps_data.satellites_used:  %d\n", gps_data.satellites_used);
-				printf("gps_data.fix.mode:         %d\n", gps_data.fix.mode);
-				printf("gps_data.fix.time:         %10.0f\n", gps_data.fix.time);
-				printf("gps_data.fix.latitude:     %f\n", gps_data.fix.latitude);
-				printf("gps_data.fix.longitude:    %f\n", gps_data.fix.longitude);
-				printf("gps_data.fix.altitude:     %f\n", gps_data.fix.altitude);
-				printf("gps_data.fix.speed:        %f\n", gps_data.fix.speed);
-				printf("gps_data.fix.track:        %f\n", gps_data.fix.track);
-				printf("gps_data.dop.pdop:         %f\n", gps_data.dop.pdop);
-
-				/* Write this data to the file */
+				/* Fix this to be in a real formart */
+				fprintf(fd, "mode: %d, ", gps_data.fix.mode);
+				fprintf(fd, "time: %10.0f, ", gps_data.fix.time);
+				fprintf(fd, "latitude: %f, ", gps_data.fix.latitude);
+				fprintf(fd, "longitude: %f, ", gps_data.fix.longitude);
+				fprintf(fd, "altitude: %f, ", gps_data.fix.altitude);
+				fprintf(fd, "speed: %f, ", gps_data.fix.speed);
+				fprintf(fd, "track: %f, ", gps_data.fix.track);
+				fprintf(fd, "pdop: %f", gps_data.dop.pdop);
+				fprintf(fd, "\n");
 			}
 		} else {
 			sleep(1);

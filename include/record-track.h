@@ -20,4 +20,6 @@
 
 void record_track(cmd_args args);
 
+void drive_line(cmd_args args);
+
 #endif /* RECORD_TRACK_H */

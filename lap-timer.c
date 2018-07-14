@@ -61,6 +61,8 @@ int main(int argc, char **argv)
 
 	if (args.mode == RECORD_TRACK) {
 		record_track(args);
+	} else if (args.mode == SINGLE_DRIVE) {
+		drive_line(args);
 	}
 
 	return 0;
