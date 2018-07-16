@@ -32,7 +32,7 @@ void drive_line(cmd_args args)
 	char *tmp;
 	int ret;
 
-	// gps_data = connect_to_gpsd(args);
+	gps_data = connect_to_gpsd(args);
 
 	fd = fopen(args.gpx, "r");
 
@@ -42,27 +42,25 @@ void drive_line(cmd_args args)
 		exit(-1);
 	}
 
-	// gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
+	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
 	/* Find the start and end position from the recorded line */
 	/* This is untested and probably unsecure */
 	first_line = (char*) malloc(256 * sizeof(char));
 	fgets(first_line, 256, fd);
 
-	fprintf(stderr, "%s\n", first_line);
-
 	fseek(fd, 0, SEEK_END);
 	last_line = (char*) malloc(256 * sizeof(char));
 	fgets(last_line, 256, fd);
 
-	fprintf(stderr, "%s\n", last_line);
-
 	tmp = strtok(first_line, " ");
 	while (tmp) {
-		if (!strcmp(tmp, "longitude")) {
-			start.lon = atoi(strtok(first_line, ","));
-		} else if (!strcmp(tmp, "latitude")) {
-			start.lat = atoi(strtok(first_line, ","));
+		if (!strcmp(tmp, "longitude:")) {
+			start.lon = atof(strtok(NULL, ","));
+			fprintf(stderr, "Long: %f\n", start.lon);
+		} else if (!strcmp(tmp, "latitude:")) {
+			start.lat = atof(strtok(NULL, ","));
+			fprintf(stderr, "Lat: %f\n", start.lat);
 		}
 
 		tmp = strtok(NULL, " ");
@@ -70,10 +68,10 @@ void drive_line(cmd_args args)
 
 	tmp = strtok(last_line, " ");
 	while (tmp) {
-		if (!strcmp(tmp, "longitude")) {
-			end.lon = atoi(strtok(first_line, ","));
-		} else if (!strcmp(tmp, "latitude")) {
-			end.lat = atoi(strtok(first_line, ","));
+		if (!strcmp(tmp, "longitude:")) {
+			end.lon = atof(strtok(NULL, ","));
+		} else if (!strcmp(tmp, "latitude:")) {
+			end.lat = atof(strtok(NULL, ","));
 		}
 
 		tmp = strtok(NULL, " ");
@@ -89,8 +87,8 @@ void drive_line(cmd_args args)
 				exit(1);
 			}
 
-			if (gps_data.fix.latitude == start.lat ||
-				gps_data.fix.longitude == start.lat) {
+			if (equal(gps_data.fix.latitude, start.lat, 0.05) ||
+				equal(gps_data.fix.longitude, start.lat, 0.05)) {
 				break;
 			}
 		} else {
@@ -110,8 +108,8 @@ void drive_line(cmd_args args)
 				exit(1);
 			}
 
-			if (gps_data.fix.latitude == end.lat ||
-				gps_data.fix.longitude == end.lat) {
+			if (equal(gps_data.fix.latitude, end.lat, 0.05) ||
+				equal(gps_data.fix.longitude, end.lat, 0.05)) {
 				break;
 			}
 		} else {
@@ -124,6 +122,6 @@ void drive_line(cmd_args args)
 	free(first_line);
 	free(last_line);
 	fclose(fd);
-	// gps_stream(&gps_data, WATCH_DISABLE, NULL);
-	// gps_close(&gps_data);
+	gps_stream(&gps_data, WATCH_DISABLE, NULL);
+	gps_close(&gps_data);
 }

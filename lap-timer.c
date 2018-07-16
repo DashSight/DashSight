@@ -22,6 +22,11 @@
 #include "common.h"
 #include "arg-parser.h"
 
+bool equal(float a, float b, float epsilon)
+{
+	return (a - b) < epsilon;
+}
+
 struct gps_data_t connect_to_gpsd(cmd_args args)
 {
 	struct gps_data_t gps_data;
