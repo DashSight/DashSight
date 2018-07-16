@@ -57,10 +57,8 @@ void drive_line(cmd_args args)
 	while (tmp) {
 		if (!strcmp(tmp, "longitude:")) {
 			start.lon = atof(strtok(NULL, ","));
-			fprintf(stderr, "Long: %f\n", start.lon);
 		} else if (!strcmp(tmp, "latitude:")) {
 			start.lat = atof(strtok(NULL, ","));
-			fprintf(stderr, "Lat: %f\n", start.lat);
 		}
 
 		tmp = strtok(NULL, " ");
