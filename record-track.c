@@ -31,7 +31,7 @@ void record_track(cmd_args args)
 
 	gps_data = connect_to_gpsd(args);
 
-	fd = fopen(args.gpx, "r");
+	fd = fopen(args.gpx, "w+");
 
 	if (fd == NULL) {
 		fprintf(stderr, "Unable to open GPX file %s for reading\n",
@@ -40,6 +40,8 @@ void record_track(cmd_args args)
 	}
 
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
+
+	fprintf(stderr, "Connected to GPSD and opened track file\n");
 
 	/* Read data and write to file until user interrupts us */
 	while (1) {
@@ -51,7 +53,9 @@ void record_track(cmd_args args)
 				exit(1);
 			}
 
-			if (gps_data.set) {
+			if (gps_data.set &&
+			    !isnan(gps_data.fix.latitude) &&
+			    !isnan(gps_data.fix.longitude)) {
 				/* Fix this to be in a real formart */
 				fprintf(fd, "mode: %d, ", gps_data.fix.mode);
 				fprintf(fd, "time: %10.0f, ", gps_data.fix.time);
@@ -62,6 +66,11 @@ void record_track(cmd_args args)
 				fprintf(fd, "track: %f, ", gps_data.fix.track);
 				fprintf(fd, "pdop: %f", gps_data.dop.pdop);
 				fprintf(fd, "\n");
+				/* At the moment there is no way to niceley
+				 * exit this loop so we have to flush on each
+				 * loop. Remove this when it gets nicer.
+				 */
+				fflush(fd);
 			}
 		} else {
 			sleep(1);
