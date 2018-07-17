@@ -28,6 +28,7 @@ typedef struct cmd_args {
 typedef struct track_info
 {
 	float lon, lat;
+	double time;
 } track_info;
 
 struct gps_data_t connect_to_gpsd(cmd_args args);

@@ -30,6 +30,7 @@ void drive_line(cmd_args args)
 	track_info start, end;
 	char *first_line, *last_line;
 	char *tmp;
+	double cur_time;
 	int ret;
 
 	gps_data = connect_to_gpsd(args);
@@ -87,6 +88,7 @@ void drive_line(cmd_args args)
 
 			if (equal(gps_data.fix.latitude, start.lat, 0.05) ||
 				equal(gps_data.fix.longitude, start.lat, 0.05)) {
+				start.time = gps_data.fix.time;
 				break;
 			}
 		} else {
@@ -98,7 +100,10 @@ void drive_line(cmd_args args)
 
 	/* Poll until we hit the end line and do stuff */
 	while (1) {
-		if (gps_waiting(&gps_data, 500)) {
+		cur_time = gps_data.fix.time - start.time;
+		printf("Time: %4.4f\r", cur_time);
+		fflush(stdout);
+		if (gps_waiting(&gps_data, 10)) {
 			ret = gps_read(&gps_data);
 
 			if (ret < 0) {
