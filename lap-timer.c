@@ -27,6 +27,28 @@ bool equal(float a, float b, float epsilon)
 	return (a - b) < epsilon;
 }
 
+struct timespec timeval_subtract(struct timespec *x, struct timespec *y)
+{
+	struct timespec result;
+	int nsec;
+
+	if (x->tv_nsec < y->tv_nsec) {
+		nsec = (y->tv_nsec - x->tv_nsec) / 1000 + 1;
+		y->tv_nsec -= 1000 * nsec;
+		y->tv_sec += nsec;
+	}
+	if (x->tv_nsec - y->tv_nsec > 1000) {
+		nsec = (x->tv_nsec - y->tv_nsec) / 1000;
+		y->tv_sec += 1000 * nsec;
+		y->tv_sec -= nsec;
+	}
+
+	result.tv_sec = x->tv_sec - y->tv_sec;
+	result.tv_nsec = x->tv_nsec - y->tv_nsec;
+
+	return result;
+}
+
 struct gps_data_t connect_to_gpsd(cmd_args args)
 {
 	struct gps_data_t gps_data;

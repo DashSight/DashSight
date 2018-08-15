@@ -28,7 +28,7 @@ typedef struct cmd_args {
 typedef struct track_info
 {
 	float lon, lat;
-	double time;
+	struct timespec time;
 } track_info;
 
 struct gps_data_t connect_to_gpsd(cmd_args args);
@@ -38,5 +38,8 @@ void record_track(cmd_args args);
 void drive_line(cmd_args args);
 
 bool equal(float a, float b, float epsilon);
+
+
+struct timespec timeval_subtract(struct timespec *x, struct timespec *y);
 
 #endif /* COMMON_H */
