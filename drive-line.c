@@ -100,7 +100,9 @@ void drive_line(cmd_args args)
 	while (1) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 		diff_time = timeval_subtract(&cur_time, &start.time);
-		printf("Time: %ld - %ld\r", diff_time.tv_sec, diff_time.tv_nsec);
+		printf("Time: %ld:%ld:%ld\r",
+			diff_time.tv_sec, diff_time.tv_nsec / 1000000,
+			(diff_time.tv_nsec / 1000) % 1000);
 		fflush(stdout);
 		if (gps_waiting(&gps_data, 10)) {
 			ret = gps_read(&gps_data);
@@ -113,12 +115,15 @@ void drive_line(cmd_args args)
 			if (equal(gps_data.fix.latitude, end.lat, 0.05) ||
 				equal(gps_data.fix.longitude, end.lat, 0.05)) {
 				clock_gettime(CLOCK_MONOTONIC_RAW, &end.time);
+				diff_time = timeval_subtract(&end.time, &start.time);
 				break;
 			}
 		}
 	}
 
-	fprintf(stderr, "Finished the drive\n");
+	fprintf(stderr, "Finished the drive, total time: %ld:%ld:%ld\n",
+			diff_time.tv_sec, diff_time.tv_nsec / 1000000,
+			(diff_time.tv_nsec / 1000) % 1000);
 
 	free(first_line);
 	free(last_line);
