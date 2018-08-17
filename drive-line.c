@@ -91,8 +91,6 @@ void drive_line(cmd_args args)
 				clock_gettime(CLOCK_MONOTONIC_RAW, &start.time);
 				break;
 			}
-		} else {
-			sleep(1);
 		}
 	}
 
@@ -117,8 +115,6 @@ void drive_line(cmd_args args)
 				clock_gettime(CLOCK_MONOTONIC_RAW, &end.time);
 				break;
 			}
-		} else {
-			sleep(1);
 		}
 	}
 
