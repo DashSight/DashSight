@@ -50,7 +50,7 @@ void drive_line(cmd_args args)
 	first_line = (char*) malloc(256 * sizeof(char));
 	fgets(first_line, 256, fd);
 
-	fseek(fd, 0, SEEK_END);
+	fseek(fd, -255, SEEK_END);
 	last_line = (char*) malloc(256 * sizeof(char));
 	fgets(last_line, 256, fd);
 
@@ -86,8 +86,8 @@ void drive_line(cmd_args args)
 				exit(1);
 			}
 
-			if (equal(gps_data.fix.latitude, start.lat, 0.05) ||
-				equal(gps_data.fix.longitude, start.lat, 0.05)) {
+			if (equal(gps_data.fix.latitude, start.lat, 0.0005) &&
+				equal(gps_data.fix.longitude, start.lon, 0.0005)) {
 				clock_gettime(CLOCK_MONOTONIC_RAW, &start.time);
 				break;
 			}
@@ -112,8 +112,8 @@ void drive_line(cmd_args args)
 				exit(1);
 			}
 
-			if (equal(gps_data.fix.latitude, end.lat, 0.05) ||
-				equal(gps_data.fix.longitude, end.lat, 0.05)) {
+			if (equal(gps_data.fix.latitude, end.lat, 0.0005) &&
+				equal(gps_data.fix.longitude, end.lon, 0.0005)) {
 				clock_gettime(CLOCK_MONOTONIC_RAW, &end.time);
 				diff_time = timeval_subtract(&end.time, &start.time);
 				break;

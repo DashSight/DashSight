@@ -19,12 +19,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gps.h>
+#include <math.h>
 #include "common.h"
 #include "arg-parser.h"
 
 bool equal(float a, float b, float epsilon)
 {
-	return (a - b) < epsilon;
+	return fabs(a - b) < epsilon;
 }
 
 struct timespec timeval_subtract(struct timespec *x, struct timespec *y)
