@@ -72,8 +72,6 @@ void record_track(cmd_args args)
 				 */
 				fflush(fd);
 			}
-		} else {
-			sleep(1);
 		}
 	}
 
