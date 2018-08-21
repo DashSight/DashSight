@@ -20,6 +20,7 @@
 #include <string.h>
 #include <gps.h>
 #include <math.h>
+#include <gtk/gtk.h>
 #include "common.h"
 #include "arg-parser.h"
 

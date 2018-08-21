@@ -17,6 +17,9 @@ CC ?= gcc
 CFLAGS ?= -g
 LFLAGS ?= -lm -lgps
 
+GTK_CFLAGS = $(shell pkg-config --cflags gtk+-3.0)
+GTK_LFLAGS = $(shell pkg-config --libs gtk+-3.0)
+
 .PHONY: all
 all: lap-timer
 
@@ -26,10 +29,10 @@ HEADERS = $(wildcard include/*.h)
 .PRECIOUS: lap-timer $(OBJECTS)
 
 lap-timer: $(OBJECTS)
-	$(CC) $(OBJECTS) -Wall $(LFLAGS) -o $@
+	@$(CC) $(GTK_CFLAGS) $(OBJECTS) -Wall $(LFLAGS) -o $@ $(GTK_LFLAGS)
 
 %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -Iinclude -c $< -o $@
+	@$(CC) $(CFLAGS) $(GTK_CFLAGS) -Iinclude -c $< -o $@ $(GTK_LFLAGS)
 
 .PHONY: clean
 clean:
