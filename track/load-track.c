@@ -42,34 +42,32 @@ track load_track(char *file, bool loop)
 	line = (char*) malloc(256 * sizeof(char));
 
 	do {
-		fgets(line, 256, fd);
+		line = fgets(line, 256, fd);
 
 		tmp = strtok(line, " ");
 		while (tmp) {
 			if (!strcmp(tmp, "longitude:")) {
 				if (first_run) {
 					ret.start.lon = atof(strtok(NULL, ","));
-					ret.end.lon = atof(strtok(NULL, ","));
-				}
-				if (!loop) {
+					ret.end.lon = ret.start.lon;
+				} else if (!loop) {
 					ret.end.lon = atof(strtok(NULL, ","));
 				}
 			} else if (!strcmp(tmp, "latitude:")) {
 				if (first_run) {
 					ret.start.lat = atof(strtok(NULL, ","));
-					ret.end.lat = atof(strtok(NULL, ","));
-				}
-				if (!loop) {
+					ret.end.lat = ret.start.lat;
+				} else if (!loop) {
 					ret.end.lat = atof(strtok(NULL, ","));
 				}
 			}
 
 			tmp = strtok(NULL, " ");
 		}
-
-		free(line);
+		first_run = true;
 	} while (line);
 
+	free(line);
 	fclose(fd);
 
 	ret.loop = loop;
