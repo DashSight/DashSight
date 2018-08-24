@@ -27,54 +27,14 @@ void drive_line(cmd_args args)
 {
 	FILE *fd;
 	struct gps_data_t gps_data;
-	track_info start, end;
-	char *first_line, *last_line;
-	char *tmp;
 	struct timespec cur_time, diff_time;
+	track cur_track;
 	int ret;
 
+	cur_track = load_track(args.gpx, false);
+
 	gps_data = connect_to_gpsd(args);
-
-	fd = fopen(args.gpx, "r");
-
-	if (fd == NULL) {
-		fprintf(stderr, "Unable to open GPX file %s for reading\n",
-			    args.gpx);
-		exit(-1);
-	}
-
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
-
-	/* Find the start and end position from the recorded line */
-	/* This is untested and probably unsecure */
-	first_line = (char*) malloc(256 * sizeof(char));
-	fgets(first_line, 256, fd);
-
-	fseek(fd, -255, SEEK_END);
-	last_line = (char*) malloc(256 * sizeof(char));
-	fgets(last_line, 256, fd);
-
-	tmp = strtok(first_line, " ");
-	while (tmp) {
-		if (!strcmp(tmp, "longitude:")) {
-			start.lon = atof(strtok(NULL, ","));
-		} else if (!strcmp(tmp, "latitude:")) {
-			start.lat = atof(strtok(NULL, ","));
-		}
-
-		tmp = strtok(NULL, " ");
-	}
-
-	tmp = strtok(last_line, " ");
-	while (tmp) {
-		if (!strcmp(tmp, "longitude:")) {
-			end.lon = atof(strtok(NULL, ","));
-		} else if (!strcmp(tmp, "latitude:")) {
-			end.lat = atof(strtok(NULL, ","));
-		}
-
-		tmp = strtok(NULL, " ");
-	}
 
 	/* Poll until we hit the start line */
 	while (1) {
@@ -86,9 +46,9 @@ void drive_line(cmd_args args)
 				exit(1);
 			}
 
-			if (equal(gps_data.fix.latitude, start.lat, 0.0005) &&
-				equal(gps_data.fix.longitude, start.lon, 0.0005)) {
-				clock_gettime(CLOCK_MONOTONIC_RAW, &start.time);
+			if (equal(gps_data.fix.latitude, cur_track.start.lat, 0.0005) &&
+				equal(gps_data.fix.longitude, cur_track.start.lon, 0.0005)) {
+				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track.start.time);
 				break;
 			}
 		}
@@ -99,7 +59,7 @@ void drive_line(cmd_args args)
 	/* Poll until we hit the end line and do stuff */
 	while (1) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
-		diff_time = timeval_subtract(&cur_time, &start.time);
+		diff_time = timeval_subtract(&cur_time, &cur_track.start.time);
 		printf("Time: %ld:%ld:%ld\r",
 			diff_time.tv_sec, diff_time.tv_nsec / 1000000,
 			(diff_time.tv_nsec / 1000) % 1000);
@@ -112,10 +72,10 @@ void drive_line(cmd_args args)
 				exit(1);
 			}
 
-			if (equal(gps_data.fix.latitude, end.lat, 0.0005) &&
-				equal(gps_data.fix.longitude, end.lon, 0.0005)) {
-				clock_gettime(CLOCK_MONOTONIC_RAW, &end.time);
-				diff_time = timeval_subtract(&end.time, &start.time);
+			if (equal(gps_data.fix.latitude, cur_track.end.lat, 0.0005) &&
+				equal(gps_data.fix.longitude, cur_track.end.lon, 0.0005)) {
+				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track.end.time);
+				diff_time = timeval_subtract(&cur_track.end.time, &cur_track.start.time);
 				break;
 			}
 		}
@@ -125,9 +85,6 @@ void drive_line(cmd_args args)
 			diff_time.tv_sec, diff_time.tv_nsec / 1000000,
 			(diff_time.tv_nsec / 1000) % 1000);
 
-	free(first_line);
-	free(last_line);
-	fclose(fd);
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
 }

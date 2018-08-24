@@ -23,7 +23,7 @@ GTK_LFLAGS = $(shell pkg-config --libs gtk+-3.0)
 .PHONY: all
 all: lap-timer
 
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
+OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c)) $(patsubst %.c, %.o, $(wildcard ./track/*.c))
 HEADERS = $(wildcard include/*.h)
 
 .PRECIOUS: lap-timer $(OBJECTS)
