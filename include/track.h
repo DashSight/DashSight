@@ -15,24 +15,32 @@
  * THE SOFTWARE.
  */
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef TRACK_H
+#define TRACK_H
 
 #include <gtk/gtk.h>
+#include "common.h"
 
-typedef struct cmd_args {
-	enum { NONE, GUI, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
-	char *server;
-	char *port;
-	char *gpx;
-} cmd_args;
+typedef struct track_info
+{
+	float lon, lat;
+	struct timespec time;
+} track_info;
 
-struct gps_data_t connect_to_gpsd(cmd_args args);
+typedef struct track
+{
+	track_info start, end;
+	bool loop;
+} track;
 
-void drive_line(cmd_args args);
+void record_track(cmd_args args);
+track load_track(char *file, bool loop);
 
-bool equal(float a, float b, float epsilon);
+gboolean record_button_press_event(GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_data);
+gboolean drive_line_button_press_event(GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_data);
 
-struct timespec timeval_subtract(struct timespec *x, struct timespec *y);
-
-#endif /* COMMON_H */
+#endif /* TRACK_H */

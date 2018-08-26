@@ -22,45 +22,8 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include "common.h"
+#include "track.h"
 #include "arg-parser.h"
-
-bool equal(float a, float b, float epsilon)
-{
-	return fabs(a - b) < epsilon;
-}
-
-struct timespec timeval_subtract(struct timespec *x, struct timespec *y)
-{
-	struct timespec result;
-	int nsec;
-
-	result.tv_sec = x->tv_sec - y->tv_sec;
-
-	if ((result.tv_nsec = x->tv_nsec - y->tv_nsec) < 0) {
-		result.tv_nsec += 1000000000;
-		result.tv_sec--;
-	}
-
-	return result;
-}
-
-struct gps_data_t connect_to_gpsd(cmd_args args)
-{
-	struct gps_data_t gps_data;
-	int err;
-
-	err = gps_open(args.server, args.port, &gps_data);
-
-	/* Do error checking */
-	if (err) {
-		fprintf(stderr, "Failed to conncet to %s:%s, error: %d\n",
-			    args.server, args.port, err);
-		exit(-1);
-	}
-
-	/* This needs to be closed with gps_close() */
-	return gps_data;
-}
 
 static void activate(GtkApplication* app,
 		gpointer user_data)

@@ -22,6 +22,7 @@
 #include <math.h>
 #include <gps.h>
 #include "common.h"
+#include "track.h"
 
 void record_track(cmd_args args)
 {

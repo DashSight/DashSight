@@ -22,6 +22,7 @@
 #include <math.h>
 #include <gps.h>
 #include "common.h"
+#include "track.h"
 
 track load_track(char *file, bool loop)
 {

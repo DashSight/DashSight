@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <gps.h>
+#include "track.h"
 #include "common.h"
 
 void drive_line(cmd_args args)
