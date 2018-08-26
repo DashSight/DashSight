@@ -21,6 +21,8 @@
 #include <unistd.h>
 #include <math.h>
 #include <gps.h>
+#include <gtk/gtk.h>
+#include <osm-gps-map.h>
 #include "common.h"
 #include "track.h"
 
@@ -85,8 +87,15 @@ gboolean record_button_press_event(GtkWidget *widget,
 				GdkEventButton *event,
 				gpointer user_data)
 {
-	cmd_args *args = user_data;
+	gtk_user_data *data = user_data;
 
-	record_track(*args);
+	/* Remove the main container. */
+	gtk_container_remove(GTK_CONTAINER(data->window), data->main_button_box);
+
+	data->record_map = osm_gps_map_new();
+	gtk_container_add(GTK_CONTAINER(data->window), data->record_map);
+	gtk_widget_show_all(data->window);
+
+	record_track(*data->args);
 	return false;
 }

@@ -94,8 +94,8 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 				GdkEventButton *event,
 				gpointer user_data)
 {
-	cmd_args *args = user_data;
+	gtk_user_data *data = user_data;
 
-	drive_line(*args);
+	drive_line(*data->args);
 	return false;
 }

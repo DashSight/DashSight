@@ -27,6 +27,19 @@ typedef struct cmd_args {
 	char *gpx;
 } cmd_args;
 
+typedef struct gtk_user_data
+{
+	cmd_args *args;
+
+	GtkWidget *window;
+
+	/* Main page */
+	GtkWidget *main_button_box;
+
+	/* Record Track */
+	GtkWidget *record_map;
+} gtk_user_data;
+
 struct gps_data_t connect_to_gpsd(cmd_args args);
 
 void drive_line(cmd_args args);

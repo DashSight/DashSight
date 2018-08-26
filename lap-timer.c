@@ -28,33 +28,33 @@
 static void activate(GtkApplication* app,
 		gpointer user_data)
 {
-	GtkWidget *window;
-	GtkWidget *button_box;
+	gtk_user_data *data = user_data;
 	GtkWidget *record_button, *drive_line_button;
 
-	window = gtk_application_window_new(app);
-	gtk_window_set_title(GTK_WINDOW(window), "Lap Timer");
+	data->window = gtk_application_window_new(app);
+	gtk_window_set_title(GTK_WINDOW(data->window), "Lap Timer");
 
-	button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
-	gtk_container_add(GTK_CONTAINER(window), button_box);
+	data->main_button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
+	gtk_container_add(GTK_CONTAINER(data->window), data->main_button_box);
 
 	record_button = gtk_button_new_with_label("Record new track");
-	gtk_container_add(GTK_CONTAINER(button_box), record_button);
+	gtk_container_add(GTK_CONTAINER(data->main_button_box), record_button);
 	g_signal_connect(G_OBJECT(record_button), "button-press-event",
 			G_CALLBACK(record_button_press_event), user_data);
 
 	drive_line_button = gtk_button_new_with_label("Drive a single line");
-	gtk_container_add(GTK_CONTAINER(button_box), drive_line_button);
+	gtk_container_add(GTK_CONTAINER(data->main_button_box), drive_line_button);
 	g_signal_connect(G_OBJECT(drive_line_button), "button-press-event",
 			G_CALLBACK(drive_line_button_press_event), user_data);
 
-	gtk_widget_show_all(window);
+	gtk_widget_show_all(data->window);
 }
 
 int main(int argc, char **argv)
 {
 	GtkApplication *app;
-	cmd_args *args = g_new0(cmd_args, 1);;
+	cmd_args *args = g_new0(cmd_args, 1);
+	gtk_user_data *data = g_new0(gtk_user_data, 1);
 	int status = 0;
 
 	args->mode = NONE;
@@ -71,10 +71,11 @@ int main(int argc, char **argv)
 
 	/* Do more argument error checking */
 
+	data->args = args;
+
 	if (args->mode == GUI) {
-		fprintf(stderr, "GUI Mode\n");
 		app = gtk_application_new("org.alistair23.lap-timer", G_APPLICATION_FLAGS_NONE);
-		g_signal_connect(app, "activate", G_CALLBACK (activate), (gpointer) args);
+		g_signal_connect(app, "activate", G_CALLBACK (activate), (gpointer) data);
 		/* It's probably best to just use Glib for arg parsing */
 		status = g_application_run(G_APPLICATION(app), 1, argv);
 		g_object_unref(app);

@@ -17,8 +17,8 @@ CC ?= gcc
 CFLAGS ?= -g
 LFLAGS ?= -lm -lgps
 
-GTK_CFLAGS = $(shell pkg-config --cflags gtk+-3.0)
-GTK_LFLAGS = $(shell pkg-config --libs gtk+-3.0)
+GTK_CFLAGS = $(shell pkg-config --cflags gtk+-3.0 osmgpsmap-1.0)
+GTK_LFLAGS = $(shell pkg-config --libs gtk+-3.0 osmgpsmap-1.0)
 
 .PHONY: all
 all: lap-timer
