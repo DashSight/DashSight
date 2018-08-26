@@ -23,18 +23,19 @@ GTK_LFLAGS = $(shell pkg-config --libs gtk+-3.0)
 .PHONY: all
 all: lap-timer
 
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c)) $(patsubst %.c, %.o, $(wildcard ./track/*.c))
+OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c)) $(patsubst %.c, %.o, $(wildcard ./*/*.c))
 HEADERS = $(wildcard include/*.h)
 
 .PRECIOUS: lap-timer $(OBJECTS)
 
 lap-timer: $(OBJECTS)
-	@$(CC) $(GTK_CFLAGS) $(OBJECTS) -Wall $(LFLAGS) -o $@ $(GTK_LFLAGS)
+	$(CC) $(GTK_CFLAGS) $(OBJECTS) -Wall $(LFLAGS) -o $@ $(GTK_LFLAGS)
 
 %.o: %.c $(HEADERS)
-	@$(CC) $(CFLAGS) $(GTK_CFLAGS) -Iinclude -c $< -o $@ $(GTK_LFLAGS)
+	$(CC) $(CFLAGS) $(GTK_CFLAGS) -Iinclude -c $< -o $@ $(GTK_LFLAGS)
 
 .PHONY: clean
 clean:
 	@rm -f *.o
+	@rm -f */*.o
 	@rm -f lap-timer
