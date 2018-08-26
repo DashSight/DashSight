@@ -18,8 +18,10 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <gtk/gtk.h>
+
 typedef struct cmd_args {
-	enum { NONE, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
+	enum { NONE, GUI, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
 	char *server;
 	char *port;
 	char *gpx;
@@ -47,5 +49,12 @@ void drive_line(cmd_args args);
 bool equal(float a, float b, float epsilon);
 
 struct timespec timeval_subtract(struct timespec *x, struct timespec *y);
+
+gboolean record_button_press_event(GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_data);
+gboolean drive_line_button_press_event(GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_data);
 
 #endif /* COMMON_H */

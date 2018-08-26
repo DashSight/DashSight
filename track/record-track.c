@@ -79,3 +79,13 @@ void record_track(cmd_args args)
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
 }
+
+gboolean record_button_press_event(GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_data)
+{
+	cmd_args *args = user_data;
+
+	record_track(*args);
+	return false;
+}

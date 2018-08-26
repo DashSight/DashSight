@@ -88,3 +88,13 @@ void drive_line(cmd_args args)
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
 }
+
+gboolean drive_line_button_press_event(GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_data)
+{
+	cmd_args *args = user_data;
+
+	drive_line(*args);
+	return false;
+}

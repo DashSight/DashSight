@@ -21,10 +21,11 @@
 #include <argp.h>
 #include "common.h"
 
-static struct argp_option options[] = { 
-	{ "record-track", 'r', 0, 0, "Record a new track"},
-	{ "circle-drive", 'c', 0, 0, "Drive a track"},
-	{ "single-drive", '1', 0, 0, "Drive a single track"},
+static struct argp_option options[] = {
+	{ "gui",          'g', 0, 0, "Run in GUI mode"},	
+	{ "record-track", 'r', 0, 0, "Record a new track (CLI)"},
+	{ "circle-drive", 'c', 0, 0, "Drive a track (CLIE)"},
+	{ "single-drive", '1', 0, 0, "Drive a single track (CLI)"},
 	{ "gpsd-server",  's', "server", 0, "Specify the GPSd server"},
 	{ "gpsd-port",    'p', "port", 0, "Specify the GPSd port"},
 	{ "track-gpx",    't', "file", 0, "File to read/write the track GPX data from/to"},
@@ -36,6 +37,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	cmd_args *arguments = state->input;
 
 	switch (key) {
+	case 'g':
+		arguments->mode = GUI;
+		break;
 	case 'r':
 		arguments->mode = RECORD_TRACK;
 		break;
