@@ -21,6 +21,7 @@
 #include <gps.h>
 #include <math.h>
 #include <gtk/gtk.h>
+#include <osm-gps-map.h>
 #include "common.h"
 #include "track.h"
 #include "arg-parser.h"
