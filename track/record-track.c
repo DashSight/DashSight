@@ -26,8 +26,10 @@
 #include "common.h"
 #include "track.h"
 
-void record_track(cmd_args args)
+gpointer record_track(gpointer user_data)
 {
+	gtk_user_data *data = user_data;
+	cmd_args args = *data->args;
 	FILE *fd;
 	struct gps_data_t gps_data;
 	int ret;
@@ -96,6 +98,9 @@ gboolean record_button_press_event(GtkWidget *widget,
 	gtk_container_add(GTK_CONTAINER(data->window), data->record_map);
 	gtk_widget_show_all(data->window);
 
-	record_track(*data->args);
+	data->record_track_thread = g_thread_new ("Record Track Thread",
+              record_track,
+              user_data);
+
 	return false;
 }

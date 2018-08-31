@@ -38,6 +38,8 @@ typedef struct gtk_user_data
 
 	/* Record Track */
 	GtkWidget *record_map;
+
+	GThread *record_track_thread;
 } gtk_user_data;
 
 struct gps_data_t connect_to_gpsd(cmd_args args);

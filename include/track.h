@@ -33,7 +33,7 @@ typedef struct track
 	bool loop;
 } track;
 
-void record_track(cmd_args args);
+gpointer record_track(gpointer data);
 track load_track(char *file, bool loop);
 
 gboolean record_button_press_event(GtkWidget *widget,

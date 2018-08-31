@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 		status = g_application_run(G_APPLICATION(app), 1, argv);
 		g_object_unref(app);
 	} else if (args->mode == RECORD_TRACK) {
-		record_track(*args);
+		record_track(data);
 	} else if (args->mode == SINGLE_DRIVE) {
 		drive_line(*args);
 	}
