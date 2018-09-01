@@ -37,9 +37,11 @@ typedef struct gtk_user_data
 	GtkWidget *main_button_box;
 
 	/* Record Track */
+	GtkWidget *record_container;
 	GtkWidget *record_map;
-
+	GtkWidget *record_start_button, *record_back_button;
 	GThread *record_track_thread;
+	bool save, record_page;
 } gtk_user_data;
 
 struct gps_data_t connect_to_gpsd(cmd_args args);

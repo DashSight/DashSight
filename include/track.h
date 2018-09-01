@@ -19,6 +19,7 @@
 #define TRACK_H
 
 #include <gtk/gtk.h>
+#include <osm-gps-map.h>
 #include "common.h"
 
 typedef struct track_info
@@ -31,6 +32,8 @@ typedef struct track
 {
 	track_info start, end;
 	bool loop;
+
+	OsmGpsMapTrack *osm_track;
 } track;
 
 gpointer record_track(gpointer data);
