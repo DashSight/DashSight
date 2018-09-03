@@ -40,6 +40,7 @@ typedef struct gtk_user_data
 	GtkWidget *record_container;
 	GtkWidget *record_map;
 	GtkWidget *record_start_button, *record_back_button;
+	GtkWidget *record_file_save_dialog, *record_file_save_button;
 	GThread *record_track_thread;
 	bool save, record_page;
 } gtk_user_data;

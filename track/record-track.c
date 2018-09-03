@@ -26,6 +26,15 @@
 #include "common.h"
 #include "track.h"
 
+static gboolean record_file_save_press_event(GtkWidget *widget,
+											GdkEventButton *event,
+											gpointer user_data)
+{
+	gtk_user_data *data = user_data;
+
+	gtk_widget_set_sensitive(data->record_start_button, true);
+}
+
 static gboolean record_start_button_press_event(GtkWidget *widget,
 												GdkEventButton *event,
 												gpointer user_data)
@@ -173,15 +182,31 @@ gboolean record_button_press_event(GtkWidget *widget,
 
 	gtk_box_pack_start(GTK_BOX(data->record_container), vbox, true, true, 10);
 
+	data->record_file_save_dialog =
+			gtk_file_chooser_dialog_new("Choos a track...",
+										GTK_WINDOW(data->window),
+										GTK_FILE_CHOOSER_ACTION_SAVE,
+										"Save",
+										"Cancel",
+										NULL);
+	data->record_file_save_button =
+			gtk_file_chooser_button_new_with_dialog(data->record_file_save_dialog);
+	gtk_box_pack_start(GTK_BOX(vbox), data->record_file_save_button, false, false, 10);
+	/* FIXME: Change to on save or something */
+	g_signal_connect(G_OBJECT(data->record_file_save_dialog), "button-press-event",
+			G_CALLBACK(record_file_save_press_event), user_data);
+
 	data->record_start_button = gtk_button_new_with_label("Start Recording");
-	gtk_box_pack_start(GTK_BOX(vbox), data->record_start_button, true, true, 10);
+	gtk_box_pack_start(GTK_BOX(vbox), data->record_start_button, false, false, 10);
+	gtk_widget_set_sensitive(data->record_start_button, false);
 	g_signal_connect(G_OBJECT(data->record_start_button), "button-press-event",
 			G_CALLBACK(record_start_button_press_event), user_data);
 
 	data->record_back_button = gtk_button_new_with_label("Back to main page");
-	gtk_box_pack_start(GTK_BOX(vbox), data->record_back_button, true, true, 10);
+	gtk_box_pack_start(GTK_BOX(vbox), data->record_back_button, false, false, 10);
 	g_signal_connect(G_OBJECT(data->record_back_button), "button-press-event",
 			G_CALLBACK(record_cancel_button_press_event), user_data);
+
 
 	gtk_box_set_homogeneous(GTK_BOX(data->record_container), false);
 
