@@ -43,6 +43,8 @@ static gboolean record_start_button_press_event(GtkWidget *widget,
 							 "Start Recording");
 		gtk_widget_set_sensitive(data->record_back_button, true);
 	}
+
+	return false;
 }
 
 static gboolean record_cancel_button_press_event(GtkWidget *widget,
@@ -70,6 +72,7 @@ gpointer record_track(gpointer user_data)
 	cmd_args args = *data->args;
 	OsmGpsMapTrack *osm_track;
 	OsmGpsMapPoint *point;
+	OsmGpsMap *map = OSM_GPS_MAP(data->record_map);
 	FILE *fd;
 	struct gps_data_t gps_data;
 	int ret;
@@ -87,7 +90,7 @@ gpointer record_track(gpointer user_data)
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
 	osm_track = osm_gps_map_track_new();
-	osm_gps_map_track_add((OsmGpsMap *) data->record_map, osm_track);
+	osm_gps_map_track_add(map, osm_track);
 
 	fprintf(stderr, "Connected to GPSD and opened track file\n");
 
@@ -104,6 +107,11 @@ gpointer record_track(gpointer user_data)
 			if (gps_data.set &&
 			    !isnan(gps_data.fix.latitude) &&
 			    !isnan(gps_data.fix.longitude)) {
+				/* Set the current position and zoom from the point */
+				osm_gps_map_set_center_and_zoom(map, gps_data.fix.latitude,
+												gps_data.fix.longitude,
+												12);
+
 
 				/* Plot current position, something like: osm_gps_map_gps_add() */
 				osm_gps_map_gps_add((OsmGpsMap *) data->record_map,
@@ -152,7 +160,7 @@ gboolean record_button_press_event(GtkWidget *widget,
 	GtkWidget *vbox = gtk_box_new(true, 10);
 
 	/* Remove the main container. */
-	gtk_window_set_has_user_ref_count(GTK_WINDOW(data->main_button_box), true);
+	g_object_ref(data->main_button_box);
 	gtk_container_remove(GTK_CONTAINER(data->window), data->main_button_box);
 
 	/* We are on the record page */
@@ -183,9 +191,13 @@ gboolean record_button_press_event(GtkWidget *widget,
 	/* Don't start saving */
 	data->save = false;
 
+	while (gtk_events_pending()) {
+		gtk_main_iteration();
+	}
+
 	data->record_track_thread = g_thread_new("Record Track Thread",
 											 record_track,
 											 user_data);
 
-	return false;
+	return true;
 }

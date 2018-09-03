@@ -34,6 +34,7 @@ static void activate(GtkApplication* app,
 
 	data->window = gtk_application_window_new(app);
 	gtk_window_set_title(GTK_WINDOW(data->window), "Lap Timer");
+	gtk_widget_set_size_request(data->window, 800, 680);
 
 	data->main_button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
 	gtk_container_add(GTK_CONTAINER(data->window), data->main_button_box);
