@@ -30,6 +30,7 @@ typedef struct cmd_args {
 typedef struct gtk_user_data
 {
 	cmd_args *args;
+	FILE *fd;
 
 	GtkWidget *window;
 
@@ -37,6 +38,7 @@ typedef struct gtk_user_data
 	GtkWidget *main_button_box;
 
 	/* Record Track */
+	gchar *record_track_filepath;
 	GtkWidget *record_container;
 	GtkWidget *record_map;
 	GtkWidget *record_start_button, *record_back_button;

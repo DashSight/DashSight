@@ -32,7 +32,15 @@ static gboolean record_file_save_press_event(GtkWidget *widget,
 {
 	gtk_user_data *data = user_data;
 
-	gtk_widget_set_sensitive(data->record_start_button, true);
+	data->fd = fopen(data->record_track_filepath, "w+");
+
+	if (data->fd == NULL) {
+		fprintf(stderr, "Unable to open GPX file %s for writing\n",
+			    data->record_track_filepath);
+	} else {
+		gtk_widget_set_sensitive(data->record_start_button, true);
+		/* Set the label as well */
+	}
 }
 
 static gboolean record_start_button_press_event(GtkWidget *widget,
@@ -56,7 +64,7 @@ static gboolean record_start_button_press_event(GtkWidget *widget,
 	return false;
 }
 
-static gboolean record_cancel_button_press_event(GtkWidget *widget,
+static gboolean record_finish_button_press_event(GtkWidget *widget,
 												GdkEventButton *event,
 												gpointer user_data)
 {
@@ -71,6 +79,7 @@ static gboolean record_cancel_button_press_event(GtkWidget *widget,
 	gtk_widget_show_all(data->window);
 
 	/* Do more cleanup */
+	fclose(data->fd);
 
 	return false;
 }
@@ -82,20 +91,11 @@ gpointer record_track(gpointer user_data)
 	OsmGpsMapTrack *osm_track;
 	OsmGpsMapPoint *point;
 	OsmGpsMap *map = OSM_GPS_MAP(data->record_map);
-	FILE *fd;
+	
 	struct gps_data_t gps_data;
 	int ret;
 
 	gps_data = connect_to_gpsd(args);
-
-	fd = fopen(args.gpx, "w+");
-
-	if (fd == NULL) {
-		fprintf(stderr, "Unable to open GPX file %s for reading\n",
-			    args.gpx);
-		exit(-1);
-	}
-
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
 	osm_track = osm_gps_map_track_new();
@@ -128,22 +128,17 @@ gpointer record_track(gpointer user_data)
 									gps_data.fix.longitude,
 									gps_data.fix.track);
 
-				if (data->save) {
+				if (data->save && data->fd) {
 					/* Fix this to be in a real formart */
-					fprintf(fd, "mode: %d, ", gps_data.fix.mode);
-					fprintf(fd, "time: %10.0f, ", gps_data.fix.time);
-					fprintf(fd, "latitude: %f, ", gps_data.fix.latitude);
-					fprintf(fd, "longitude: %f, ", gps_data.fix.longitude);
-					fprintf(fd, "altitude: %f, ", gps_data.fix.altitude);
-					fprintf(fd, "speed: %f, ", gps_data.fix.speed);
-					fprintf(fd, "track: %f, ", gps_data.fix.track);
-					fprintf(fd, "pdop: %f", gps_data.dop.pdop);
-					fprintf(fd, "\n");
-					/* At the moment there is no way to niceley
-					 * exit this loop so we have to flush on each
-					 * loop. Remove this when it gets nicer.
-					 */
-					fflush(fd);
+					fprintf(data->fd, "mode: %d, ", gps_data.fix.mode);
+					fprintf(data->fd, "time: %10.0f, ", gps_data.fix.time);
+					fprintf(data->fd, "latitude: %f, ", gps_data.fix.latitude);
+					fprintf(data->fd, "longitude: %f, ", gps_data.fix.longitude);
+					fprintf(data->fd, "altitude: %f, ", gps_data.fix.altitude);
+					fprintf(data->fd, "speed: %f, ", gps_data.fix.speed);
+					fprintf(data->fd, "track: %f, ", gps_data.fix.track);
+					fprintf(data->fd, "pdop: %f", gps_data.dop.pdop);
+					fprintf(data->fd, "\n");
 
 					point = osm_gps_map_point_new_degrees(gps_data.fix.latitude,
 														  gps_data.fix.longitude);
@@ -155,8 +150,7 @@ gpointer record_track(gpointer user_data)
 	}
 
 	fprintf(stderr, "Done!\n");
-
-	fclose(fd);
+	fflush(data->fd);
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
 }
@@ -205,7 +199,7 @@ gboolean record_button_press_event(GtkWidget *widget,
 	data->record_back_button = gtk_button_new_with_label("Back to main page");
 	gtk_box_pack_start(GTK_BOX(vbox), data->record_back_button, false, false, 10);
 	g_signal_connect(G_OBJECT(data->record_back_button), "button-press-event",
-			G_CALLBACK(record_cancel_button_press_event), user_data);
+			G_CALLBACK(record_finish_button_press_event), user_data);
 
 
 	gtk_box_set_homogeneous(GTK_BOX(data->record_container), false);
