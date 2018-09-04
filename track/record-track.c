@@ -31,16 +31,42 @@ static gboolean record_file_save_press_event(GtkWidget *widget,
 											gpointer user_data)
 {
 	gtk_user_data *data = user_data;
+	GtkWidget *record_file_save_dialog;
+	int res;
 
-	data->fd = fopen(data->record_track_filepath, "w+");
+	record_file_save_dialog =
+			gtk_file_chooser_dialog_new("Choos a track...",
+										GTK_WINDOW(data->window),
+										GTK_FILE_CHOOSER_ACTION_SAVE,
+										"Cancel", GTK_RESPONSE_CANCEL,
+										"Save", GTK_RESPONSE_ACCEPT,
+										NULL);
 
-	if (data->fd == NULL) {
-		fprintf(stderr, "Unable to open GPX file %s for writing\n",
-			    data->record_track_filepath);
-	} else {
-		gtk_widget_set_sensitive(data->record_start_button, true);
-		/* Set the label as well */
+	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(record_file_save_dialog), true);
+
+	res = gtk_dialog_run(GTK_DIALOG(record_file_save_dialog));
+	if (res == GTK_RESPONSE_ACCEPT) {
+		data->record_track_filepath =
+				gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(record_file_save_dialog));
+
+		if (data->record_track_filepath != NULL) {
+			data->fd = fopen(data->record_track_filepath, "w+");
+
+			if (data->fd == NULL) {
+				fprintf(stderr, "Unable to open GPX file %s for writing\n",
+					    data->record_track_filepath);
+			} else {
+				gtk_button_set_label(GTK_BUTTON(data->record_file_save_button),
+									data->record_track_filepath);
+				gtk_widget_set_sensitive(data->record_start_button, true);
+				/* Set the label as well */
+			}
+		}
 	}
+
+	gtk_widget_destroy(record_file_save_dialog);
+
+	return true;
 }
 
 static gboolean record_start_button_press_event(GtkWidget *widget,
@@ -79,7 +105,10 @@ static gboolean record_finish_button_press_event(GtkWidget *widget,
 	gtk_widget_show_all(data->window);
 
 	/* Do more cleanup */
-	fclose(data->fd);
+	if (data->fd) {
+		fclose(data->fd);
+	}
+	g_free(data->record_track_filepath);
 
 	return false;
 }
@@ -160,7 +189,7 @@ gboolean record_button_press_event(GtkWidget *widget,
 				gpointer user_data)
 {
 	gtk_user_data *data = user_data;
-	GtkWidget *vbox = gtk_box_new(true, 10);
+	GtkWidget *vbox = gtk_button_box_new(GTK_ORIENTATION_VERTICAL);
 
 	/* Remove the main container. */
 	g_object_ref(data->main_button_box);
@@ -169,25 +198,17 @@ gboolean record_button_press_event(GtkWidget *widget,
 	/* We are on the record page */
 	data->record_page = true;
 
-	data->record_container = gtk_box_new(false, 100);
+	data->record_container = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 
 	data->record_map = osm_gps_map_new();
-	gtk_box_pack_start(GTK_BOX(data->record_container), data->record_map, true, true, 10);
+	gtk_paned_pack1(GTK_PANED(data->record_container), data->record_map, true, true);
 
-	gtk_box_pack_start(GTK_BOX(data->record_container), vbox, true, true, 10);
+	gtk_paned_pack2(GTK_PANED(data->record_container), vbox, false, false);
 
-	data->record_file_save_dialog =
-			gtk_file_chooser_dialog_new("Choos a track...",
-										GTK_WINDOW(data->window),
-										GTK_FILE_CHOOSER_ACTION_SAVE,
-										"Save",
-										"Cancel",
-										NULL);
-	data->record_file_save_button =
-			gtk_file_chooser_button_new_with_dialog(data->record_file_save_dialog);
+	data->record_file_save_button = gtk_button_new_with_label("Choose a file...");
 	gtk_box_pack_start(GTK_BOX(vbox), data->record_file_save_button, false, false, 10);
 	/* FIXME: Change to on save or something */
-	g_signal_connect(G_OBJECT(data->record_file_save_dialog), "button-press-event",
+	g_signal_connect(G_OBJECT(data->record_file_save_button), "button-press-event",
 			G_CALLBACK(record_file_save_press_event), user_data);
 
 	data->record_start_button = gtk_button_new_with_label("Start Recording");
@@ -201,8 +222,7 @@ gboolean record_button_press_event(GtkWidget *widget,
 	g_signal_connect(G_OBJECT(data->record_back_button), "button-press-event",
 			G_CALLBACK(record_finish_button_press_event), user_data);
 
-
-	gtk_box_set_homogeneous(GTK_BOX(data->record_container), false);
+	gtk_button_box_set_layout(GTK_BUTTON_BOX(vbox), GTK_BUTTONBOX_CENTER);
 
 	gtk_container_add(GTK_CONTAINER(data->window), data->record_container);
 	gtk_widget_show_all(data->window);
