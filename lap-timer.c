@@ -49,6 +49,9 @@ static void activate(GtkApplication* app,
 	g_signal_connect(G_OBJECT(drive_line_button), "button-press-event",
 			G_CALLBACK(drive_line_button_press_event), user_data);
 
+	gtk_button_box_set_layout(GTK_BUTTON_BOX(data->main_button_box),
+								GTK_BUTTONBOX_EXPAND);
+
 	gtk_widget_show_all(data->window);
 }
 
