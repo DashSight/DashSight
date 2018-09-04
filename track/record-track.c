@@ -182,6 +182,8 @@ gpointer record_track(gpointer user_data)
 	fflush(data->fd);
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
+
+	return NULL;
 }
 
 gboolean record_button_press_event(GtkWidget *widget,
@@ -207,7 +209,6 @@ gboolean record_button_press_event(GtkWidget *widget,
 
 	data->record_file_save_button = gtk_button_new_with_label("Choose a file...");
 	gtk_box_pack_start(GTK_BOX(vbox), data->record_file_save_button, false, false, 10);
-	/* FIXME: Change to on save or something */
 	g_signal_connect(G_OBJECT(data->record_file_save_button), "button-press-event",
 			G_CALLBACK(record_file_save_press_event), user_data);
 

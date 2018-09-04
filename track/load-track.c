@@ -29,8 +29,10 @@ track load_track(char *file, bool loop)
 	FILE *fd;
 	char *line, *tmp;
 	struct timespec cur_time, diff_time;
+	OsmGpsMapPoint *point;
 	bool first_run = true;
 	track ret = { 0 };
+	float cur_lat, cur_lon;
 
 	fd = fopen(file, "r");
 
@@ -40,6 +42,8 @@ track load_track(char *file, bool loop)
 		exit(-1);
 	}
 
+	ret.osm_track = osm_gps_map_track_new();
+
 	line = (char*) malloc(256 * sizeof(char));
 
 	do {
@@ -47,20 +51,27 @@ track load_track(char *file, bool loop)
 
 		tmp = strtok(line, " ");
 		while (tmp) {
-			if (!strcmp(tmp, "longitude:")) {
+			if (!strcmp(tmp, "latitude:")) {
+				cur_lat = atof(strtok(NULL, ","));
 				if (first_run) {
-					ret.start.lon = atof(strtok(NULL, ","));
-					ret.end.lon = ret.start.lon;
+					ret.start.lat = cur_lat;
+					ret.end.lat = cur_lat;
 				} else if (!loop) {
-					ret.end.lon = atof(strtok(NULL, ","));
+					ret.end.lat = cur_lat;
 				}
-			} else if (!strcmp(tmp, "latitude:")) {
+			} else if (!strcmp(tmp, "longitude:")) {
+				cur_lon = atof(strtok(NULL, ","));
 				if (first_run) {
-					ret.start.lat = atof(strtok(NULL, ","));
-					ret.end.lat = ret.start.lat;
+					ret.start.lon = cur_lon;
+					ret.end.lon = cur_lon;
 				} else if (!loop) {
-					ret.end.lat = atof(strtok(NULL, ","));
+					ret.end.lon = cur_lon;
 				}
+
+				/* Longitude is saved secondly, so store the point now. */
+				point = osm_gps_map_point_new_degrees(cur_lat, cur_lon);
+				osm_gps_map_track_add_point(ret.osm_track, point);
+				osm_gps_map_point_free(point);
 			}
 
 			tmp = strtok(NULL, " ");

@@ -45,11 +45,18 @@ typedef struct gtk_user_data
 	GtkWidget *record_file_save_button;
 	GThread *record_track_thread;
 	bool save, record_page;
+
+	/* Drive Track */
+	gchar *drive_track_filepath;
+	GtkWidget *drive_container;
+	GtkWidget *drive_map;
+	GtkWidget *drive_file_load_button;
+	bool load_page;
 } gtk_user_data;
 
 struct gps_data_t connect_to_gpsd(cmd_args args);
 
-void drive_line(cmd_args args);
+gpointer drive_line(gpointer user_data);
 
 bool equal(float a, float b, float epsilon);
 

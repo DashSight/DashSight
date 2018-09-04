@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	} else if (args->mode == RECORD_TRACK) {
 		record_track(data);
 	} else if (args->mode == SINGLE_DRIVE) {
-		drive_line(*args);
+		drive_line(data);
 	}
 
 	return status;
