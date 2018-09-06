@@ -30,17 +30,33 @@ static void activate(GtkApplication* app,
 		gpointer user_data)
 {
 	gtk_user_data *data = user_data;
+	GdkPixbuf *main_image_pixbuf, *record_button_image_pixbuf;
+	GtkWidget *main_image, *record_button_image;
+	GtkWidget *vertical_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	GtkWidget *record_button, *drive_line_button;
 
 	data->window = gtk_application_window_new(app);
 	gtk_window_set_title(GTK_WINDOW(data->window), "Lap Timer");
 	gtk_widget_set_size_request(data->window, 800, 680);
 
+	main_image_pixbuf = gdk_pixbuf_new_from_file("SplashPage.png", NULL);
+	main_image_pixbuf = gdk_pixbuf_scale_simple(main_image_pixbuf,
+												320, 320,
+												GDK_INTERP_BILINEAR);
+	main_image = gtk_image_new_from_pixbuf(main_image_pixbuf);
+
+	record_button_image_pixbuf = gdk_pixbuf_new_from_file("record-track.png", NULL);
+	record_button_image_pixbuf = gdk_pixbuf_scale_simple(record_button_image_pixbuf,
+														320, 320,
+														GDK_INTERP_BILINEAR);
+	record_button_image = gtk_image_new_from_pixbuf(record_button_image_pixbuf);
+
 	data->main_button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
-	gtk_container_add(GTK_CONTAINER(data->window), data->main_button_box);
 
 	record_button = gtk_button_new_with_label("Record new track");
 	gtk_container_add(GTK_CONTAINER(data->main_button_box), record_button);
+	gtk_button_set_always_show_image(GTK_BUTTON(record_button), TRUE);
+	gtk_button_set_image(GTK_BUTTON (record_button), record_button_image);
 	g_signal_connect(G_OBJECT(record_button), "button-press-event",
 			G_CALLBACK(record_button_press_event), user_data);
 
@@ -51,6 +67,14 @@ static void activate(GtkApplication* app,
 
 	gtk_button_box_set_layout(GTK_BUTTON_BOX(data->main_button_box),
 								GTK_BUTTONBOX_EXPAND);
+
+	gtk_box_pack_start(GTK_BOX(vertical_box),
+						main_image,
+						true, true, 0);
+	gtk_box_pack_start(GTK_BOX(vertical_box),
+						data->main_button_box,
+						true, true, 0);
+	gtk_container_add(GTK_CONTAINER(data->window), vertical_box);
 
 	gtk_widget_show_all(data->window);
 }
