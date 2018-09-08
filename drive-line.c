@@ -59,7 +59,7 @@ gpointer drive_line(gpointer user_data)
 			if (cur_track.osm_track) {
 				GSList *points = osm_gps_map_track_get_points(cur_track.osm_track);
 				osm_gps_map_point_get_degrees((OsmGpsMapPoint *)points->data, &start_lat, &start_lon);
-				osm_gps_map_set_center_and_zoom(map, start_lat, start_lon, 12);
+				osm_gps_map_set_center_and_zoom(map, start_lat, start_lon, MAP_ZOOM_LEVEL);
 				osm_gps_map_track_add(map, cur_track.osm_track);
 				data->drive_track_updated = false;
 			}

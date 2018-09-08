@@ -148,7 +148,7 @@ gpointer record_track(gpointer user_data)
 				/* Set the current position and zoom from the point */
 				osm_gps_map_set_center_and_zoom(map, gps_data.fix.latitude,
 												gps_data.fix.longitude,
-												12);
+												MAP_ZOOM_LEVEL);
 
 
 				/* Plot current position, something like: osm_gps_map_gps_add() */

@@ -22,6 +22,8 @@
 #include <osm-gps-map.h>
 #include "common.h"
 
+#define MAP_ZOOM_LEVEL 15
+
 typedef struct track_info
 {
 	float lon, lat;
