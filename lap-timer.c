@@ -51,7 +51,7 @@ static void activate(GtkApplication* app,
 
 	main_image_pixbuf = gdk_pixbuf_new_from_file("SplashPage.png", NULL);
 	main_image_pixbuf = gdk_pixbuf_scale_simple(main_image_pixbuf,
-												320, 320,
+												640, 320,
 												GDK_INTERP_BILINEAR);
 	main_image = gtk_image_new_from_pixbuf(main_image_pixbuf);
 
