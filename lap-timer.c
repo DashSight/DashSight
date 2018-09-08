@@ -26,17 +26,27 @@
 #include "track.h"
 #include "arg-parser.h"
 
+gboolean close_button_press_event(GtkWidget *widget,
+								  GdkEventButton *event,
+								  gpointer user_data)
+{
+	gtk_user_data *data = user_data;
+	
+	gtk_window_close(GTK_WINDOW(data->window));
+}
+
 static void activate(GtkApplication* app,
 		gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	GdkPixbuf *main_image_pixbuf, *record_button_image_pixbuf;
-	GtkWidget *main_image, *record_button_image, *button_box;
-	GtkWidget *record_button, *drive_line_button;
+	GtkWidget *main_image, *button_box;
+	GtkWidget *record_button_image;
+	GtkWidget *record_button, *drive_line_button, *close_button;
 
 	data->window = gtk_application_window_new(app);
 	gtk_window_set_title(GTK_WINDOW(data->window), "Lap Timer");
-	gtk_widget_set_size_request(data->window, 800, 400);
+	gtk_window_fullscreen(GTK_WINDOW(data->window));
 
 	main_image_pixbuf = gdk_pixbuf_new_from_file("SplashPage.png", NULL);
 	main_image_pixbuf = gdk_pixbuf_scale_simple(main_image_pixbuf,
@@ -64,6 +74,11 @@ static void activate(GtkApplication* app,
 	gtk_container_add(GTK_CONTAINER(button_box), drive_line_button);
 	g_signal_connect(G_OBJECT(drive_line_button), "button-press-event",
 			G_CALLBACK(drive_line_button_press_event), user_data);
+
+	close_button = gtk_button_new_with_label("Close!");
+	gtk_container_add(GTK_CONTAINER(button_box), close_button);
+	g_signal_connect(G_OBJECT(close_button), "button-press-event",
+			G_CALLBACK(close_button_press_event), user_data);
 
 	gtk_button_box_set_layout(GTK_BUTTON_BOX(button_box),
 								GTK_BUTTONBOX_EXPAND);
