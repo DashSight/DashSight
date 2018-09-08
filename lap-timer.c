@@ -36,7 +36,7 @@ static void activate(GtkApplication* app,
 
 	data->window = gtk_application_window_new(app);
 	gtk_window_set_title(GTK_WINDOW(data->window), "Lap Timer");
-	gtk_widget_set_size_request(data->window, 800, 680);
+	gtk_widget_set_size_request(data->window, 800, 400);
 
 	main_image_pixbuf = gdk_pixbuf_new_from_file("SplashPage.png", NULL);
 	main_image_pixbuf = gdk_pixbuf_scale_simple(main_image_pixbuf,
