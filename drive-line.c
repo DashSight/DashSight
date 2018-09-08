@@ -41,6 +41,7 @@ gpointer drive_line(gpointer user_data)
 	struct gps_data_t gps_data;
 	struct timespec cur_time, diff_time;
 	track cur_track;
+	float start_lat, start_lon;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret;
 
@@ -55,6 +56,9 @@ gpointer drive_line(gpointer user_data)
 
 			cur_track = load_track(data->drive_track_filepath, false);
 			if (cur_track.osm_track) {
+				GSList *points = osm_gps_map_track_get_points(cur_track.osm_track);
+				osm_gps_map_point_get_degrees((OsmGpsMapPoint *)points, &start_lat, &start_lon);
+				osm_gps_map_set_center_and_zoom(map, start_lat, start_lon, 12);
 				osm_gps_map_track_add(map, cur_track.osm_track);
 			}
 		}
