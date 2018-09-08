@@ -130,6 +130,10 @@ gpointer record_track(gpointer user_data)
 	osm_track = osm_gps_map_track_new();
 	osm_gps_map_track_add(map, osm_track);
 
+	g_object_set(G_OBJECT(data->record_map),
+			"record-trip-history", false,
+			NULL);
+
 	fprintf(stderr, "Connected to GPSD and opened track file\n");
 
 	/* Read data and write to file until user interrupts us */
@@ -152,7 +156,6 @@ gpointer record_track(gpointer user_data)
 
 
 				/* Plot current position, something like: osm_gps_map_gps_add() */
-				osm_gps_map_gps_clear(map);
 				osm_gps_map_gps_add(map,
 									gps_data.fix.latitude,
 									gps_data.fix.longitude,
