@@ -152,7 +152,8 @@ gpointer record_track(gpointer user_data)
 
 
 				/* Plot current position, something like: osm_gps_map_gps_add() */
-				osm_gps_map_gps_add((OsmGpsMap *) data->record_map,
+				osm_gps_map_gps_clear(map);
+				osm_gps_map_gps_add(map,
 									gps_data.fix.latitude,
 									gps_data.fix.longitude,
 									gps_data.fix.track);
