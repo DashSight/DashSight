@@ -40,8 +40,9 @@ static void activate(GtkApplication* app,
 {
 	gtk_user_data *data = user_data;
 	GdkPixbuf *main_image_pixbuf, *record_button_image_pixbuf;
+	GdkPixbuf *drive_line_button_image_pixbuf;
 	GtkWidget *main_image, *button_box;
-	GtkWidget *record_button_image;
+	GtkWidget *record_button_image, *drive_line_button_image;
 	GtkWidget *record_button, *drive_line_button, *close_button;
 
 	data->window = gtk_application_window_new(app);
@@ -54,11 +55,17 @@ static void activate(GtkApplication* app,
 												GDK_INTERP_BILINEAR);
 	main_image = gtk_image_new_from_pixbuf(main_image_pixbuf);
 
-	record_button_image_pixbuf = gdk_pixbuf_new_from_file("record-track.png", NULL);
+	record_button_image_pixbuf = gdk_pixbuf_new_from_file("RecordTrack.png", NULL);
 	record_button_image_pixbuf = gdk_pixbuf_scale_simple(record_button_image_pixbuf,
 														320, 320,
 														GDK_INTERP_BILINEAR);
 	record_button_image = gtk_image_new_from_pixbuf(record_button_image_pixbuf);
+
+	drive_line_button_image_pixbuf = gdk_pixbuf_new_from_file("DriveLine.png", NULL);
+	drive_line_button_image_pixbuf = gdk_pixbuf_scale_simple(drive_line_button_image_pixbuf,
+														320, 320,
+														GDK_INTERP_BILINEAR);
+	drive_line_button_image = gtk_image_new_from_pixbuf(drive_line_button_image_pixbuf);
 
 	data->main_page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
@@ -66,12 +73,13 @@ static void activate(GtkApplication* app,
 	record_button = gtk_button_new_with_label("Record new track");
 	gtk_container_add(GTK_CONTAINER(button_box), record_button);
 	gtk_button_set_always_show_image(GTK_BUTTON(record_button), TRUE);
-	gtk_button_set_image(GTK_BUTTON (record_button), record_button_image);
+	gtk_button_set_image(GTK_BUTTON(record_button), record_button_image);
 	g_signal_connect(G_OBJECT(record_button), "button-press-event",
 			G_CALLBACK(record_button_press_event), user_data);
 
 	drive_line_button = gtk_button_new_with_label("Drive a single line");
 	gtk_container_add(GTK_CONTAINER(button_box), drive_line_button);
+	gtk_button_set_image(GTK_BUTTON(drive_line_button), drive_line_button_image);
 	g_signal_connect(G_OBJECT(drive_line_button), "button-press-event",
 			G_CALLBACK(drive_line_button_press_event), user_data);
 
