@@ -57,13 +57,13 @@ static void activate(GtkApplication* app,
 
 	record_button_image_pixbuf = gdk_pixbuf_new_from_file("RecordTrack.png", NULL);
 	record_button_image_pixbuf = gdk_pixbuf_scale_simple(record_button_image_pixbuf,
-														320, 320,
+														60, 60,
 														GDK_INTERP_BILINEAR);
 	record_button_image = gtk_image_new_from_pixbuf(record_button_image_pixbuf);
 
 	drive_line_button_image_pixbuf = gdk_pixbuf_new_from_file("DriveLine.png", NULL);
 	drive_line_button_image_pixbuf = gdk_pixbuf_scale_simple(drive_line_button_image_pixbuf,
-														320, 320,
+														60, 60,
 														GDK_INTERP_BILINEAR);
 	drive_line_button_image = gtk_image_new_from_pixbuf(drive_line_button_image_pixbuf);
 
