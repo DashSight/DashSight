@@ -47,6 +47,8 @@ gpointer drive_line(gpointer user_data)
 	gps_data = connect_to_gpsd(args);
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
+	cur_track.osm_track = osm_gps_map_track_new();
+
 	while (data->load_page) {
 		if (data->drive_track_filepath) {
 			osm_gps_map_track_remove_all(map);
