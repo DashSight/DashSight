@@ -31,6 +31,7 @@ void drive_file_load_file_set_event(GtkFileChooserButton *widget,
 
 	data->drive_track_filepath =
 			gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(data->drive_file_load_button));
+	data->drive_track_updated = true;
 }
 
 gpointer drive_line(gpointer user_data)
@@ -51,15 +52,16 @@ gpointer drive_line(gpointer user_data)
 	cur_track.osm_track = osm_gps_map_track_new();
 
 	while (data->load_page) {
-		if (data->drive_track_filepath) {
+		if (data->drive_track_filepath && data->drive_track_updated) {
 			osm_gps_map_track_remove_all(map);
 
 			cur_track = load_track(data->drive_track_filepath, false);
 			if (cur_track.osm_track) {
 				GSList *points = osm_gps_map_track_get_points(cur_track.osm_track);
-				osm_gps_map_point_get_degrees((OsmGpsMapPoint *)points, &start_lat, &start_lon);
+				osm_gps_map_point_get_degrees((OsmGpsMapPoint *)points->data, &start_lat, &start_lon);
 				osm_gps_map_set_center_and_zoom(map, start_lat, start_lon, 12);
 				osm_gps_map_track_add(map, cur_track.osm_track);
+				data->drive_track_updated = false;
 			}
 		}
 	}
@@ -155,6 +157,7 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 
 	/* First we need to load a track */
 	data->load_page = true;
+	data->drive_track_updated = false;
 
 	data->record_track_thread = g_thread_new("Drive Thread",
 											 drive_line,

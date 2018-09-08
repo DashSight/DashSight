@@ -51,7 +51,7 @@ typedef struct gtk_user_data
 	GtkWidget *drive_container;
 	GtkWidget *drive_map;
 	GtkWidget *drive_file_load_button;
-	bool load_page;
+	bool load_page, drive_track_updated;
 } gtk_user_data;
 
 struct gps_data_t connect_to_gpsd(cmd_args args);
