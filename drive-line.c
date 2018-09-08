@@ -121,8 +121,8 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	GtkWidget *vbox = gtk_button_box_new(GTK_ORIENTATION_VERTICAL);
 
 	/* Remove the main container. */
-	g_object_ref(data->main_button_box);
-	gtk_container_remove(GTK_CONTAINER(data->window), data->main_button_box);
+	g_object_ref(data->main_page);
+	gtk_container_remove(GTK_CONTAINER(data->window), data->main_page);
 
 	data->drive_container = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 

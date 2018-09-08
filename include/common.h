@@ -35,7 +35,7 @@ typedef struct gtk_user_data
 	GtkWidget *window;
 
 	/* Main page */
-	GtkWidget *main_button_box;
+	GtkWidget *main_page;
 
 	/* Record Track */
 	gchar *record_track_filepath;

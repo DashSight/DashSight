@@ -31,8 +31,7 @@ static void activate(GtkApplication* app,
 {
 	gtk_user_data *data = user_data;
 	GdkPixbuf *main_image_pixbuf, *record_button_image_pixbuf;
-	GtkWidget *main_image, *record_button_image;
-	GtkWidget *vertical_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	GtkWidget *main_image, *record_button_image, *button_box;
 	GtkWidget *record_button, *drive_line_button;
 
 	data->window = gtk_application_window_new(app);
@@ -51,30 +50,31 @@ static void activate(GtkApplication* app,
 														GDK_INTERP_BILINEAR);
 	record_button_image = gtk_image_new_from_pixbuf(record_button_image_pixbuf);
 
-	data->main_button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
+	data->main_page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
 
 	record_button = gtk_button_new_with_label("Record new track");
-	gtk_container_add(GTK_CONTAINER(data->main_button_box), record_button);
+	gtk_container_add(GTK_CONTAINER(button_box), record_button);
 	gtk_button_set_always_show_image(GTK_BUTTON(record_button), TRUE);
 	gtk_button_set_image(GTK_BUTTON (record_button), record_button_image);
 	g_signal_connect(G_OBJECT(record_button), "button-press-event",
 			G_CALLBACK(record_button_press_event), user_data);
 
 	drive_line_button = gtk_button_new_with_label("Drive a single line");
-	gtk_container_add(GTK_CONTAINER(data->main_button_box), drive_line_button);
+	gtk_container_add(GTK_CONTAINER(button_box), drive_line_button);
 	g_signal_connect(G_OBJECT(drive_line_button), "button-press-event",
 			G_CALLBACK(drive_line_button_press_event), user_data);
 
-	gtk_button_box_set_layout(GTK_BUTTON_BOX(data->main_button_box),
+	gtk_button_box_set_layout(GTK_BUTTON_BOX(button_box),
 								GTK_BUTTONBOX_EXPAND);
 
-	gtk_box_pack_start(GTK_BOX(vertical_box),
+	gtk_box_pack_start(GTK_BOX(data->main_page),
 						main_image,
 						true, true, 0);
-	gtk_box_pack_start(GTK_BOX(vertical_box),
-						data->main_button_box,
+	gtk_box_pack_start(GTK_BOX(data->main_page),
+						button_box,
 						true, true, 0);
-	gtk_container_add(GTK_CONTAINER(data->window), vertical_box);
+	gtk_container_add(GTK_CONTAINER(data->window), data->main_page);
 
 	gtk_widget_show_all(data->window);
 }

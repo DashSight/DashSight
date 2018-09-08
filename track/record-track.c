@@ -101,7 +101,7 @@ static gboolean record_finish_button_press_event(GtkWidget *widget,
 	data->record_page = false;
 	gtk_container_remove(GTK_CONTAINER(data->window), data->record_container);
 
-	gtk_container_add(GTK_CONTAINER(data->window), data->main_button_box);
+	gtk_container_add(GTK_CONTAINER(data->window), data->main_page);
 	gtk_widget_show_all(data->window);
 
 	/* Do more cleanup */
@@ -194,8 +194,8 @@ gboolean record_button_press_event(GtkWidget *widget,
 	GtkWidget *vbox = gtk_button_box_new(GTK_ORIENTATION_VERTICAL);
 
 	/* Remove the main container. */
-	g_object_ref(data->main_button_box);
-	gtk_container_remove(GTK_CONTAINER(data->window), data->main_button_box);
+	g_object_ref(data->main_page);
+	gtk_container_remove(GTK_CONTAINER(data->window), data->main_page);
 
 	/* We are on the record page */
 	data->record_page = true;
