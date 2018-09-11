@@ -70,6 +70,7 @@ gpointer drive_line(gpointer user_data)
 	float start_lat, start_lon;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret;
+	gchar *clock_time;
 
 	gps_data = connect_to_gpsd(args);
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
@@ -115,10 +116,11 @@ gpointer drive_line(gpointer user_data)
 	while (1) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 		diff_time = timeval_subtract(&cur_time, &cur_track.start.time);
-		printf("Time: %ld:%ld:%ld\r",
-			diff_time.tv_sec, diff_time.tv_nsec / 1000000,
-			(diff_time.tv_nsec / 1000) % 1000);
-		fflush(stdout);
+		clock_time = g_strdup_printf("%ld:%ld:%ld\r",
+									diff_time.tv_sec, diff_time.tv_nsec / 1000000,
+									(diff_time.tv_nsec / 1000) % 1000);
+		gtk_label_set_text(GTK_LABEL(data->timer_display), clock_time);
+		g_free(clock_time);
 		if (gps_waiting(&gps_data, 10)) {
 			ret = gps_read(&gps_data);
 
