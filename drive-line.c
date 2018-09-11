@@ -24,14 +24,39 @@
 #include "track.h"
 #include "common.h"
 
-void drive_file_load_file_set_event(GtkFileChooserButton *widget,
-									gpointer user_data)
+static void drive_file_load_file_set_event(GtkFileChooserButton *widget,
+											gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 
 	data->drive_track_filepath =
-			gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(data->drive_file_load_button));
+			gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(data->drive_file_load));
 	data->drive_track_updated = true;
+}
+
+static gboolean drive_file_load_file_press_event(GtkWidget *widget,
+												GdkEventButton *event,
+												gpointer user_data)
+{
+	gtk_user_data *data = user_data;
+
+	gtk_container_remove(GTK_CONTAINER(data->window), data->drive_container);
+
+	data->drive_container = gtk_grid_new();
+
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 1, 1, 1, 1);
+
+	data->timer_display = gtk_label_new("0:00:00");
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 2, 1, 1, 1);
+
+	while (gtk_events_pending()) {
+		gtk_main_iteration();
+	}
+
+	gtk_container_add(GTK_CONTAINER(data->window), data->drive_container);
+	gtk_widget_show_all(data->window);
+
+	data->load_page = false;
 }
 
 gpointer drive_line(gpointer user_data)
@@ -139,12 +164,17 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 
 	gtk_paned_pack2(GTK_PANED(data->drive_container), vbox, false, false);
 
-	data->drive_file_load_button =
+	data->drive_file_load =
 			gtk_file_chooser_button_new("Load a track...",
 										GTK_FILE_CHOOSER_ACTION_OPEN);
-	gtk_box_pack_start(GTK_BOX(vbox), data->drive_file_load_button, false, false, 10);
-	g_signal_connect(G_OBJECT(data->drive_file_load_button), "file-set",
+	gtk_box_pack_start(GTK_BOX(vbox), data->drive_file_load, false, false, 10);
+	g_signal_connect(G_OBJECT(data->drive_file_load), "file-set",
 			G_CALLBACK(drive_file_load_file_set_event), user_data);
+
+	data->drive_file_load_button = gtk_button_new_with_label("Load this file");
+	gtk_box_pack_start(GTK_BOX(vbox), data->drive_file_load_button, false, false, 10);
+	g_signal_connect(G_OBJECT(data->drive_file_load_button), "button-press-event",
+			G_CALLBACK(drive_file_load_file_press_event), user_data);
 
 	gtk_button_box_set_layout(GTK_BUTTON_BOX(vbox), GTK_BUTTONBOX_CENTER);
 

@@ -50,7 +50,9 @@ typedef struct gtk_user_data
 	gchar *drive_track_filepath;
 	GtkWidget *drive_container;
 	GtkWidget *drive_map;
-	GtkWidget *drive_file_load_button;
+	GtkWidget *drive_grid;
+	GtkWidget *drive_file_load, *drive_file_load_button;
+	GtkWidget *timer_display;
 	bool load_page, drive_track_updated;
 } gtk_user_data;
 
