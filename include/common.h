@@ -19,6 +19,7 @@
 #define COMMON_H
 
 #include <gtk/gtk.h>
+#include <osm-gps-map.h>
 
 typedef struct cmd_args {
 	enum { NONE, GUI, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
@@ -53,6 +54,7 @@ typedef struct gtk_user_data
 	GtkWidget *drive_grid;
 	GtkWidget *drive_file_load, *drive_file_load_button;
 	GtkWidget *timer_display;
+	void *loaded_track;
 	bool load_page, drive_track_updated;
 } gtk_user_data;
 

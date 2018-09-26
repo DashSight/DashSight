@@ -39,7 +39,7 @@ typedef struct track
 } track;
 
 gpointer record_track(gpointer data);
-track load_track(char *file, bool loop);
+track *load_track(char *file, bool loop);
 
 gboolean record_button_press_event(GtkWidget *widget,
 				GdkEventButton *event,
