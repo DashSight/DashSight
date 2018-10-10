@@ -45,10 +45,9 @@ track *load_track(char *file, bool loop)
 	ret->osm_track = osm_gps_map_track_new();
 
 	line = (char*) malloc(256 * sizeof(char));
+	line = fgets(line, 256, fd);
 
-	do {
-		line = fgets(line, 256, fd);
-
+	while (line) {
 		tmp = strtok(line, " ");
 		while (tmp) {
 			if (!strcmp(tmp, "latitude:")) {
@@ -77,7 +76,9 @@ track *load_track(char *file, bool loop)
 			tmp = strtok(NULL, " ");
 		}
 		first_run = true;
-	} while (line);
+
+		line = fgets(line, 256, fd);
+	}
 
 	free(line);
 	fclose(fd);
