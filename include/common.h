@@ -58,6 +58,8 @@ typedef struct gtk_user_data
 	bool load_page, drive_track_updated;
 } gtk_user_data;
 
+#define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
+
 struct gps_data_t connect_to_gpsd(cmd_args args);
 
 gpointer drive_line(gpointer user_data);

@@ -39,7 +39,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												gpointer user_data)
 {
 	const char *start_time = "0:00:00";
-	const char *format = "<span font_desc=\"55.0\">\%s</span>";
+	const char *format = TIMER_FORMAT;
 	char *markup;
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
@@ -83,7 +83,7 @@ gpointer drive_line(gpointer user_data)
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret;
 	gchar *clock_time;
-	const char *format = "<span font_desc=\"55.0\">\%s</span>";
+	const char *format = TIMER_FORMAT;
 	char *markup;
 
 	gps_data = connect_to_gpsd(args);
