@@ -39,7 +39,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												gpointer user_data)
 {
 	const char *start_time = "0:00:00";
-	const char *format = "<span font_desc=\"70.0\">\%s</span>";
+	const char *format = "<span font_desc=\"55.0\">\%s</span>";
 	char *markup;
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
@@ -50,17 +50,17 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_container_add(GTK_CONTAINER(data->window), data->drive_container);
 
 	gtk_grid_set_row_spacing(GTK_GRID(data->drive_container), 100);
-	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 100);
+	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 40);
 
 	data->drive_map = osm_gps_map_new();
 	osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(data->drive_map), cur_track->start.lat, cur_track->start.lon, MAP_ZOOM_LEVEL);
 	osm_gps_map_track_add(OSM_GPS_MAP(data->drive_map), cur_track->osm_track);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 0, 7, 7);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 0, 12, 6);
 
 	data->timer_display = gtk_label_new(NULL);
 	markup = g_markup_printf_escaped(format, start_time);
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 7, 0, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 12, 0, 1, 1);
 	g_free(markup);
 
 	gtk_widget_show_all(data->window);
@@ -83,7 +83,7 @@ gpointer drive_line(gpointer user_data)
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret;
 	gchar *clock_time;
-	const char *format = "<span font_desc=\"70.0\">\%s</span>";
+	const char *format = "<span font_desc=\"55.0\">\%s</span>";
 	char *markup;
 
 	gps_data = connect_to_gpsd(args);
