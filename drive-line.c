@@ -83,6 +83,8 @@ gpointer drive_line(gpointer user_data)
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret;
 	gchar *clock_time;
+	const char *format = "<span font_desc=\"70.0\">\%s</span>";
+	char *markup;
 
 	gps_data = connect_to_gpsd(args);
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
@@ -142,8 +144,10 @@ gpointer drive_line(gpointer user_data)
 		clock_time = g_strdup_printf("%ld:%ld:%ld\r",
 									diff_time.tv_sec, diff_time.tv_nsec / 1000000,
 									(diff_time.tv_nsec / 1000) % 1000);
-		gtk_label_set_text(GTK_LABEL(data->timer_display), clock_time);
+		markup = g_markup_printf_escaped(format, clock_time);
+		gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
 		g_free(clock_time);
+		g_free(markup);
 		if (gps_waiting(&gps_data, 10)) {
 			ret = gps_read(&gps_data);
 
@@ -160,6 +164,16 @@ gpointer drive_line(gpointer user_data)
 			}
 		}
 	}
+
+	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
+	diff_time = timeval_subtract(&cur_time, &cur_track->start.time);
+	clock_time = g_strdup_printf("%ld:%ld:%ld\r",
+								diff_time.tv_sec, diff_time.tv_nsec / 1000000,
+								(diff_time.tv_nsec / 1000) % 1000);
+	markup = g_markup_printf_escaped(format, clock_time);
+	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
+	g_free(clock_time);
+	g_free(markup);
 
 	fprintf(stderr, "Finished the drive, total time: %ld:%ld:%ld\n",
 			diff_time.tv_sec, diff_time.tv_nsec / 1000000,
