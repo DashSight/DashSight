@@ -1288,6 +1288,8 @@
 
 	aliases {
 		ethernet0 = "/soc/ethernet@1c30000";
+		serial0 = "/soc/serial@1c28000";
+		serial2 = "/soc/serial@1c28800";
 	};
 
 	connector {
