@@ -53,8 +53,10 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 40);
 
 	data->drive_map = osm_gps_map_new();
-	osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(data->drive_map), cur_track->start.lat, cur_track->start.lon, MAP_ZOOM_LEVEL);
-	osm_gps_map_track_add(OSM_GPS_MAP(data->drive_map), cur_track->osm_track);
+	if (cur_track) {
+		osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(data->drive_map), cur_track->start.lat, cur_track->start.lon, MAP_ZOOM_LEVEL);
+		osm_gps_map_track_add(OSM_GPS_MAP(data->drive_map), cur_track->osm_track);
+	}
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 0, 12, 6);
 
 	data->timer_display = gtk_label_new(NULL);
@@ -126,7 +128,8 @@ gpointer drive_line(gpointer user_data)
 									gps_data.fix.track);
 
 
-				if (equal(gps_data.fix.latitude, cur_track->start.lat, 0.0005) &&
+				if (cur_track &&
+					equal(gps_data.fix.latitude, cur_track->start.lat, 0.0005) &&
 					equal(gps_data.fix.longitude, cur_track->start.lon, 0.0005)) {
 					clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->start.time);
 					break;
