@@ -111,7 +111,7 @@ gpointer drive_line(gpointer user_data)
 	/* Poll until we hit the start line */
 	while (1) {
 		if (gps_waiting(&gps_data, 500)) {
-			ret = gps_read(&gps_data);
+			ret = gps_read(&gps_data, NULL, 0);
 
 			if (ret < 0) {
 				fprintf(stderr, "gps_read error: %d\n", ret);
@@ -149,7 +149,7 @@ gpointer drive_line(gpointer user_data)
 		g_free(clock_time);
 		g_free(markup);
 		if (gps_waiting(&gps_data, 10)) {
-			ret = gps_read(&gps_data);
+			ret = gps_read(&gps_data, NULL, 0);
 
 			if (ret < 0) {
 				fprintf(stderr, "gps_read error: %d\n", ret);
