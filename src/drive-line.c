@@ -78,6 +78,15 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 gpointer obdii_data(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
+	char filename[] = "obdii_setup.py";
+	FILE* fp;
+
+	Py_Initialize();
+
+	fp = _Py_fopen(filename, "r");
+	PyRun_SimpleFile(fp, filename);
+
+	Py_Finalize();
 
 	return NULL;
 }
