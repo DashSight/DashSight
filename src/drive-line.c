@@ -79,10 +79,10 @@ gpointer obdii_data(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	PyObject *py_main, *py_dict;
+	PyObject *get_obdii_val;
 	PyObject *py_res;
 	char file_setup[] = "obdii_setup.py";
-	char file_loop[] = "obdii_loop.py";
-	FILE *fp_setup, *fp_loop;
+	FILE *fp_setup;
 
 	Py_Initialize();
 
@@ -96,9 +96,9 @@ gpointer obdii_data(gpointer user_data)
 		sleep(1);
 	}
 
+	get_obdii_val = PyObject_GetAttrString(py_main, (char*)"c_get_data");
 	while (1) {
-		fp_loop = _Py_fopen(file_loop, "r");
-		py_res = PyRun_File(fp_loop, file_loop, Py_file_input, py_dict, py_dict);
+		py_res = PyObject_CallObject(get_obdii_val, NULL);
 	}
 
 	Py_Finalize();
