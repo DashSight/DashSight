@@ -656,7 +656,7 @@
 				phandle = < 0x23 >;
 			};
 
-			uart1_pins {
+			uart1: uart1_pins {
 				pins = "PG6\0PG7";
 				function = "uart1";
 			};
@@ -671,12 +671,12 @@
 				function = "uart2";
 			};
 
-			uart3-pins {
+			uart3: uart3-pins {
 				pins = "PD0\0PD1";
 				function = "uart3";
 			};
 
-			uart4-pins {
+			uart4: uart4-pins {
 				pins = "PD2\0PD3";
 				function = "uart4";
 			};
@@ -796,6 +796,8 @@
 			clocks = < 0x02 0x44 >;
 			resets = < 0x02 0x2f >;
 			status = "disabled";
+			pinctrl-names = "default";
+			pinctrl-0 = < &uart1 >;
 		};
 
 		serial@1c28800 {
@@ -819,7 +821,9 @@
 			reg-io-width = < 0x04 >;
 			clocks = < 0x02 0x46 >;
 			resets = < 0x02 0x31 >;
-			status = "disabled";
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = < &uart3 >;
 		};
 
 		serial@1c29000 {
@@ -831,6 +835,8 @@
 			clocks = < 0x02 0x47 >;
 			resets = < 0x02 0x32 >;
 			status = "disabled";
+			pinctrl-names = "default";
+			pinctrl-0 = < &uart4 >;
 		};
 
 		i2c@1c2ac00 {
