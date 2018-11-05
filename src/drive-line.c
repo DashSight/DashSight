@@ -231,7 +231,7 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	data->load_page = true;
 	data->drive_track_updated = false;
 
-	data->record_track_thread = g_thread_new("Drive Thread",
+	data->drive_track_thread = g_thread_new("Drive Thread",
 											 drive_line,
 											 user_data);
 
