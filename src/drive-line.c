@@ -78,14 +78,16 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 gpointer obdii_data(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
-	PyObject *py_main = PyImport_AddModule("__main__");
-	PyObject *py_dict = PyModule_GetDict(py_main);
+	PyObject *py_main, *py_dict;
+	PyObject *py_res;
 	char file_setup[] = "obdii_setup.py";
 	char file_loop[] = "obdii_loop.py";
-	PyObject *py_res;
 	FILE *fp_setup, *fp_loop;
 
 	Py_Initialize();
+
+	py_main = PyImport_AddModule("__main__");
+	py_dict = PyModule_GetDict(py_main);
 
 	fp_setup = _Py_fopen(file_setup, "r");
 	PyRun_File(fp_setup, file_setup, 0, py_dict, py_dict);
