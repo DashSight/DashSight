@@ -54,7 +54,7 @@ typedef struct gtk_user_data
 	GtkWidget *drive_grid;
 	GtkWidget *drive_file_load, *drive_file_load_button;
 	GtkWidget *timer_display;
-	GThread *drive_track_thread;
+	GThread *drive_track_thread, *obdii_thread;
 	void *loaded_track;
 	bool load_page, drive_track_updated;
 } gtk_user_data;

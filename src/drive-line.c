@@ -15,6 +15,7 @@
  * THE SOFTWARE.
  */
 
+#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,6 +73,13 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	}
 
 	data->load_page = false;
+}
+
+gpointer obdii_data(gpointer user_data)
+{
+	gtk_user_data *data = user_data;
+
+	return NULL;
 }
 
 gpointer drive_line(gpointer user_data)
@@ -234,6 +242,9 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	data->drive_track_thread = g_thread_new("Drive Thread",
 											 drive_line,
 											 user_data);
+	data->obdii_thread = g_thread_new("OBDII Data Thread",
+									  obdii_data,
+									  user_data);
 
 	return true;
 }

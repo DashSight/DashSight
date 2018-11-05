@@ -20,6 +20,9 @@ LFLAGS ?= -lm -lgps
 GTK_CFLAGS = $(shell pkg-config --cflags gtk+-3.0 osmgpsmap-1.0)
 GTK_LFLAGS = $(shell pkg-config --libs gtk+-3.0 osmgpsmap-1.0)
 
+PYTHON_CFLAGS =  $(shell python3-config --includes)
+PYTHON_LFALGS =  $(shell python3-config --libs)
+
 .PHONY: all
 all: lap-timer
 
@@ -29,10 +32,10 @@ HEADERS = $(wildcard include/*.h)
 .PRECIOUS: lap-timer $(OBJECTS)
 
 lap-timer: $(OBJECTS)
-	$(CC) $(GTK_CFLAGS) $(OBJECTS) -Wall $(LFLAGS) -o $@ $(GTK_LFLAGS)
+	$(CC) $(GTK_CFLAGS) $(PYTHON_CFLAGS) $(OBJECTS) -Wall $(LFLAGS) -o $@ $(GTK_LFLAGS) $(PYTHON_LFALGS)
 
 %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) $(GTK_CFLAGS) -Iinclude -c $< -o $@ $(GTK_LFLAGS)
+	$(CC) $(CFLAGS) $(GTK_CFLAGS) $(PYTHON_CFLAGS) -Iinclude -c $< -o $@ $(GTK_LFLAGS) $(PYTHON_LFALGS)
 
 .PHONY: clean
 clean:
