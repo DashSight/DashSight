@@ -90,7 +90,7 @@ gpointer obdii_data(gpointer user_data)
 	py_dict = PyModule_GetDict(py_main);
 
 	fp_setup = _Py_fopen(file_setup, "r");
-	PyRun_File(fp_setup, file_setup, 0, py_dict, py_dict);
+	PyRun_File(fp_setup, file_setup, Py_file_input, py_dict, py_dict);
 
 	while (!data->load_page) {
 		sleep(1);
@@ -98,7 +98,7 @@ gpointer obdii_data(gpointer user_data)
 
 	while (1) {
 		fp_loop = _Py_fopen(file_loop, "r");
-		py_res = PyRun_File(fp_loop, file_loop, 0, py_dict, py_dict);
+		py_res = PyRun_File(fp_loop, file_loop, Py_file_input, py_dict, py_dict);
 	}
 
 	Py_Finalize();
