@@ -29,18 +29,20 @@ class LapTimerOBD(object):
 				self.coms.append(c)
 				
 	def get_data(self):
-		print("2")
 		if self.connection.status() != OBDStatus.CAR_CONNECTED:
 			print("No connection to car")
 			return 0
 
 		ret = self.coms[self.cur_pos]
 		self.cur_pos = self.cur_pos + 1
-		if self.cur_pos > self.coms.count():
+		if self.cur_pos > len(self.coms):
 			self.cur_pos = 0
 
+		ret = self.connection.query(ret)
+
+		return ret.value
+
 def c_get_data():
-	print("1")
 	return main_list[0].get_data()
 
 def c_main():
