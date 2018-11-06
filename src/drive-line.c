@@ -95,18 +95,27 @@ gpointer obdii_data(gpointer user_data)
 		return NULL;
 	}
 
+	/* Python main() function */
 	pFunc = PyObject_GetAttrString(pModule, "c_main");
 
 	if (!pFunc || !PyCallable_Check(pFunc)) {
 		fprintf(stderr, "Failed to initialise the connection\n");
 		PyErr_Print();
+		return NULL;
 	}
 
-	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+	pValue = PyObject_CallObject(pFunc, NULL);
+
+	if (pValue) {
+		Py_DECREF(pValue);
+	}
 
 	// while (!data->load_page) {
 		// sleep(1);
 	// }
+
+	/* Python get_data() function */
+	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
 
     if (pFunc && PyCallable_Check(pFunc)) {
 		while (1) {
