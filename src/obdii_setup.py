@@ -50,7 +50,12 @@ class LapTimerOBD(object):
 
 		ret = self.connection.query(ret)
 
-		return ret.value
+		try:
+			ret = ret.value.magnitude
+		except:
+			ret = ret.value
+
+		return ret
 
 def c_get_command():
 	return lap_timer.get_command()
