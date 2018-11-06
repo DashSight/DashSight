@@ -119,10 +119,14 @@ gpointer obdii_data(gpointer user_data)
 			if (pValue_data != NULL) {
 				if (PyLong_Check(pValue_data)) {
 					fprintf(stderr, "L: %ld\n", PyLong_AsLong(pValue_data));
+				} else if (PyFloat_Check(pValue_data)) {
+					fprintf(stderr, "F: %f\n", PyFloat_AsDouble(pValue_data));
 				} else if (PyBytes_Check(pValue_data)) {
 					fprintf(stderr, "B: %s\n", PyBytes_AsString(pValue_data));
 				} else if (PyUnicode_Check(pValue_data)) {
 					fprintf(stderr, "U: %s\n", PyUnicode_AsUTF8(pValue_data));
+				} else {
+					fprintf(stderr, "Unsupported return type\n");
 				}
 				Py_DECREF(pValue_data);
 			} else {
