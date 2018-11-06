@@ -41,12 +41,9 @@ class LapTimerOBD(object):
 		if self.cur_pos > self.coms.count:
 			self.cur_pos = 0
 
-def c_get_data(self):
+def c_get_data():
 	print("1")
 	return main_list[0].get_data()
 
-def main():
+def c_main():
 	main_list.append(LapTimerOBD())
-
-if __name__ == '__main__':
-	main()

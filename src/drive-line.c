@@ -79,7 +79,7 @@ gpointer obdii_data(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	PyObject *pName, *pModule, *pFunc;
-	PyObject *pArgs, *pValue;
+	PyObject *pValue;
 
 	Py_Initialize();
 
@@ -88,9 +88,16 @@ gpointer obdii_data(gpointer user_data)
 	Py_DECREF(pName);
 
 	if (!pModule) {
-		fprintf(stderr, "Unable to import Python module");
-		Py_DECREF(pModule);
+		fprintf(stderr, "Unable to import Python module\n");
+		PyErr_Print();
 		return NULL;
+	}
+
+	pFunc = PyObject_GetAttrString(pModule, "c_main");
+
+	if (!pFunc || !PyCallable_Check(pFunc)) {
+		fprintf(stderr, "Failed to initialise the connection\n");
+		PyErr_Print();
 	}
 
 	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
