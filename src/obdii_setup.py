@@ -38,7 +38,7 @@ class LapTimerOBD(object):
 
 		ret = self.coms[self.cur_pos]
 		self.cur_pos = self.cur_pos + 1
-		if self.cur_pos > self.coms.count:
+		if self.cur_pos > self.coms.count():
 			self.cur_pos = 0
 
 def c_get_data():
