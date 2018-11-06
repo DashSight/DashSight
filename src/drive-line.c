@@ -122,7 +122,13 @@ gpointer obdii_data(gpointer user_data)
 			pValue = PyObject_CallObject(pFunc, NULL);
 
 			if (pValue != NULL) {
-				fprintf(stderr, "Result of call: %ld\n", PyLong_AsLong(pValue));
+				if (PyLong_Check(pValue)) {
+					fprintf(stderr, "Result of call: %ld\n", PyLong_AsLong(pValue));
+				} else if (PyBytes_Check(pValue)) {
+					fprintf(stderr, "Result of call: %s\n", PyBytes_AsString(pValue));
+				} else if (PyUnicode_Check(pValue)) {
+					fprintf(stderr, "Result of call: %s\n", PyUnicode_AS_DATA(pValue));
+				}
 				Py_DECREF(pValue);
 			} else {
 				fprintf(stderr, "Failed to get a PyValue\n");
