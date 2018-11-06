@@ -2,8 +2,6 @@ import sys
 import obd
 from obd import OBDStatus
 
-obd.logger.setLevel(obd.logging.DEBUG)
-
 main_list = []
 
 class LapTimerOBD(object):
