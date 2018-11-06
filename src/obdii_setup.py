@@ -27,8 +27,18 @@ class LapTimerOBD(object):
 			response = self.connection.query(c)
 			if not response.is_null():
 				self.coms.append(c)
-				
+
+	def get_command(self):
+		"""
+		Get the current OBDII command.
+		"""
+
+		return self.coms[self.cur_pos].name
+
 	def get_data(self):
+		"""
+		Get the current OBDII data and increment the command.
+		"""
 		if self.connection.status() != OBDStatus.CAR_CONNECTED:
 			print("No connection to car")
 			return -1
@@ -41,6 +51,9 @@ class LapTimerOBD(object):
 		ret = self.connection.query(ret)
 
 		return ret.value
+
+def c_get_command():
+	return lap_timer.get_command()
 
 def c_get_data():
 	return lap_timer.get_data()

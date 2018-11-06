@@ -80,8 +80,9 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 gpointer obdii_data(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
-	PyObject *pName, *pModule, *pFunc;
-	PyObject *pValue;
+	PyObject *pName, *pModule;
+	PyObject *pFunc_data, *pValue_data;
+	PyObject *pFunc_com, *pValue_com;
 
 	Py_Initialize();
 
@@ -99,30 +100,39 @@ gpointer obdii_data(gpointer user_data)
 		// sleep(1);
 	// }
 
-	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+	pFunc_com = PyObject_GetAttrString(pModule, "c_get_command");
+	pFunc_data = PyObject_GetAttrString(pModule, "c_get_data");
 
-    if (pFunc && PyCallable_Check(pFunc)) {
+    if (pFunc_data && PyCallable_Check(pFunc_data)) {
 		while (1) {
-			pValue = PyObject_CallObject(pFunc, NULL);
+			pValue_com = PyObject_CallObject(pFunc_com, NULL);
+			pValue_data = PyObject_CallObject(pFunc_data, NULL);
 
-			if (pValue != NULL) {
-				if (PyLong_Check(pValue)) {
-					fprintf(stderr, "Long: Result of call: %ld\n", PyLong_AsLong(pValue));
-				} else if (PyBytes_Check(pValue)) {
-					fprintf(stderr, "Byte: Result of call: %s\n", PyBytes_AsString(pValue));
-				} else if (PyUnicode_Check(pValue)) {
-					fprintf(stderr, "Unicode: Result of call: %s\n", PyUnicode_AsUTF8(pValue));
-				}
-				Py_DECREF(pValue);
+			if (PyUnicode_Check(pValue_com)) {
+				fprintf(stderr, "Getting: %s ", PyUnicode_AsUTF8(pValue_com));
+				Py_DECREF(pValue_com);
 			} else {
-				fprintf(stderr, "Failed to get a PyValue\n");
+				PyErr_Print();
+				break;
+			}
+
+			if (pValue_data != NULL) {
+				if (PyLong_Check(pValue_data)) {
+					fprintf(stderr, "L: %ld\n", PyLong_AsLong(pValue_data));
+				} else if (PyBytes_Check(pValue_data)) {
+					fprintf(stderr, "B: %s\n", PyBytes_AsString(pValue_data));
+				} else if (PyUnicode_Check(pValue_data)) {
+					fprintf(stderr, "U: %s\n", PyUnicode_AsUTF8(pValue_data));
+				}
+				Py_DECREF(pValue_data);
+			} else {
 				PyErr_Print();
 				break;
 			}
 		}
 	}
 
-	Py_DECREF(pFunc);
+	Py_DECREF(pFunc_data);
 	Py_DECREF(pModule);
 
 	Py_Finalize();
