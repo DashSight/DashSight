@@ -85,7 +85,7 @@ gpointer obdii_data(gpointer user_data)
 
 	Py_Initialize();
 
-	pName = PyUnicode_DecodeFSDefault("obdii_setup.py");
+	pName = PyUnicode_DecodeFSDefault("obdii_setup");
 	pModule = PyImport_Import(pName);
 	Py_DECREF(pName);
 
