@@ -73,6 +73,8 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	}
 
 	data->load_page = false;
+
+	return false;
 }
 
 gpointer obdii_data(gpointer user_data)
@@ -133,7 +135,6 @@ gpointer drive_line(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	cmd_args args = *data->args;
-	FILE *fd;
 	struct gps_data_t gps_data;
 	struct timespec cur_time, diff_time;
 	track *cur_track;
