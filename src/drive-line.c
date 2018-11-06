@@ -95,26 +95,10 @@ gpointer obdii_data(gpointer user_data)
 		return NULL;
 	}
 
-	/* Python main() function */
-	pFunc = PyObject_GetAttrString(pModule, "c_main");
-
-	if (!pFunc || !PyCallable_Check(pFunc)) {
-		fprintf(stderr, "Failed to initialise the connection\n");
-		PyErr_Print();
-		return NULL;
-	}
-
-	pValue = PyObject_CallObject(pFunc, NULL);
-
-	if (pValue) {
-		Py_DECREF(pValue);
-	}
-
 	// while (!data->load_page) {
 		// sleep(1);
 	// }
 
-	/* Python get_data() function */
 	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
 
     if (pFunc && PyCallable_Check(pFunc)) {
@@ -123,11 +107,11 @@ gpointer obdii_data(gpointer user_data)
 
 			if (pValue != NULL) {
 				if (PyLong_Check(pValue)) {
-					fprintf(stderr, "Result of call: %ld\n", PyLong_AsLong(pValue));
+					fprintf(stderr, "Long: Result of call: %ld\n", PyLong_AsLong(pValue));
 				} else if (PyBytes_Check(pValue)) {
-					fprintf(stderr, "Result of call: %s\n", PyBytes_AsString(pValue));
+					fprintf(stderr, "Byte: Result of call: %s\n", PyBytes_AsString(pValue));
 				} else if (PyUnicode_Check(pValue)) {
-					fprintf(stderr, "Result of call: %s\n", PyUnicode_AS_DATA(pValue));
+					fprintf(stderr, "Unicode: Result of call: %s\n", PyUnicode_AsUTF8(pValue));
 				}
 				Py_DECREF(pValue);
 			} else {

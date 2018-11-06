@@ -2,11 +2,11 @@ import sys
 import obd
 from obd import OBDStatus
 
-main_list = []
+# obd.logger.setLevel(obd.logging.DEBUG)
 
 class LapTimerOBD(object):
 	def __init__(self):
-		self.connection = obd.OBD("/dev/ttyS1", baudrate=9600, protocol="3", fast=False)
+		self.connection = obd.OBD("/dev/ttyS1", fast=False)
 
 		if self.connection.status() != OBDStatus.CAR_CONNECTED:
 			print("Unable to connect to the car")
@@ -31,11 +31,11 @@ class LapTimerOBD(object):
 	def get_data(self):
 		if self.connection.status() != OBDStatus.CAR_CONNECTED:
 			print("No connection to car")
-			return 0
+			return -1
 
 		ret = self.coms[self.cur_pos]
 		self.cur_pos = self.cur_pos + 1
-		if self.cur_pos > len(self.coms):
+		if self.cur_pos > len(self.coms) - 1:
 			self.cur_pos = 0
 
 		ret = self.connection.query(ret)
@@ -43,7 +43,7 @@ class LapTimerOBD(object):
 		return ret.value
 
 def c_get_data():
-	return main_list[0].get_data()
+	return lap_timer.get_data()
 
-def c_main():
-	main_list.append(LapTimerOBD())
+lap_timer = LapTimerOBD()
+
