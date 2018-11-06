@@ -78,28 +78,44 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 gpointer obdii_data(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
-	PyObject *py_main, *py_dict;
-	PyObject *get_obdii_val;
-	PyObject *py_res;
-	char file_setup[] = "obdii_setup.py";
-	FILE *fp_setup;
+	PyObject *pName, *pModule, *pFunc;
+	PyObject *pArgs, *pValue;
 
 	Py_Initialize();
 
-	py_main = PyImport_AddModule("__main__");
-	py_dict = PyModule_GetDict(py_main);
+	pName = PyUnicode_DecodeFSDefault("obdii_setup.py");
+	pModule = PyImport_Import(pName);
+	Py_DECREF(pName);
 
-	fp_setup = _Py_fopen(file_setup, "r");
-	PyRun_File(fp_setup, file_setup, Py_file_input, py_dict, py_dict);
-
-	while (!data->load_page) {
-		sleep(1);
+	if (!pModule) {
+		fprintf(stderr, "Unable to import Python module");
+		Py_DECREF(pModule);
+		return NULL;
 	}
 
-	get_obdii_val = PyObject_GetAttrString(py_main, (char*)"c_get_data");
-	while (1) {
-		py_res = PyObject_CallObject(get_obdii_val, NULL);
+	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+
+	// while (!data->load_page) {
+		// sleep(1);
+	// }
+
+    if (pFunc && PyCallable_Check(pFunc)) {
+		while (1) {
+			pValue = PyObject_CallObject(pFunc, NULL);
+
+			if (pValue != NULL) {
+				fprintf(stderr, "Result of call: %ld\n", PyLong_AsLong(pValue));
+				Py_DECREF(pValue);
+			} else {
+				fprintf(stderr, "Failed to get a PyValue\n");
+				PyErr_Print();
+				break;
+			}
+		}
 	}
+
+	Py_DECREF(pFunc);
+	Py_DECREF(pModule);
 
 	Py_Finalize();
 
