@@ -24,6 +24,11 @@
 #include <gps.h>
 #include "track.h"
 #include "common.h"
+#include "obdii_commands.h"
+
+obdii_commands obdii_sur_coms[] = {
+	{ "RPM", RET_FLOAT }
+};
 
 static void drive_file_load_file_set_event(GtkFileChooserButton *widget,
 											gpointer user_data)
@@ -81,8 +86,8 @@ gpointer obdii_data(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	PyObject *pName, *pModule;
-	PyObject *pFunc_data, *pValue_data;
-	PyObject *pFunc_com, *pValue_com;
+	PyObject *pFunc, *pValue;
+	int i;
 
 	Py_Initialize();
 
@@ -100,35 +105,31 @@ gpointer obdii_data(gpointer user_data)
 		// sleep(1);
 	// }
 
-	pFunc_com = PyObject_GetAttrString(pModule, "c_get_command");
-	pFunc_data = PyObject_GetAttrString(pModule, "c_get_data");
+	for (i = 0; i < 1; i++) {
+		/* TODO: Setup args and call this
+		 * pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+		 */
+		pFunc = PyObject_GetAttrString(pModule, "c_get_rpm");
 
-    if (pFunc_data && PyCallable_Check(pFunc_data)) {
-		while (1) {
-			pValue_com = PyObject_CallObject(pFunc_com, NULL);
-			pValue_data = PyObject_CallObject(pFunc_data, NULL);
+	    if (pFunc && PyCallable_Check(pFunc)) {
+			pValue = PyObject_CallObject(pFunc, NULL);
 
-			if (PyUnicode_Check(pValue_com)) {
-				fprintf(stderr, "Getting: %s ", PyUnicode_AsUTF8(pValue_com));
-				Py_DECREF(pValue_com);
-			} else {
-				PyErr_Print();
-				break;
-			}
-
-			if (pValue_data != NULL) {
-				if (PyLong_Check(pValue_data)) {
-					fprintf(stderr, "L: %ld\n", PyLong_AsLong(pValue_data));
-				} else if (PyFloat_Check(pValue_data)) {
-					fprintf(stderr, "F: %f\n", PyFloat_AsDouble(pValue_data));
-				} else if (PyBytes_Check(pValue_data)) {
-					fprintf(stderr, "B: %s\n", PyBytes_AsString(pValue_data));
-				} else if (PyUnicode_Check(pValue_data)) {
-					fprintf(stderr, "U: %s\n", PyUnicode_AsUTF8(pValue_data));
-				} else {
-					fprintf(stderr, "Unsupported return type\n");
+			if (pValue != NULL) {
+				switch (obdii_sur_coms->return_type) {
+				case RET_LONG:
+					python_parse_long(pValue);
+					break;
+				case RET_FLOAT:
+					python_parse_float(pValue);
+					break;
+				case RET_STR:
+					python_parse_str(pValue);
+					break;
+				case RET_UNICODE:
+					python_parse_unicode(pValue);
+					break;
 				}
-				Py_DECREF(pValue_data);
+				Py_DECREF(pValue);
 			} else {
 				PyErr_Print();
 				break;
@@ -136,7 +137,7 @@ gpointer obdii_data(gpointer user_data)
 		}
 	}
 
-	Py_DECREF(pFunc_data);
+	Py_DECREF(pFunc);
 	Py_DECREF(pModule);
 
 	Py_Finalize();

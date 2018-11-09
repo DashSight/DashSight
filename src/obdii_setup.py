@@ -12,30 +12,7 @@ class LapTimerOBD(object):
 			print("Unable to connect to the car")
 			exit(1)
 
-		self.get_working_commands()
-
-	def get_working_commands(self):
-		"""
-		Query the car and store all commands that we support and return data.
-		"""
-
-		# Setup the data we will need later.
-		self.coms = []
-		self.cur_pos = 0
-
-		for c in self.connection.supported_commands:
-			response = self.connection.query(c)
-			if not response.is_null():
-				self.coms.append(c)
-
-	def get_command(self):
-		"""
-		Get the current OBDII command.
-		"""
-
-		return self.coms[self.cur_pos].name
-
-	def get_data(self):
+	def get_data(self, cmd):
 		"""
 		Get the current OBDII data and increment the command.
 		"""
@@ -43,12 +20,7 @@ class LapTimerOBD(object):
 			print("No connection to car")
 			return -1
 
-		ret = self.coms[self.cur_pos]
-		self.cur_pos = self.cur_pos + 1
-		if self.cur_pos > len(self.coms) - 1:
-			self.cur_pos = 0
-
-		ret = self.connection.query(ret)
+		ret = self.connection.query(cmd)
 
 		try:
 			ret = ret.value.magnitude
@@ -57,11 +29,11 @@ class LapTimerOBD(object):
 
 		return ret
 
-def c_get_command():
-	return lap_timer.get_command()
+	def get_rpm(self):
+		return get_data('RPM')
 
-def c_get_data():
-	return lap_timer.get_data()
+def c_get_rpm():
+	return lap_timer.get_rpm()
 
 lap_timer = LapTimerOBD()
 
