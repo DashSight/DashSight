@@ -20,7 +20,7 @@ class LapTimerOBD(object):
 			print("No connection to car")
 			return -1
 
-		ret = self.connection.query(cmd)
+		ret = self.connection.query(obd.commands[cmd])
 
 		try:
 			ret = ret.value.magnitude
@@ -30,7 +30,7 @@ class LapTimerOBD(object):
 		return ret
 
 	def get_rpm(self):
-		return get_data('RPM')
+		return self.get_data('RPM')
 
 def c_get_rpm():
 	return lap_timer.get_rpm()
