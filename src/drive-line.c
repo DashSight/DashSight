@@ -27,7 +27,8 @@
 #include "obdii_commands.h"
 
 obdii_commands obdii_sur_coms[] = {
-	{ "RPM", RET_FLOAT }
+	{ OBDII_RPM, "RPM", RET_FLOAT },
+	{ OBDII_THROTTLE, "THROTTLE", RET_FLOAT },
 };
 
 static void drive_file_load_file_set_event(GtkFileChooserButton *widget,
@@ -105,22 +106,26 @@ gpointer obdii_data(gpointer user_data)
 		// sleep(1);
 	// }
 
-	for (i = 0; i < 1; i++) {
+	for (i = 0; i < ARRAY_SIZE(obdii_sur_coms); i++) {
 		/* TODO: Setup args and call this
 		 * pFunc = PyObject_GetAttrString(pModule, "c_get_data");
 		 */
-		pFunc = PyObject_GetAttrString(pModule, "c_get_rpm");
+		if (i == 0) {
+			pFunc = PyObject_GetAttrString(pModule, "c_get_rpm");
+		} else if (i == 1) {
+			pFunc = PyObject_GetAttrString(pModule, "c_get_throttle");
+		}
 
 	    if (pFunc && PyCallable_Check(pFunc)) {
 			pValue = PyObject_CallObject(pFunc, NULL);
 
 			if (pValue != NULL) {
-				switch (obdii_sur_coms->return_type) {
+				switch (obdii_sur_coms->ret_type) {
 				case RET_LONG:
 					python_parse_long(pValue);
 					break;
 				case RET_FLOAT:
-					python_parse_float(pValue);
+					python_parse_float(data, pValue, obdii_sur_coms->com_type);
 					break;
 				case RET_STR:
 					python_parse_str(pValue);
@@ -135,9 +140,10 @@ gpointer obdii_data(gpointer user_data)
 				break;
 			}
 		}
+
+		Py_DECREF(pFunc);
 	}
 
-	Py_DECREF(pFunc);
 	Py_DECREF(pModule);
 
 	Py_Finalize();

@@ -18,20 +18,26 @@
 #ifndef OBDII_COMMANDS_H
 #define OBDII_COMMANDS_H
 
-enum ret_type {
+enum command_type {
+	OBDII_RPM,
+	OBDII_THROTTLE
+} command_type;
+
+enum return_type {
 	RET_LONG,
 	RET_FLOAT,
 	RET_STR,
 	RET_UNICODE
-} ret_type;
+} return_type;
 
 typedef struct obdii_commands {
+	enum command_type com_type;
 	char *name;
-	enum ret_type return_type;
+	enum return_type ret_type;
 } obdii_commands;
 
 long python_parse_long(PyObject *pValue);
-float python_parse_float(PyObject *pValue);
+float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_type com_type);
 char *python_parse_unicode(PyObject *pValue);
 char *python_parse_str(PyObject *pValue);
 

@@ -34,12 +34,23 @@ long python_parse_long(PyObject *pValue) {
 	return PyLong_AsLong(pValue);
 }
 
-float python_parse_float(PyObject *pValue) {
+float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_type com_type) {
+	float ret;
+
 	if (PyFloat_Check(pValue)) {
-		fprintf(stderr, "F: %f\n", PyFloat_AsDouble(pValue));
+		ret = PyFloat_AsDouble(pValue);
 	}
 
-	return PyFloat_AsDouble(pValue);
+	switch (com_type) {
+	case OBDII_RPM:
+		/* Update the RPM widget */
+		break;
+	case OBDII_THROTTLE:
+		/* Update the throttle widget */
+		break;
+	}
+
+	return ret;
 }
 
 char *python_parse_unicode(PyObject *pValue) {

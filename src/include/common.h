@@ -61,6 +61,8 @@ typedef struct gtk_user_data
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 struct gps_data_t connect_to_gpsd(cmd_args args);
 
 gpointer drive_line(gpointer user_data);
