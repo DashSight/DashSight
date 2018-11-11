@@ -46,7 +46,8 @@ float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_typ
 		/* Update the RPM widget */
 		break;
 	case OBDII_THROTTLE:
-		/* Update the throttle widget */
+		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->throttle_bar),
+									(int) ret);
 		break;
 	}
 

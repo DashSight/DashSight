@@ -72,6 +72,10 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 12, 0, 1, 1);
 	g_free(markup);
 
+	data->throttle_bar = gtk_progress_bar_new();
+	gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(data->throttle_bar), true);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 14, 1, 1, 1);
+
 	gtk_widget_show_all(data->window);
 
 	while (gtk_events_pending()) {
