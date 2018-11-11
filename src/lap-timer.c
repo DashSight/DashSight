@@ -39,6 +39,7 @@ static void activate(GtkApplication* app,
 		gpointer user_data)
 {
 	gtk_user_data *data = user_data;
+	GtkCssProvider *cssProvider;
 	GdkPixbuf *main_image_pixbuf, *record_button_image_pixbuf;
 	GdkPixbuf *drive_line_button_image_pixbuf;
 	GtkWidget *main_image, *button_box;
@@ -48,6 +49,13 @@ static void activate(GtkApplication* app,
 	data->window = gtk_application_window_new(app);
 	gtk_window_set_title(GTK_WINDOW(data->window), "Lap Timer");
 	gtk_window_fullscreen(GTK_WINDOW(data->window));
+
+	cssProvider = gtk_css_provider_new();
+	gtk_css_provider_load_from_path(cssProvider, "theme.css", NULL);
+	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+									GTK_STYLE_PROVIDER(cssProvider),
+									GTK_STYLE_PROVIDER_PRIORITY_USER);
+
 
 	main_image_pixbuf = gdk_pixbuf_new_from_file("SplashPage.png", NULL);
 	main_image_pixbuf = gdk_pixbuf_scale_simple(main_image_pixbuf,
