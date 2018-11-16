@@ -55,7 +55,9 @@ typedef struct gtk_user_data
 	GtkWidget *drive_file_load, *drive_file_load_button;
 	GtkWidget *timer_display;
 	GtkWidget *throttle_bar;
+	GtkWidget *taco_draw_area;
 	GThread *drive_track_thread, *obdii_thread;
+	int revs;
 	void *loaded_track;
 	bool load_page, drive_track_updated;
 } gtk_user_data;
@@ -64,8 +66,11 @@ typedef struct gtk_user_data
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+#define REV_ANGLE(x) (((x / 7000.0) * M_PI) + ((M_PI / 3.0) * 2.5))
+
 struct gps_data_t connect_to_gpsd(cmd_args args);
 
+gboolean taco_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer user_data);
 gpointer drive_line(gpointer user_data);
 
 bool equal(float a, float b, float epsilon);

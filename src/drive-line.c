@@ -76,6 +76,12 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(data->throttle_bar), true);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 14, 1, 1, 1);
 
+	data->taco_draw_area = gtk_drawing_area_new();
+	gtk_widget_set_size_request(data->taco_draw_area, 250, 250);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 12, 1, 1, 1);
+	g_signal_connect(G_OBJECT(data->taco_draw_area), "draw",
+					G_CALLBACK(taco_draw_callback), data);
+
 	gtk_widget_show_all(data->window);
 
 	while (gtk_events_pending()) {
