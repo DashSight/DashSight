@@ -28,7 +28,7 @@
 
 obdii_commands obdii_sur_coms[] = {
 	{ OBDII_RPM, "RPM", RET_FLOAT },
-	{ OBDII_THROTTLE, "THROTTLE", RET_FLOAT },
+	{ OBDII_THROTTLE, "THROTTLE_POS", RET_FLOAT },
 };
 
 static void drive_file_load_file_set_event(GtkFileChooserButton *widget,

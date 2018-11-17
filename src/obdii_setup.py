@@ -33,7 +33,7 @@ class LapTimerOBD(object):
 		return self.get_data('RPM')
 
 	def get_throttle(self):
-		return self.get_data('THROTTLE')
+		return self.get_data('THROTTLE_POS')
 
 def c_get_throttle():
 	return lap_timer.get_throttle()
