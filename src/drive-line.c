@@ -112,46 +112,45 @@ gpointer obdii_data(gpointer user_data)
 		return NULL;
 	}
 
-	// while (!data->load_page) {
-		// sleep(1);
-	// }
+	while (true) {
+		for (i = 0; i < ARRAY_SIZE(obdii_sur_coms); i++) {
+			/* TODO: Setup args and call this
+			 * pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+			 */
+			if (i == 0) {
+				pFunc = PyObject_GetAttrString(pModule, "c_get_rpm");
+			} else if (i == 1) {
+				pFunc = PyObject_GetAttrString(pModule, "c_get_throttle");
+			}
 
-	for (i = 0; i < ARRAY_SIZE(obdii_sur_coms); i++) {
-		/* TODO: Setup args and call this
-		 * pFunc = PyObject_GetAttrString(pModule, "c_get_data");
-		 */
-		if (i == 0) {
-			pFunc = PyObject_GetAttrString(pModule, "c_get_rpm");
-		} else if (i == 1) {
-			pFunc = PyObject_GetAttrString(pModule, "c_get_throttle");
-		}
+			if (pFunc && PyCallable_Check(pFunc)) {
+				pValue = PyObject_CallObject(pFunc, NULL);
 
-	    if (pFunc && PyCallable_Check(pFunc)) {
-			pValue = PyObject_CallObject(pFunc, NULL);
-
-			if (pValue != NULL) {
-				switch (obdii_sur_coms->ret_type) {
-				case RET_LONG:
-					python_parse_long(pValue);
-					break;
-				case RET_FLOAT:
-					python_parse_float(data, pValue, obdii_sur_coms[i].com_type);
-					break;
-				case RET_STR:
-					python_parse_str(pValue);
-					break;
-				case RET_UNICODE:
-					python_parse_unicode(pValue);
+				if (pValue != NULL) {
+					switch (obdii_sur_coms->ret_type) {
+					case RET_LONG:
+						python_parse_long(pValue);
+						break;
+					case RET_FLOAT:
+						python_parse_float(data, pValue,
+											obdii_sur_coms[i].com_type);
+						break;
+					case RET_STR:
+						python_parse_str(pValue);
+						break;
+					case RET_UNICODE:
+						python_parse_unicode(pValue);
+						break;
+					}
+					Py_DECREF(pValue);
+				} else {
+					PyErr_Print();
 					break;
 				}
-				Py_DECREF(pValue);
-			} else {
-				PyErr_Print();
-				break;
 			}
-		}
 
-		Py_DECREF(pFunc);
+			Py_DECREF(pFunc);
+		}
 	}
 
 	Py_DECREF(pModule);
