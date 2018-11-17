@@ -135,7 +135,7 @@ gpointer obdii_data(gpointer user_data)
 					python_parse_long(pValue);
 					break;
 				case RET_FLOAT:
-					python_parse_float(data, pValue, obdii_sur_coms->com_type);
+					python_parse_float(data, pValue, obdii_sur_coms[i].com_type);
 					break;
 				case RET_STR:
 					python_parse_str(pValue);
