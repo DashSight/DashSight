@@ -151,6 +151,8 @@ gpointer obdii_data(gpointer user_data)
 
 			Py_DECREF(pFunc);
 		}
+
+		sleep(1);
 	}
 
 	Py_DECREF(pModule);
