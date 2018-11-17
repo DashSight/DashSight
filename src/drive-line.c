@@ -64,21 +64,21 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 		osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(data->drive_map), cur_track->start.lat, cur_track->start.lon, MAP_ZOOM_LEVEL);
 		osm_gps_map_track_add(OSM_GPS_MAP(data->drive_map), cur_track->osm_track);
 	}
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 0, 12, 6);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 1, 15, 5);
 
 	data->timer_display = gtk_label_new(NULL);
 	markup = g_markup_printf_escaped(format, start_time);
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 12, 0, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 0, 0, 10, 1);
 	g_free(markup);
 
 	data->throttle_bar = gtk_progress_bar_new();
 	gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(data->throttle_bar), true);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 14, 1, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 15, 0, 5, 1);
 
 	data->taco_draw_area = gtk_drawing_area_new();
-	gtk_widget_set_size_request(data->taco_draw_area, 250, 250);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 12, 1, 1, 1);
+	gtk_widget_set_size_request(data->taco_draw_area, 100, 100);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 10, 0, 5, 2);
 	g_signal_connect(G_OBJECT(data->taco_draw_area), "draw",
 					G_CALLBACK(taco_draw_callback), data);
 

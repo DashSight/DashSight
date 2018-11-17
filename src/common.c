@@ -68,9 +68,9 @@ gboolean taco_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 	gtk_user_data *data = user_data;
 	GtkStyleContext *context;
 	guint width,height;
-	double mid_x = 150;
-	double mid_y = 150;
-	double radius = 100;
+	double mid_x = 70;
+	double mid_y = 70;
+	double radius = 65;
 	gchar *revs;
 	int i;
 
@@ -111,7 +111,8 @@ gboolean taco_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 
 	cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL,
 							CAIRO_FONT_WEIGHT_NORMAL);
-	cairo_arc(cr, mid_x, mid_y, radius / 2, 0, M_PI * (2.0 / 3.0));
+	cairo_set_font_size (cr, 10.0);
+	cairo_arc(cr, mid_x, mid_y, radius / 2, 0, M_PI * (2.2 / 3.0));
 	cairo_show_text(cr, "revs x1000");
 	cairo_stroke(cr);
 
