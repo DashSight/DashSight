@@ -112,6 +112,10 @@ gpointer obdii_data(gpointer user_data)
 		return NULL;
 	}
 
+	while (!data->load_page) {
+		sleep(1);
+	}
+
 	while (true) {
 		for (i = 0; i < ARRAY_SIZE(obdii_sur_coms); i++) {
 			pArgs = PyTuple_New(1);
