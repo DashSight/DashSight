@@ -49,7 +49,7 @@ float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_typ
 		break;
 	case OBDII_THROTTLE:
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->throttle_bar),
-									(int) ret);
+									ret / 100.0);
 		break;
 	}
 
