@@ -98,6 +98,7 @@ gpointer obdii_data(gpointer user_data)
 	gtk_user_data *data = user_data;
 	PyObject *pName, *pModule;
 	PyObject *pFunc, *pValue;
+	PyObject *pArg0, *pArgs;
 	int i;
 
 	Py_Initialize();
@@ -114,17 +115,23 @@ gpointer obdii_data(gpointer user_data)
 
 	while (true) {
 		for (i = 0; i < ARRAY_SIZE(obdii_sur_coms); i++) {
-			/* TODO: Setup args and call this
-			 * pFunc = PyObject_GetAttrString(pModule, "c_get_data");
-			 */
-			if (i == 0) {
-				pFunc = PyObject_GetAttrString(pModule, "c_get_rpm");
-			} else if (i == 1) {
-				pFunc = PyObject_GetAttrString(pModule, "c_get_throttle");
+			pArgs = PyTuple_New(1);
+			pArg0 = PyUnicode_FromString(obdii_sur_coms[i].name);
+
+			if (!pArg0) {
+				Py_DECREF(pArg0);
+				Py_DECREF(pModule);
+				PyErr_Print();
+				fprintf(stderr, "Cannot convert argument\n");
+				return NULL;
 			}
 
+			PyTuple_SetItem(pArgs, 0, pArg0);
+			pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+
 			if (pFunc && PyCallable_Check(pFunc)) {
-				pValue = PyObject_CallObject(pFunc, NULL);
+				pValue = PyObject_CallObject(pFunc, pArgs);
+				Py_DECREF(pArgs);
 
 				if (pValue != NULL) {
 					switch (obdii_sur_coms->ret_type) {

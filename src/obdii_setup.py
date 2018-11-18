@@ -29,17 +29,8 @@ class LapTimerOBD(object):
 
 		return ret
 
-	def get_rpm(self):
-		return self.get_data('RPM')
-
-	def get_throttle(self):
-		return self.get_data('THROTTLE_POS')
-
-def c_get_throttle():
-	return lap_timer.get_throttle()
-
-def c_get_rpm():
-	return lap_timer.get_rpm()
+def c_get_data(com):
+	return lap_timer.get_data(com)
 
 lap_timer = LapTimerOBD()
 
