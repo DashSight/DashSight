@@ -45,7 +45,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												GdkEventButton *event,
 												gpointer user_data)
 {
-	const char *start_time = "0:00:00";
+	const char *start_time = "00:00:00";
 	const char *format = TIMER_FORMAT;
 	char *markup;
 	gtk_user_data *data = user_data;
@@ -241,10 +241,10 @@ gpointer drive_line(gpointer user_data)
 	while (1) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 		diff_time = timeval_subtract(&cur_time, &cur_track->start.time);
-		clock_time = g_strdup_printf("%ld:%ld:%ld",
+		clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
 									diff_time.tv_sec / 60,
-									diff_time.tv_sec,
-									diff_time.tv_nsec / (1000 * 1000));
+									diff_time.tv_sec % 60,
+									diff_time.tv_nsec / (1000 * 1000 * 10));
 		markup = g_markup_printf_escaped(format, clock_time);
 		gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
 		g_free(clock_time);
@@ -264,14 +264,15 @@ gpointer drive_line(gpointer user_data)
 				break;
 			}
 		}
+		usleep(70000);
 	}
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 	diff_time = timeval_subtract(&cur_time, &cur_track->start.time);
-	clock_time = g_strdup_printf("%ld:%ld:%ld",
+	clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
 								diff_time.tv_sec / 60,
-								diff_time.tv_sec,
-								diff_time.tv_nsec / (1000 * 1000));
+								diff_time.tv_sec % 60,
+								diff_time.tv_nsec / (1000 * 1000 * 10));
 	markup = g_markup_printf_escaped(format, clock_time);
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
 	g_free(clock_time);
