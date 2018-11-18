@@ -241,9 +241,10 @@ gpointer drive_line(gpointer user_data)
 	while (1) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 		diff_time = timeval_subtract(&cur_time, &cur_track->start.time);
-		clock_time = g_strdup_printf("%ld:%ld:%ld\r",
-									diff_time.tv_sec, diff_time.tv_nsec / 1000000,
-									(diff_time.tv_nsec / 1000) % 1000);
+		clock_time = g_strdup_printf("%ld:%ld:%ld",
+									diff_time.tv_sec / 60,
+									diff_time.tv_sec,
+									diff_time.tv_nsec / (1000 * 1000));
 		markup = g_markup_printf_escaped(format, clock_time);
 		gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
 		g_free(clock_time);
@@ -267,9 +268,10 @@ gpointer drive_line(gpointer user_data)
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 	diff_time = timeval_subtract(&cur_time, &cur_track->start.time);
-	clock_time = g_strdup_printf("%ld:%ld:%ld\r",
-								diff_time.tv_sec, diff_time.tv_nsec / 1000000,
-								(diff_time.tv_nsec / 1000) % 1000);
+	clock_time = g_strdup_printf("%ld:%ld:%ld",
+								diff_time.tv_sec / 60,
+								diff_time.tv_sec,
+								diff_time.tv_nsec / (1000 * 1000));
 	markup = g_markup_printf_escaped(format, clock_time);
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
 	g_free(clock_time);
