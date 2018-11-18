@@ -73,7 +73,6 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	g_free(markup);
 
 	data->throttle_bar = gtk_progress_bar_new();
-	gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(data->throttle_bar), true);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 15, 0, 5, 1);
 
 	data->taco_draw_area = gtk_drawing_area_new();
