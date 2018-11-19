@@ -112,7 +112,8 @@ gpointer obdii_data(gpointer user_data)
 		return NULL;
 	}
 
-	while (!data->load_page) {
+	/* Don't start updating the page until we have it. */
+	while (data->load_page) {
 		sleep(1);
 	}
 
