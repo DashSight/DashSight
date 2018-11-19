@@ -26,6 +26,11 @@
 #include "common.h"
 #include "obdii_commands.h"
 
+obdii_commands obdii_sur_coms[] = {
+	{ OBDII_RPM, "RPM", RET_FLOAT },
+	{ OBDII_THROTTLE, "THROTTLE_POS", RET_FLOAT },
+};
+
 long python_parse_long(PyObject *pValue) {
 	if (PyLong_Check(pValue)) {
 		fprintf(stderr, "L: %ld\n", PyLong_AsLong(pValue));
@@ -70,4 +75,85 @@ char *python_parse_str(PyObject *pValue) {
 	}
 
 	return PyUnicode_AsUTF8(pValue);
+}
+
+gpointer obdii_data(gpointer user_data)
+{
+	gtk_user_data *data = user_data;
+	PyObject *pName, *pModule;
+	PyObject *pFunc, *pValue;
+	PyObject *pArg0, *pArgs;
+	int i;
+
+	Py_Initialize();
+
+	pName = PyUnicode_DecodeFSDefault("obdii_setup");
+	pModule = PyImport_Import(pName);
+	Py_DECREF(pName);
+
+	if (!pModule) {
+		fprintf(stderr, "Unable to import Python module\n");
+		PyErr_Print();
+		return NULL;
+	}
+
+	/* Don't start updating the page until we have it. */
+	while (data->load_page) {
+		sleep(1);
+	}
+
+	while (true) {
+		for (i = 0; i < ARRAY_SIZE(obdii_sur_coms); i++) {
+			pArgs = PyTuple_New(1);
+			pArg0 = PyUnicode_FromString(obdii_sur_coms[i].name);
+
+			if (!pArg0) {
+				Py_DECREF(pArg0);
+				Py_DECREF(pModule);
+				PyErr_Print();
+				fprintf(stderr, "Cannot convert argument\n");
+				return NULL;
+			}
+
+			PyTuple_SetItem(pArgs, 0, pArg0);
+			pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+
+			if (pFunc && PyCallable_Check(pFunc)) {
+				pValue = PyObject_CallObject(pFunc, pArgs);
+				Py_DECREF(pArgs);
+
+				if (pValue != NULL) {
+					switch (obdii_sur_coms->ret_type) {
+					case RET_LONG:
+						python_parse_long(pValue);
+						break;
+					case RET_FLOAT:
+						python_parse_float(data, pValue,
+											obdii_sur_coms[i].com_type);
+						break;
+					case RET_STR:
+						python_parse_str(pValue);
+						break;
+					case RET_UNICODE:
+						python_parse_unicode(pValue);
+						break;
+					}
+					Py_DECREF(pValue);
+				} else {
+					PyErr_Print();
+					break;
+				}
+			}
+
+			Py_DECREF(pFunc);
+		}
+
+		sleep(1);
+	}
+
+	Py_DECREF(pModule);
+
+	Py_Finalize();
+
+	return NULL;
 }

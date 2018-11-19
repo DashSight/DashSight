@@ -18,6 +18,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdbool.h>
 #include <gtk/gtk.h>
 #include <osm-gps-map.h>
 
