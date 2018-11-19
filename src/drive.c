@@ -66,6 +66,7 @@ gpointer drive_line(gpointer user_data)
 		start_time = &cur_track->start.time;
 	} else {
 		start_time = g_new0(struct timespec, 1);
+		clock_gettime(CLOCK_MONOTONIC_RAW, start_time);
 	}
 
 	/* Poll until we hit the start line */
