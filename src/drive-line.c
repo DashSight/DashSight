@@ -280,8 +280,9 @@ gpointer drive_line(gpointer user_data)
 	g_free(markup);
 
 	fprintf(stderr, "Finished the drive, total time: %ld:%ld:%ld\n",
-			diff_time.tv_sec, diff_time.tv_nsec / 1000000,
-			(diff_time.tv_nsec / 1000) % 1000);
+			diff_time.tv_sec / 60,
+			diff_time.tv_sec % 60,
+			diff_time.tv_nsec / (1000 * 1000 * 10));
 
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
