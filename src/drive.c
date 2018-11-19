@@ -33,6 +33,7 @@ gpointer drive_line(gpointer user_data)
 	struct gps_data_t gps_data;
 	struct timespec cur_time, diff_time;
 	track *cur_track;
+	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret;
 	gchar *clock_time;
@@ -61,8 +62,14 @@ gpointer drive_line(gpointer user_data)
 	/* Update this */
 	map = OSM_GPS_MAP(data->drive_map);
 
+	if (cur_track) {
+		start_time = &cur_track->start.time;
+	} else {
+		start_time = g_new0(struct timespec, 1);
+	}
+
 	/* Poll until we hit the start line */
-	while (1) {
+	while (cur_track) {
 		if (gps_waiting(&gps_data, 500)) {
 			ret = gps_read(&gps_data, NULL, 0);
 
@@ -72,7 +79,7 @@ gpointer drive_line(gpointer user_data)
 			}
 
 			if (!isnan(gps_data.fix.latitude) &&
-			    !isnan(gps_data.fix.longitude)) {
+				!isnan(gps_data.fix.longitude)) {
 				osm_gps_map_gps_add(map,
 									gps_data.fix.latitude,
 									gps_data.fix.longitude,
@@ -82,7 +89,7 @@ gpointer drive_line(gpointer user_data)
 				if (cur_track &&
 					equal(gps_data.fix.latitude, cur_track->start.lat, 0.0005) &&
 					equal(gps_data.fix.longitude, cur_track->start.lon, 0.0005)) {
-					clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->start.time);
+					clock_gettime(CLOCK_MONOTONIC_RAW, start_time);
 					break;
 				}
 			}
@@ -94,7 +101,7 @@ gpointer drive_line(gpointer user_data)
 	/* Poll until we hit the end line and do stuff */
 	while (1) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
-		diff_time = timeval_subtract(&cur_time, &cur_track->start.time);
+		diff_time = timeval_subtract(&cur_time, start_time);
 		clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
 									diff_time.tv_sec / 60,
 									diff_time.tv_sec % 60,
@@ -103,7 +110,7 @@ gpointer drive_line(gpointer user_data)
 		gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
 		g_free(clock_time);
 		g_free(markup);
-		if (gps_waiting(&gps_data, 10)) {
+		if (gps_waiting(&gps_data, 500)) {
 			ret = gps_read(&gps_data, NULL, 0);
 
 			if (ret < 0) {
@@ -111,18 +118,33 @@ gpointer drive_line(gpointer user_data)
 				exit(1);
 			}
 
-			if (equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
-				equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
-				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
-				diff_time = timeval_subtract(&cur_track->end.time, &cur_track->start.time);
-				break;
+			if (!isnan(gps_data.fix.latitude) &&
+				!isnan(gps_data.fix.longitude)) {
+				osm_gps_map_gps_add(map,
+									gps_data.fix.latitude,
+									gps_data.fix.longitude,
+									gps_data.fix.track);
+
+				if (!cur_track) {
+					/* We don't have a map loaded */
+					osm_gps_map_set_center_and_zoom(map,
+								gps_data.fix.latitude,
+								gps_data.fix.longitude,
+								MAP_ZOOM_LEVEL);
+				} else if (cur_track &&
+					equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
+					equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
+					clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
+					diff_time = timeval_subtract(&cur_track->end.time, start_time);
+					break;
+				}
 			}
 		}
 		usleep(70000);
 	}
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
-	diff_time = timeval_subtract(&cur_time, &cur_track->start.time);
+	diff_time = timeval_subtract(&cur_time, start_time);
 	clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
 								diff_time.tv_sec / 60,
 								diff_time.tv_sec % 60,
