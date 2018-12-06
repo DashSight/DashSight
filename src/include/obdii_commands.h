@@ -20,7 +20,12 @@
 
 enum command_type {
 	OBDII_RPM,
-	OBDII_THROTTLE
+	OBDII_THROTTLE,
+	OBDII_ENGINE_LOAD,
+	OBDII_TIMING_ADV,
+	OBDII_MAF,
+	OBDII_COOLANT_TEMP,
+	OBDII_INTAKE_TEMP
 } command_type;
 
 enum return_type {
@@ -36,7 +41,7 @@ typedef struct obdii_commands {
 	enum return_type ret_type;
 } obdii_commands;
 
-long python_parse_long(PyObject *pValue);
+long python_parse_long(gtk_user_data *data, PyObject *pValue, enum command_type com_type);
 float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_type com_type);
 char *python_parse_unicode(PyObject *pValue);
 char *python_parse_str(PyObject *pValue);

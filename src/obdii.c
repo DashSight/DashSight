@@ -27,20 +27,40 @@
 #include "obdii_commands.h"
 
 obdii_commands obdii_sur_coms[] = {
-	{ OBDII_RPM, "RPM", RET_FLOAT },
-	{ OBDII_THROTTLE, "THROTTLE_POS", RET_FLOAT },
+	{ OBDII_RPM,          "RPM",             RET_FLOAT },
+	{ OBDII_THROTTLE,     "THROTTLE_POS",    RET_FLOAT },
+	{ OBDII_ENGINE_LOAD,  "ENGINE_LOAD",     RET_FLOAT },
+	{ OBDII_TIMING_ADV,   "TIMING_ADVANCE",  RET_FLOAT },
+	{ OBDII_MAF,          "MAF",             RET_FLOAT },
+	{ OBDII_COOLANT_TEMP, "COOLANT_TEMP",    RET_LONG },
+	{ OBDII_INTAKE_TEMP,  "INTAKE_TEMP",     RET_LONG },
 };
 
-long python_parse_long(PyObject *pValue) {
+long python_parse_long(gtk_user_data *data,
+						PyObject *pValue,
+						enum command_type com_type) {
+	long ret = 0;
+
 	if (PyLong_Check(pValue)) {
-		fprintf(stderr, "L: %ld\n", PyLong_AsLong(pValue));
+		ret = PyLong_AsLong(pValue);
 	}
 
-	return PyLong_AsLong(pValue);
+	switch (com_type) {
+	case OBDII_COOLANT_TEMP:
+		/* Display the coolant temp */
+		break;
+	case OBDII_INTAKE_TEMP:
+		/* Display air intake temp */
+		break;
+	}
+
+	return ret;
 }
 
-float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_type com_type) {
-	float ret;
+float python_parse_float(gtk_user_data *data,
+						PyObject *pValue,
+						enum command_type com_type) {
+	float ret = 0;
 
 	if (PyFloat_Check(pValue)) {
 		ret = PyFloat_AsDouble(pValue);
@@ -48,13 +68,21 @@ float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_typ
 
 	switch (com_type) {
 	case OBDII_RPM:
-		/* Update the RPM widget */
 		data->revs = ret;
 		gtk_widget_queue_draw(data->taco_draw_area);
 		break;
 	case OBDII_THROTTLE:
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->throttle_bar),
 									ret / 100.0);
+		break;
+	case OBDII_ENGINE_LOAD:
+		/* Display engine load */
+		break;
+	case OBDII_TIMING_ADV:
+		/* Display timing advance info */
+		break;
+	case OBDII_MAF:
+		/* Display the MAF */
 		break;
 	}
 
@@ -125,7 +153,8 @@ gpointer obdii_data(gpointer user_data)
 				if (pValue != NULL) {
 					switch (obdii_sur_coms->ret_type) {
 					case RET_LONG:
-						python_parse_long(pValue);
+						python_parse_long(data, pValue,
+											obdii_sur_coms[i].com_type);
 						break;
 					case RET_FLOAT:
 						python_parse_float(data, pValue,
