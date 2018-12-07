@@ -55,6 +55,7 @@ typedef struct gtk_user_data
 	GtkWidget *drive_grid;
 	GtkWidget *drive_file_load, *drive_file_load_button;
 	GtkWidget *timer_display;
+	GtkWidget *coolant_temp_disp;
 	GtkWidget *throttle_bar;
 	GtkWidget *taco_draw_area;
 	GThread *drive_track_thread, *obdii_thread;
@@ -64,6 +65,8 @@ typedef struct gtk_user_data
 } gtk_user_data;
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
+
+#define COOLANT_FORMAT "<span font_desc=\"25.0\" foreground=\"green\">\%s</span>"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

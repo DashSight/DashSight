@@ -41,6 +41,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												gpointer user_data)
 {
 	const char *start_time = "00:00:00";
+	const char *temp = "0 *C";
 	const char *format = TIMER_FORMAT;
 	char *markup;
 	gtk_user_data *data = user_data;
@@ -75,6 +76,13 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 10, 0, 5, 2);
 	g_signal_connect(G_OBJECT(data->taco_draw_area), "draw",
 					G_CALLBACK(taco_draw_callback), data);
+
+	data->coolant_temp_disp = gtk_label_new(NULL);
+	format = COOLANT_FORMAT;
+	markup = g_markup_printf_escaped(format, temp);
+	gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 15, 1, 5, 1);
+	g_free(markup);
 
 	gtk_widget_show_all(data->window);
 
