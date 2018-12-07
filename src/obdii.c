@@ -175,6 +175,7 @@ gpointer obdii_data(gpointer user_data)
 			}
 
 			Py_DECREF(pFunc);
+			usleep(1000);
 		}
 
 		sleep(1);
