@@ -50,7 +50,7 @@ long python_parse_long(gtk_user_data *data,
 
 	switch (com_type) {
 	case OBDII_COOLANT_TEMP:
-		temp = g_strdup_printf("%l *C", ret);
+		temp = g_strdup_printf("%u *C", ret);
 		markup = g_markup_printf_escaped(format, temp);
 		gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
 		g_free(temp);
