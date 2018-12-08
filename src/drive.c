@@ -41,6 +41,10 @@ gboolean drive_loop(gpointer user_data)
 	char *markup;
 	int ret;
 
+	if (!data || data->finished_drive) {
+		return true;
+	}
+
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 	diff_time = timeval_subtract(&cur_time, start_time);
 	clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
@@ -130,7 +134,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	}
 
 	/* Poll until we hit the start line */
-	while (cur_track) {
+	while (cur_track && !data->finished_drive) {
 		if (gps_waiting(&gps_data, 500)) {
 			ret = gps_read(&gps_data, NULL, 0);
 

@@ -59,6 +59,7 @@ typedef struct gtk_user_data
 	GtkWidget *drive_map;
 	GtkWidget *drive_grid;
 	GtkWidget *drive_file_load, *drive_file_load_button;
+	GtkWidget *return_home;
 	GtkWidget *timer_display;
 	GtkWidget *coolant_temp_disp;
 	GtkWidget *intake_temp_disp;

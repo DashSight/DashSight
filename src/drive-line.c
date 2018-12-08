@@ -36,6 +36,21 @@ static void drive_file_load_file_set_event(GtkFileChooserButton *widget,
 	data->drive_track_updated = true;
 }
 
+gboolean drive_line_return(GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_data)
+{
+	gtk_user_data *data = user_data;
+
+	data->finished_drive = true;
+
+	while (gtk_events_pending()) {
+		gtk_main_iteration();
+	}
+
+	return true;
+}
+
 static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												GdkEventButton *event,
 												gpointer user_data)
@@ -90,6 +105,11 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 16, 1, 1, 1);
 	g_free(markup);
+
+	data->return_home = gtk_button_new_with_label("Return");
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->return_home, 15, 3, 1, 1);
+	g_signal_connect(G_OBJECT(data->return_home), "button-press-event",
+			G_CALLBACK(drive_line_return), user_data);
 
 	gtk_widget_show_all(data->window);
 

@@ -127,6 +127,10 @@ gboolean obdii_loop(gpointer user_data)
 	PyObject *pModule = obdii_data->pModule;
 	static int i = 0;
 
+	if (!data || data->finished_drive) {
+		return true;
+	}
+
 	pArgs = PyTuple_New(1);
 	pArg0 = PyUnicode_FromString(obdii_sur_coms[i].name);
 
