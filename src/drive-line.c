@@ -81,7 +81,14 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	format = COOLANT_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
 	gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 15, 1, 5, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 15, 1, 1, 1);
+	g_free(markup);
+
+	data->intake_temp_disp = gtk_label_new(NULL);
+	format = INTAKE_FORMAT;
+	markup = g_markup_printf_escaped(format, temp);
+	gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 16, 1, 1, 1);
 	g_free(markup);
 
 	gtk_widget_show_all(data->window);

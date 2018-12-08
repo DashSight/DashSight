@@ -40,9 +40,7 @@ long python_parse_long(gtk_user_data *data,
 						PyObject *pValue,
 						enum command_type com_type) {
 	long ret = 0;
-	const char *format = COOLANT_FORMAT;
-	char *temp;
-	char *markup;
+	char *temp, *format, *markup;
 
 	if (PyLong_Check(pValue)) {
 		ret = PyLong_AsLong(pValue);
@@ -50,14 +48,22 @@ long python_parse_long(gtk_user_data *data,
 
 	switch (com_type) {
 	case OBDII_COOLANT_TEMP:
-		temp = g_strdup_printf("%u *C", ret);
+		format = COOLANT_FORMAT;
+		temp = g_strdup_printf("%lu *C", ret);
 		markup = g_markup_printf_escaped(format, temp);
+
 		gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
 		g_free(temp);
 		g_free(markup);
 		break;
 	case OBDII_INTAKE_TEMP:
-		/* Display air intake temp */
+		format = INTAKE_FORMAT;
+		temp = g_strdup_printf("%lu *C", ret);
+		markup = g_markup_printf_escaped(format, temp);
+
+		gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
+		g_free(temp);
+		g_free(markup);
 		break;
 	}
 
