@@ -203,5 +203,8 @@ gpointer prepare_to_drive(gpointer user_data)
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
 
+	/* Add support to return to the home page */
+	exit(0);
+
 	return NULL;
 }
