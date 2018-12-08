@@ -46,6 +46,6 @@ float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_typ
 char *python_parse_unicode(PyObject *pValue);
 char *python_parse_str(PyObject *pValue);
 
-gpointer obdii_data(gpointer user_data);
+gpointer obdii_start_connection(gpointer user_data);
 
 #endif /* OBDII_COMMANDS_H */

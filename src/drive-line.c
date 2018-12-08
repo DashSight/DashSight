@@ -143,7 +143,7 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 											 prepare_to_drive,
 											 user_data);
 	data->obdii_thread = g_thread_new("OBDII Data Thread",
-									  obdii_data,
+									  obdii_start_connection,
 									  user_data);
 
 	return true;

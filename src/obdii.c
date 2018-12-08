@@ -112,13 +112,72 @@ char *python_parse_str(PyObject *pValue) {
 	return PyUnicode_AsUTF8(pValue);
 }
 
-gpointer obdii_data(gpointer user_data)
+gboolean obdii_loop(gpointer user_data)
+{
+	obdii_loop_data *obdii_data = user_data;
+	gtk_user_data *data = obdii_data->data;
+	PyObject *pFunc, *pValue;
+	PyObject *pArg0, *pArgs;
+	PyObject *pModule = obdii_data->pModule;
+	static int i = 0;
+
+	pArgs = PyTuple_New(1);
+	pArg0 = PyUnicode_FromString(obdii_sur_coms[i].name);
+
+	if (!pArg0) {
+		Py_DECREF(pArg0);
+		Py_DECREF(pModule);
+		PyErr_Print();
+		fprintf(stderr, "Cannot convert argument\n");
+		return false;
+	}
+
+	PyTuple_SetItem(pArgs, 0, pArg0);
+	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+
+	if (pFunc && PyCallable_Check(pFunc)) {
+		pValue = PyObject_CallObject(pFunc, pArgs);
+		Py_DECREF(pArgs);
+
+		if (pValue != NULL) {
+			switch (obdii_sur_coms->ret_type) {
+			case RET_LONG:
+				python_parse_long(data, pValue,
+									obdii_sur_coms[i].com_type);
+				break;
+			case RET_FLOAT:
+				python_parse_float(data, pValue,
+									obdii_sur_coms[i].com_type);
+				break;
+			case RET_STR:
+				python_parse_str(pValue);
+				break;
+			case RET_UNICODE:
+				python_parse_unicode(pValue);
+				break;
+			}
+			Py_DECREF(pValue);
+		} else {
+			PyErr_Print();
+			return false;
+		}
+	}
+
+	Py_DECREF(pFunc);
+
+	i++;
+
+	if (i >= ARRAY_SIZE(obdii_sur_coms)) {
+		i = 0;
+	}
+
+	return true;
+}
+
+gpointer obdii_start_connection(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	PyObject *pName, *pModule;
-	PyObject *pFunc, *pValue;
-	PyObject *pArg0, *pArgs;
-	int i;
 
 	Py_Initialize();
 
@@ -137,59 +196,21 @@ gpointer obdii_data(gpointer user_data)
 		sleep(1);
 	}
 
-	while (true) {
-		for (i = 0; i < ARRAY_SIZE(obdii_sur_coms); i++) {
-			pArgs = PyTuple_New(1);
-			pArg0 = PyUnicode_FromString(obdii_sur_coms[i].name);
+	obdii_loop_data *obdii_data = g_new0(obdii_loop_data, 1);;
 
-			if (!pArg0) {
-				Py_DECREF(pArg0);
-				Py_DECREF(pModule);
-				PyErr_Print();
-				fprintf(stderr, "Cannot convert argument\n");
-				return NULL;
-			}
+	obdii_data->data = data;
+	obdii_data->pModule = pModule;
 
-			PyTuple_SetItem(pArgs, 0, pArg0);
-			pFunc = PyObject_GetAttrString(pModule, "c_get_data");
+	g_timeout_add(700, obdii_loop, obdii_data);
 
-			if (pFunc && PyCallable_Check(pFunc)) {
-				pValue = PyObject_CallObject(pFunc, pArgs);
-				Py_DECREF(pArgs);
-
-				if (pValue != NULL) {
-					switch (obdii_sur_coms->ret_type) {
-					case RET_LONG:
-						python_parse_long(data, pValue,
-											obdii_sur_coms[i].com_type);
-						break;
-					case RET_FLOAT:
-						python_parse_float(data, pValue,
-											obdii_sur_coms[i].com_type);
-						break;
-					case RET_STR:
-						python_parse_str(pValue);
-						break;
-					case RET_UNICODE:
-						python_parse_unicode(pValue);
-						break;
-					}
-					Py_DECREF(pValue);
-				} else {
-					PyErr_Print();
-					break;
-				}
-			}
-
-			Py_DECREF(pFunc);
-			usleep(1000);
-		}
-
+	/* Poll until we hit the end line and do stuff */
+	while (!data->finished_drive) {
 		sleep(1);
 	}
 
-	Py_DECREF(pModule);
+	g_free(obdii_data);
 
+	Py_DECREF(pModule);
 	Py_Finalize();
 
 	return NULL;

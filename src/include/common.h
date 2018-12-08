@@ -18,6 +18,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <Python.h>
 #include <stdbool.h>
 #include <gtk/gtk.h>
 #include <gps.h>
@@ -77,6 +78,13 @@ typedef struct drive_loop_data
 	OsmGpsMap *map;
 	track *cur_track;
 } drive_loop_data;
+
+typedef struct obdii_loop_data
+{
+	gtk_user_data *data;
+
+	PyObject *pModule;
+} obdii_loop_data;
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
 
