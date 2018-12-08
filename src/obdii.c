@@ -128,7 +128,9 @@ gboolean obdii_loop(gpointer user_data)
 	static int i = 0;
 
 	if (!data || data->finished_drive) {
-		data->obdii_loop_safe = true;
+		if (data) {
+			data->obdii_loop_safe = true;
+		}
 		return true;
 	}
 
@@ -216,7 +218,7 @@ gpointer obdii_start_connection(gpointer user_data)
 	g_timeout_add(175, obdii_loop, obdii_data);
 
 	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive && !data->obdii_loop_safe) {
+	while (!data->finished_drive || !data->obdii_loop_safe) {
 		sleep(1);
 	}
 

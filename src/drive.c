@@ -42,7 +42,9 @@ gboolean drive_loop(gpointer user_data)
 	int ret;
 
 	if (!data || data->finished_drive) {
-		data->drive_loop_safe = true;
+		if (data) {
+			data->drive_loop_safe = true;
+		}
 		return true;
 	}
 
@@ -176,7 +178,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	g_timeout_add(50, drive_loop, drive_data);
 
 	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive && !data->drive_loop_safe) {
+	while (!data->finished_drive || !data->drive_loop_safe) {
 		sleep(1);
 	}
 
