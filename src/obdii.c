@@ -140,7 +140,7 @@ gboolean obdii_loop(gpointer user_data)
 		Py_DECREF(pArgs);
 
 		if (pValue != NULL) {
-			switch (obdii_sur_coms->ret_type) {
+			switch (obdii_sur_coms[i].ret_type) {
 			case RET_LONG:
 				python_parse_long(data, pValue,
 									obdii_sur_coms[i].com_type);
