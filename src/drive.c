@@ -42,6 +42,7 @@ gboolean drive_loop(gpointer user_data)
 	int ret;
 
 	if (!data || data->finished_drive) {
+		data->drive_loop_safe = true;
 		return true;
 	}
 
@@ -82,6 +83,7 @@ gboolean drive_loop(gpointer user_data)
 				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
 				diff_time = timeval_subtract(&cur_track->end.time, start_time);
 				data->finished_drive = true;
+				data->drive_loop_safe = true;
 				return false;
 			}
 		}
@@ -169,10 +171,12 @@ gpointer prepare_to_drive(gpointer user_data)
 	drive_data->map = map;
 	drive_data->cur_track = cur_track;
 
+	data->drive_loop_safe = false;
+
 	g_timeout_add(50, drive_loop, drive_data);
 
 	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive) {
+	while (!data->finished_drive && !data->drive_loop_safe) {
 		sleep(1);
 	}
 

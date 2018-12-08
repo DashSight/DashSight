@@ -128,6 +128,7 @@ gboolean obdii_loop(gpointer user_data)
 	static int i = 0;
 
 	if (!data || data->finished_drive) {
+		data->obdii_loop_safe = true;
 		return true;
 	}
 
@@ -207,14 +208,15 @@ gpointer obdii_start_connection(gpointer user_data)
 	}
 
 	obdii_loop_data *obdii_data = g_new0(obdii_loop_data, 1);;
-
 	obdii_data->data = data;
 	obdii_data->pModule = pModule;
+
+	data->obdii_loop_safe = false;
 
 	g_timeout_add(175, obdii_loop, obdii_data);
 
 	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive) {
+	while (!data->finished_drive && !data->obdii_loop_safe) {
 		sleep(1);
 	}
 

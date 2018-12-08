@@ -68,7 +68,8 @@ typedef struct gtk_user_data
 	GThread *drive_track_thread, *obdii_thread;
 	int revs;
 	void *loaded_track;
-	bool load_page, drive_track_updated, finished_drive;
+	bool load_page, drive_track_updated;
+	bool finished_drive, drive_loop_safe, obdii_loop_safe;
 } gtk_user_data;
 
 typedef struct drive_loop_data
