@@ -20,7 +20,9 @@
 
 #include <stdbool.h>
 #include <gtk/gtk.h>
+#include <gps.h>
 #include <osm-gps-map.h>
+#include "track.h"
 
 typedef struct cmd_args {
 	enum { NONE, GUI, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
@@ -28,6 +30,8 @@ typedef struct cmd_args {
 	char *port;
 	char *gpx;
 } cmd_args;
+
+typedef struct track track;
 
 typedef struct gtk_user_data
 {
@@ -61,8 +65,18 @@ typedef struct gtk_user_data
 	GThread *drive_track_thread, *obdii_thread;
 	int revs;
 	void *loaded_track;
-	bool load_page, drive_track_updated;
+	bool load_page, drive_track_updated, finished_drive;
 } gtk_user_data;
+
+typedef struct drive_loop_data
+{
+	gtk_user_data *data;
+
+	struct gps_data_t gps_data;
+	struct timespec *start_time;
+	OsmGpsMap *map;
+	track *cur_track;
+} drive_loop_data;
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
 
@@ -75,7 +89,7 @@ typedef struct gtk_user_data
 struct gps_data_t connect_to_gpsd(cmd_args args);
 
 gboolean taco_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer user_data);
-gpointer drive_line(gpointer user_data);
+gpointer prepare_to_drive(gpointer user_data);
 
 bool equal(float a, float b, float epsilon);
 

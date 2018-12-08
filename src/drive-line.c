@@ -137,9 +137,10 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	/* First we need to load a track */
 	data->load_page = true;
 	data->drive_track_updated = false;
+	data->finished_drive = false;
 
 	data->drive_track_thread = g_thread_new("Drive Thread",
-											 drive_line,
+											 prepare_to_drive,
 											 user_data);
 	data->obdii_thread = g_thread_new("OBDII Data Thread",
 									  obdii_data,

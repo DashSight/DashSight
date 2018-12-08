@@ -26,7 +26,67 @@
 #include "common.h"
 #include "obdii_commands.h"
 
-gpointer drive_line(gpointer user_data)
+gboolean drive_loop(gpointer user_data)
+{
+	drive_loop_data *drive_data = user_data;
+	gtk_user_data *data = drive_data->data;
+	struct gps_data_t gps_data = drive_data->gps_data;
+	struct timespec *start_time = drive_data->start_time;
+	OsmGpsMap *map = drive_data->map;
+	track *cur_track = drive_data->cur_track;
+
+	struct timespec cur_time, diff_time;
+	gchar *clock_time;
+	const char *format = TIMER_FORMAT;
+	char *markup;
+	int ret;
+
+	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
+	diff_time = timeval_subtract(&cur_time, start_time);
+	clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
+								diff_time.tv_sec / 60,
+								diff_time.tv_sec % 60,
+								diff_time.tv_nsec / (1000 * 1000 * 10));
+	markup = g_markup_printf_escaped(format, clock_time);
+	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
+	g_free(clock_time);
+	g_free(markup);
+	if (gps_waiting(&gps_data, 500)) {
+		ret = gps_read(&gps_data, NULL, 0);
+
+		if (ret < 0) {
+			fprintf(stderr, "gps_read error: %d\n", ret);
+			exit(1);
+		}
+
+		if (!isnan(gps_data.fix.latitude) &&
+			!isnan(gps_data.fix.longitude)) {
+			osm_gps_map_gps_add(map,
+								gps_data.fix.latitude,
+								gps_data.fix.longitude,
+								gps_data.fix.track);
+
+			if (!cur_track) {
+				/* We don't have a map loaded */
+				osm_gps_map_set_center_and_zoom(map,
+							gps_data.fix.latitude,
+							gps_data.fix.longitude,
+							MAP_ZOOM_LEVEL);
+			} else if (cur_track &&
+				equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
+				equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
+				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
+				diff_time = timeval_subtract(&cur_track->end.time, start_time);
+				data->finished_drive = true;
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+gpointer prepare_to_drive(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	cmd_args args = *data->args;
@@ -86,7 +146,6 @@ gpointer drive_line(gpointer user_data)
 									gps_data.fix.longitude,
 									gps_data.fix.track);
 
-
 				if (cur_track &&
 					equal(gps_data.fix.latitude, cur_track->start.lat, 0.0005) &&
 					equal(gps_data.fix.longitude, cur_track->start.lon, 0.0005)) {
@@ -99,50 +158,21 @@ gpointer drive_line(gpointer user_data)
 
 	fprintf(stderr, "Starting the drive\n");
 
+	drive_loop_data *drive_data = g_new0(drive_loop_data, 1);
+	drive_data->data = data;
+	drive_data->gps_data = gps_data;
+	drive_data->start_time = start_time;
+	drive_data->map = map;
+	drive_data->cur_track = cur_track;
+
+	g_timeout_add(50, drive_loop, drive_data);
+
 	/* Poll until we hit the end line and do stuff */
-	while (1) {
-		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
-		diff_time = timeval_subtract(&cur_time, start_time);
-		clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
-									diff_time.tv_sec / 60,
-									diff_time.tv_sec % 60,
-									diff_time.tv_nsec / (1000 * 1000 * 10));
-		markup = g_markup_printf_escaped(format, clock_time);
-		gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
-		g_free(clock_time);
-		g_free(markup);
-		if (gps_waiting(&gps_data, 500)) {
-			ret = gps_read(&gps_data, NULL, 0);
-
-			if (ret < 0) {
-				fprintf(stderr, "gps_read error: %d\n", ret);
-				exit(1);
-			}
-
-			if (!isnan(gps_data.fix.latitude) &&
-				!isnan(gps_data.fix.longitude)) {
-				osm_gps_map_gps_add(map,
-									gps_data.fix.latitude,
-									gps_data.fix.longitude,
-									gps_data.fix.track);
-
-				if (!cur_track) {
-					/* We don't have a map loaded */
-					osm_gps_map_set_center_and_zoom(map,
-								gps_data.fix.latitude,
-								gps_data.fix.longitude,
-								MAP_ZOOM_LEVEL);
-				} else if (cur_track &&
-					equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
-					equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
-					clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
-					diff_time = timeval_subtract(&cur_track->end.time, start_time);
-					break;
-				}
-			}
-		}
-		usleep(70000);
+	while (!data->finished_drive) {
+		sleep(1);
 	}
+
+	g_free(drive_data);
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 	diff_time = timeval_subtract(&cur_time, start_time);
