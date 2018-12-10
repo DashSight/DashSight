@@ -175,7 +175,7 @@ gpointer prepare_to_drive(gpointer user_data)
 
 	data->drive_loop_safe = false;
 
-	g_timeout_add(50, drive_loop, drive_data);
+	g_timeout_add(10, drive_loop, drive_data);
 
 	/* Poll until we hit the end line and do stuff */
 	while (!data->finished_drive || !data->drive_loop_safe) {
