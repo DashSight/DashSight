@@ -55,6 +55,7 @@ typedef struct gtk_user_data
 
 	/* Drive Track */
 	gchar *drive_track_filepath;
+	GtkWidget *load_drive_container;
 	GtkWidget *drive_container;
 	GtkWidget *drive_map;
 	GtkWidget *drive_grid;
@@ -69,7 +70,7 @@ typedef struct gtk_user_data
 	int revs;
 	void *loaded_track;
 	bool load_page, drive_track_updated;
-	bool finished_drive, drive_loop_safe, obdii_loop_safe;
+	bool finished_drive;
 } gtk_user_data;
 
 typedef struct drive_loop_data

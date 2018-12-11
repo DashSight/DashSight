@@ -44,9 +44,13 @@ gboolean drive_line_return(GtkWidget *widget,
 
 	data->finished_drive = true;
 
-	while (gtk_events_pending()) {
-		gtk_main_iteration();
-	}
+	g_thread_join(data->obdii_thread);
+	g_thread_join(data->drive_track_thread);
+
+	gtk_container_remove(GTK_CONTAINER(data->window), data->drive_container);
+
+	gtk_container_add(GTK_CONTAINER(data->window), data->main_page);
+	gtk_widget_show_all(data->window);
 
 	return true;
 }
@@ -62,7 +66,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
 
-	gtk_container_remove(GTK_CONTAINER(data->window), data->drive_container);
+	gtk_container_remove(GTK_CONTAINER(data->window), data->load_drive_container);
 
 	data->drive_container = gtk_grid_new();
 	gtk_container_add(GTK_CONTAINER(data->window), data->drive_container);
@@ -133,12 +137,12 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	g_object_ref(data->main_page);
 	gtk_container_remove(GTK_CONTAINER(data->window), data->main_page);
 
-	data->drive_container = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+	data->load_drive_container = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 
 	data->drive_map = osm_gps_map_new();
-	gtk_paned_pack1(GTK_PANED(data->drive_container), data->drive_map, true, true);
+	gtk_paned_pack1(GTK_PANED(data->load_drive_container), data->drive_map, true, true);
 
-	gtk_paned_pack2(GTK_PANED(data->drive_container), vbox, false, false);
+	gtk_paned_pack2(GTK_PANED(data->load_drive_container), vbox, false, false);
 
 	data->drive_file_load =
 			gtk_file_chooser_button_new("Load a track...",
@@ -154,7 +158,7 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 
 	gtk_button_box_set_layout(GTK_BUTTON_BOX(vbox), GTK_BUTTONBOX_CENTER);
 
-	gtk_container_add(GTK_CONTAINER(data->window), data->drive_container);
+	gtk_container_add(GTK_CONTAINER(data->window), data->load_drive_container);
 	gtk_widget_show_all(data->window);
 
 	while (gtk_events_pending()) {

@@ -128,10 +128,7 @@ gboolean obdii_loop(gpointer user_data)
 	static int i = 0;
 
 	if (!data || data->finished_drive) {
-		if (data) {
-			data->obdii_loop_safe = true;
-		}
-		return true;
+		return false;
 	}
 
 	pArgs = PyTuple_New(1);
@@ -191,6 +188,7 @@ gpointer obdii_start_connection(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	PyObject *pName, *pModule;
+	int pid;
 
 	Py_Initialize();
 
@@ -205,27 +203,31 @@ gpointer obdii_start_connection(gpointer user_data)
 	}
 
 	/* Don't start updating the page until we have it. */
-	while (data->load_page) {
+	while (data->load_page && !data->finished_drive) {
 		sleep(1);
 	}
+
+	g_object_ref(data->drive_container);
 
 	obdii_loop_data *obdii_data = g_new0(obdii_loop_data, 1);;
 	obdii_data->data = data;
 	obdii_data->pModule = pModule;
 
-	data->obdii_loop_safe = false;
-
-	g_timeout_add(175, obdii_loop, obdii_data);
+	pid = g_timeout_add(175, obdii_loop, obdii_data);
 
 	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive || !data->obdii_loop_safe) {
+	while (!data->finished_drive) {
 		sleep(1);
 	}
+
+	g_source_remove(pid);
 
 	g_free(obdii_data);
 
 	Py_DECREF(pModule);
 	Py_Finalize();
+
+	g_object_unref(data->drive_container);
 
 	return NULL;
 }

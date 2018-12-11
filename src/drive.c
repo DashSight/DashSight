@@ -42,10 +42,7 @@ gboolean drive_loop(gpointer user_data)
 	int ret;
 
 	if (!data || data->finished_drive) {
-		if (data) {
-			data->drive_loop_safe = true;
-		}
-		return true;
+		return false;
 	}
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
@@ -85,7 +82,6 @@ gboolean drive_loop(gpointer user_data)
 				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
 				diff_time = timeval_subtract(&cur_track->end.time, start_time);
 				data->finished_drive = true;
-				data->drive_loop_safe = true;
 				return false;
 			}
 		}
@@ -103,7 +99,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	track *cur_track;
 	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
-	int ret;
+	int ret, pid;
 	gchar *clock_time;
 	const char *format = TIMER_FORMAT;
 	char *markup;
@@ -136,6 +132,8 @@ gpointer prepare_to_drive(gpointer user_data)
 		start_time = g_new0(struct timespec, 1);
 		clock_gettime(CLOCK_MONOTONIC_RAW, start_time);
 	}
+
+	g_object_ref(data->drive_container);
 
 	/* Poll until we hit the start line */
 	while (cur_track && !data->finished_drive) {
@@ -173,14 +171,14 @@ gpointer prepare_to_drive(gpointer user_data)
 	drive_data->map = map;
 	drive_data->cur_track = cur_track;
 
-	data->drive_loop_safe = false;
-
-	g_timeout_add(10, drive_loop, drive_data);
+	pid = g_timeout_add(10, drive_loop, drive_data);
 
 	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive || !data->drive_loop_safe) {
+	while (!data->finished_drive) {
 		sleep(1);
 	}
+
+	g_source_remove(pid);
 
 	g_free(drive_data);
 
@@ -203,8 +201,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
 
-	/* Add support to return to the home page */
-	exit(0);
+	g_object_unref(data->drive_container);
 
 	return NULL;
 }
