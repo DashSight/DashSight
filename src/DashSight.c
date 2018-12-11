@@ -112,8 +112,11 @@ static void activate(GtkApplication* app,
 int main(int argc, char **argv)
 {
 	GtkApplication *app;
+	cmd_args *args = g_new0(cmd_args, 1);
 	gtk_user_data *data = g_new0(gtk_user_data, 1);
 	int status = 0;
+
+	data->args = args;
 
 	app = gtk_application_new("org.alistair23.DashSight", G_APPLICATION_FLAGS_NONE);
 	g_signal_connect(app, "activate", G_CALLBACK (activate), (gpointer) data);
