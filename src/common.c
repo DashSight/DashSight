@@ -23,7 +23,6 @@
 #include <gtk/gtk.h>
 #include "common.h"
 #include "track.h"
-#include "arg-parser.h"
 
 bool equal(float a, float b, float epsilon)
 {
