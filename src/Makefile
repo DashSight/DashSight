@@ -24,14 +24,14 @@ PYTHON_CFLAGS =  $(shell python3-config --includes)
 PYTHON_LFALGS =  $(shell python3-config --libs)
 
 .PHONY: all
-all: lap-timer
+all: DashSight
 
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c)) $(patsubst %.c, %.o, $(wildcard ./*/*.c))
 HEADERS = $(wildcard include/*.h)
 
-.PRECIOUS: lap-timer $(OBJECTS)
+.PRECIOUS: DashSight $(OBJECTS)
 
-lap-timer: $(OBJECTS)
+DashSight: $(OBJECTS)
 	$(CC) $(GTK_CFLAGS) $(PYTHON_CFLAGS) $(OBJECTS) -Wall $(LFLAGS) -o $@ $(GTK_LFLAGS) $(PYTHON_LFALGS)
 
 %.o: %.c $(HEADERS)
@@ -42,3 +42,4 @@ clean:
 	@rm -f *.o
 	@rm -f */*.o
 	@rm -f lap-timer
+	@rm -f DashSight
