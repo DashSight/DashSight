@@ -24,7 +24,6 @@
 #include <osm-gps-map.h>
 #include "common.h"
 #include "track.h"
-#include "arg-parser.h"
 
 gboolean close_button_press_event(GtkWidget *widget,
 								  GdkEventButton *event,
@@ -113,37 +112,13 @@ static void activate(GtkApplication* app,
 int main(int argc, char **argv)
 {
 	GtkApplication *app;
-	cmd_args *args = g_new0(cmd_args, 1);
 	gtk_user_data *data = g_new0(gtk_user_data, 1);
 	int status = 0;
 
-	args->mode = NONE;
-	args->server = NULL;
-	args->port = NULL;
-	args->gpx = NULL;
-
-	argp_parse(&argp, argc, argv, 0, 0, args);
-
-	if (args->mode == NONE) {
-		fprintf(stderr, "You need to specify a mode\n");
-		exit(1);
-	}
-
-	/* Do more argument error checking */
-
-	data->args = args;
-
-	if (args->mode == GUI) {
-		app = gtk_application_new("org.alistair23.lap-timer", G_APPLICATION_FLAGS_NONE);
-		g_signal_connect(app, "activate", G_CALLBACK (activate), (gpointer) data);
-		/* It's probably best to just use Glib for arg parsing */
-		status = g_application_run(G_APPLICATION(app), 1, argv);
-		g_object_unref(app);
-	} else if (args->mode == RECORD_TRACK) {
-		record_track(data);
-	} else if (args->mode == SINGLE_DRIVE) {
-		prepare_to_drive(data);
-	}
+	app = gtk_application_new("org.alistair23.DashSight", G_APPLICATION_FLAGS_NONE);
+	g_signal_connect(app, "activate", G_CALLBACK (activate), (gpointer) data);
+	status = g_application_run(G_APPLICATION(app), argc, argv);
+	g_object_unref(app);
 
 	return status;
 }
