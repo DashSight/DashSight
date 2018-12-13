@@ -42,7 +42,10 @@ gboolean drive_line_return(GtkWidget *widget,
 {
 	gtk_user_data *data = user_data;
 
+	g_mutex_lock(&data->data_mutex);
+	g_cond_signal(&data->finished_drive_cond);
 	data->finished_drive = true;
+	g_mutex_unlock(&data->data_mutex);
 
 	g_thread_join(data->obdii_thread);
 	g_thread_join(data->drive_track_thread);

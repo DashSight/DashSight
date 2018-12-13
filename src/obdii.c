@@ -213,12 +213,15 @@ gpointer obdii_start_connection(gpointer user_data)
 	obdii_data->data = data;
 	obdii_data->pModule = pModule;
 
+
 	pid = g_timeout_add(175, obdii_loop, obdii_data);
 
 	/* Poll until we hit the end line and do stuff */
 	while (!data->finished_drive) {
-		sleep(1);
+		g_cond_wait(&data->finished_drive_cond, &data->data_mutex);
 	}
+
+	g_mutex_unlock(&data->data_mutex);
 
 	g_source_remove(pid);
 

@@ -70,7 +70,11 @@ typedef struct gtk_user_data
 	int revs;
 	void *loaded_track;
 	bool load_page, drive_track_updated;
+
+	GCond finished_drive_cond;
 	bool finished_drive;
+
+	GMutex data_mutex;
 } gtk_user_data;
 
 typedef struct drive_loop_data

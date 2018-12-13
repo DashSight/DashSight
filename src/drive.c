@@ -81,7 +81,11 @@ gboolean drive_loop(gpointer user_data)
 				equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
 				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
 				diff_time = timeval_subtract(&cur_track->end.time, start_time);
+
+				g_mutex_lock(&data->data_mutex);
+				g_cond_signal(&data->finished_drive_cond);
 				data->finished_drive = true;
+				g_mutex_unlock(&data->data_mutex);
 				return false;
 			}
 		}
@@ -175,8 +179,10 @@ gpointer prepare_to_drive(gpointer user_data)
 
 	/* Poll until we hit the end line and do stuff */
 	while (!data->finished_drive) {
-		sleep(1);
+		g_cond_wait(&data->finished_drive_cond, &data->data_mutex);
 	}
+
+	g_mutex_unlock(&data->data_mutex);
 
 	g_source_remove(pid);
 
