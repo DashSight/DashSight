@@ -221,11 +221,12 @@ gpointer obdii_start_connection(gpointer user_data)
 	obdii_data->data = data;
 	obdii_data->pModule = pModule;
 
+	data->obdii_loop = g_main_loop_new(worker_context, false);
+
 	source = g_timeout_source_new(175);
 	g_source_set_callback(source, obdii_loop, obdii_data, NULL);
-	pid = g_source_attach(source, g_main_context_get_thread_default());
+	pid = g_source_attach(source, worker_context);
 
-	data->obdii_loop = g_main_loop_new(worker_context, false);
 	g_main_loop_run(data->obdii_loop);
 	g_main_loop_unref(data->obdii_loop);
 
