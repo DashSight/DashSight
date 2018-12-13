@@ -180,15 +180,15 @@ gpointer prepare_to_drive(gpointer user_data)
 	g_source_set_callback(source, drive_loop, drive_data, NULL);
 	pid = g_source_attach(source, g_main_context_get_thread_default());
 
+	g_mutex_lock(&data->data_mutex);
+
 	/* Poll until we hit the end line and do stuff */
 	while (!data->finished_drive) {
 		g_cond_wait(&data->finished_drive_cond, &data->data_mutex);
 	}
 
 	g_mutex_unlock(&data->data_mutex);
-
 	g_source_remove(pid);
-
 	g_free(drive_data);
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
