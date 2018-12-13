@@ -57,6 +57,7 @@ typedef struct gtk_user_data
 	gchar *drive_track_filepath;
 	GtkWidget *load_drive_container;
 	GtkWidget *drive_container;
+	GMainLoop *obdii_loop;
 	GtkWidget *drive_map;
 	GtkWidget *drive_grid;
 	GtkWidget *drive_file_load, *drive_file_load_button;

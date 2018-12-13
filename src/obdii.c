@@ -128,6 +128,7 @@ gboolean obdii_loop(gpointer user_data)
 	static int i = 0;
 
 	if (!data || data->finished_drive) {
+		g_main_loop_quit(data->obdii_loop);
 		return false;
 	}
 
@@ -139,6 +140,7 @@ gboolean obdii_loop(gpointer user_data)
 		Py_DECREF(pModule);
 		PyErr_Print();
 		fprintf(stderr, "Cannot convert argument\n");
+		g_main_loop_quit(data->obdii_loop);
 		return false;
 	}
 
@@ -169,6 +171,7 @@ gboolean obdii_loop(gpointer user_data)
 			Py_DECREF(pValue);
 		} else {
 			PyErr_Print();
+			g_main_loop_quit(data->obdii_loop);
 			return false;
 		}
 	}
@@ -188,8 +191,12 @@ gpointer obdii_start_connection(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	PyObject *pName, *pModule;
+	GMainContext *worker_context;
 	GSource *source;
 	int pid;
+
+	worker_context = g_main_context_new();
+	g_main_context_push_thread_default(worker_context);
 
 	Py_Initialize();
 
@@ -218,21 +225,20 @@ gpointer obdii_start_connection(gpointer user_data)
 	g_source_set_callback(source, obdii_loop, obdii_data, NULL);
 	pid = g_source_attach(source, g_main_context_get_thread_default());
 
-	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive) {
-		g_cond_wait(&data->finished_drive_cond, &data->data_mutex);
-	}
-
-	g_mutex_unlock(&data->data_mutex);
+	data->obdii_loop = g_main_loop_new(worker_context, false);
+	g_main_loop_run(data->obdii_loop);
+	g_main_loop_unref(data->obdii_loop);
 
 	g_source_remove(pid);
-
 	g_free(obdii_data);
 
 	Py_DECREF(pModule);
 	Py_Finalize();
 
 	g_object_unref(data->drive_container);
+
+	g_main_context_pop_thread_default(worker_context);
+	g_main_context_unref(worker_context);
 
 	return NULL;
 }
