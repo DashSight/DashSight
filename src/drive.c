@@ -42,6 +42,7 @@ gboolean drive_loop(gpointer user_data)
 	int ret;
 
 	if (!data || data->finished_drive) {
+		g_main_loop_quit(data->drive_loop);
 		return false;
 	}
 
@@ -82,10 +83,8 @@ gboolean drive_loop(gpointer user_data)
 				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
 				diff_time = timeval_subtract(&cur_track->end.time, start_time);
 
-				g_mutex_lock(&data->data_mutex);
-				g_cond_signal(&data->finished_drive_cond);
+				g_main_loop_quit(data->drive_loop);
 				data->finished_drive = true;
-				g_mutex_unlock(&data->data_mutex);
 				return false;
 			}
 		}
@@ -104,10 +103,14 @@ gpointer prepare_to_drive(gpointer user_data)
 	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret, pid;
+	GMainContext *worker_context;
 	GSource *source;
 	gchar *clock_time;
 	const char *format = TIMER_FORMAT;
 	char *markup;
+
+	worker_context = g_main_context_new();
+	g_main_context_push_thread_default(worker_context);
 
 	gps_data = connect_to_gpsd(args);
 	gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
@@ -180,14 +183,10 @@ gpointer prepare_to_drive(gpointer user_data)
 	g_source_set_callback(source, drive_loop, drive_data, NULL);
 	pid = g_source_attach(source, g_main_context_get_thread_default());
 
-	g_mutex_lock(&data->data_mutex);
+	data->drive_loop = g_main_loop_new(worker_context, false);
+	g_main_loop_run(data->drive_loop);
+	g_main_loop_unref(data->drive_loop);
 
-	/* Poll until we hit the end line and do stuff */
-	while (!data->finished_drive) {
-		g_cond_wait(&data->finished_drive_cond, &data->data_mutex);
-	}
-
-	g_mutex_unlock(&data->data_mutex);
 	g_source_remove(pid);
 	g_free(drive_data);
 
@@ -211,6 +210,9 @@ gpointer prepare_to_drive(gpointer user_data)
 	gps_close(&gps_data);
 
 	g_object_unref(data->drive_container);
+
+	g_main_context_pop_thread_default(worker_context);
+	g_main_context_unref(worker_context);
 
 	return NULL;
 }
