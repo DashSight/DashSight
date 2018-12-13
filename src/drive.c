@@ -104,6 +104,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret, pid;
+	GSource *source;
 	gchar *clock_time;
 	const char *format = TIMER_FORMAT;
 	char *markup;
@@ -175,7 +176,9 @@ gpointer prepare_to_drive(gpointer user_data)
 	drive_data->map = map;
 	drive_data->cur_track = cur_track;
 
-	pid = g_timeout_add(10, drive_loop, drive_data);
+	source = g_timeout_source_new(10);
+	g_source_set_callback(source, drive_loop, drive_data, NULL);
+	pid = g_source_attach(source, g_main_context_get_thread_default());
 
 	/* Poll until we hit the end line and do stuff */
 	while (!data->finished_drive) {

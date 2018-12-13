@@ -188,6 +188,7 @@ gpointer obdii_start_connection(gpointer user_data)
 {
 	gtk_user_data *data = user_data;
 	PyObject *pName, *pModule;
+	GSource *source;
 	int pid;
 
 	Py_Initialize();
@@ -213,8 +214,9 @@ gpointer obdii_start_connection(gpointer user_data)
 	obdii_data->data = data;
 	obdii_data->pModule = pModule;
 
-
-	pid = g_timeout_add(175, obdii_loop, obdii_data);
+	source = g_timeout_source_new(175);
+	g_source_set_callback(source, obdii_loop, obdii_data, NULL);
+	pid = g_source_attach(source, g_main_context_get_thread_default());
 
 	/* Poll until we hit the end line and do stuff */
 	while (!data->finished_drive) {
