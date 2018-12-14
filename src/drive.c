@@ -116,6 +116,9 @@ gpointer prepare_to_drive(gpointer user_data)
 		if (data->drive_track_filepath && data->drive_track_updated) {
 			osm_gps_map_track_remove_all(map);
 
+				gtk_button_set_label(GTK_BUTTON(data->drive_file_download_button),
+						"Download this map");
+
 			cur_track = load_track(data->drive_track_filepath, false);
 			if (cur_track->osm_track) {
 				data->loaded_track = cur_track;

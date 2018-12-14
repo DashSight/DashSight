@@ -60,6 +60,7 @@ typedef struct gtk_user_data
 	GMainLoop *obdii_loop;
 	GtkWidget *drive_map;
 	GtkWidget *drive_grid;
+	GtkWidget *drive_file_download_button;
 	GtkWidget *drive_file_load, *drive_file_load_button;
 	GtkWidget *return_home;
 	GtkWidget *timer_display;

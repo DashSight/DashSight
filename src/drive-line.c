@@ -58,6 +58,36 @@ gboolean drive_line_return(GtkWidget *widget,
 	return true;
 }
 
+static gboolean drive_file_download_file_press_event(GtkWidget *widget,
+												GdkEventButton *event,
+												gpointer user_data)
+{
+	gtk_user_data *data = user_data;
+	track *cur_track = data->loaded_track;
+	GSList *list;
+	OsmGpsMapPoint *first_point, *last_point;
+
+	if (!cur_track) {
+		return true;
+	}
+
+	list = osm_gps_map_track_get_points(cur_track->osm_track);
+
+	first_point = g_slist_nth_data(list, 0);
+	last_point = g_slist_nth_data(list, g_slist_length(list));
+
+	gtk_button_set_label(GTK_BUTTON(data->drive_file_download_button),
+						"Downloading");
+
+	osm_gps_map_download_maps(OSM_GPS_MAP(data->drive_map),
+							first_point,
+							last_point,
+							MAP_ZOOM_LEVEL + 3,
+							MAP_ZOOM_LEVEL - 3);
+
+	return true;
+}
+
 static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												GdkEventButton *event,
 												gpointer user_data)
@@ -153,6 +183,11 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	gtk_box_pack_start(GTK_BOX(vbox), data->drive_file_load, false, false, 10);
 	g_signal_connect(G_OBJECT(data->drive_file_load), "file-set",
 			G_CALLBACK(drive_file_load_file_set_event), user_data);
+
+	data->drive_file_download_button = gtk_button_new_with_label("Download this map");
+	gtk_box_pack_start(GTK_BOX(vbox), data->drive_file_download_button, false, false, 10);
+	g_signal_connect(G_OBJECT(data->drive_file_download_button), "button-press-event",
+			G_CALLBACK(drive_file_download_file_press_event), user_data);
 
 	data->drive_file_load_button = gtk_button_new_with_label("Load this file");
 	gtk_box_pack_start(GTK_BOX(vbox), data->drive_file_load_button, false, false, 10);
