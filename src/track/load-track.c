@@ -75,7 +75,7 @@ track *load_track(char *file, bool loop)
 
 			tmp = strtok(NULL, " ");
 		}
-		first_run = true;
+		first_run = false;
 
 		line = fgets(line, 256, fd);
 	}
