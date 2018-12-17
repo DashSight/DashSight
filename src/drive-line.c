@@ -123,6 +123,9 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	data->throttle_bar = gtk_progress_bar_new();
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 15, 0, 5, 1);
 
+	data->engine_load_bar = gtk_progress_bar_new();
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 15, 1, 5, 1);
+
 	data->taco_draw_area = gtk_drawing_area_new();
 	gtk_widget_set_size_request(data->taco_draw_area, 100, 100);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 10, 0, 5, 2);
@@ -133,14 +136,14 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	format = COOLANT_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
 	gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 15, 1, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 15, 2, 1, 1);
 	g_free(markup);
 
 	data->intake_temp_disp = gtk_label_new(NULL);
 	format = INTAKE_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
 	gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 16, 1, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 16, 2, 1, 1);
 	g_free(markup);
 
 	data->return_home = gtk_button_new_with_label("Return");

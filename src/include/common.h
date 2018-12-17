@@ -66,7 +66,7 @@ typedef struct gtk_user_data
 	GtkWidget *timer_display;
 	GtkWidget *coolant_temp_disp;
 	GtkWidget *intake_temp_disp;
-	GtkWidget *throttle_bar;
+	GtkWidget *engine_load_bar, *throttle_bar;
 	GtkWidget *taco_draw_area;
 	GThread *drive_track_thread, *obdii_thread;
 	int revs;

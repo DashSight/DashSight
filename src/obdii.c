@@ -89,7 +89,8 @@ float python_parse_float(gtk_user_data *data,
 									ret / 100.0);
 		break;
 	case OBDII_ENGINE_LOAD:
-		/* Display engine load */
+		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->engine_load_bar),
+									ret / 100.0);
 		break;
 	case OBDII_TIMING_ADV:
 		/* Display timing advance info */
