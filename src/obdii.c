@@ -150,7 +150,6 @@ gboolean obdii_loop(gpointer user_data)
 
 	if (pFunc && PyCallable_Check(pFunc)) {
 		pValue = PyObject_CallObject(pFunc, pArgs);
-		Py_DECREF(pArgs);
 
 		if (pValue != NULL) {
 			switch (obdii_sur_coms[i].ret_type) {
@@ -177,6 +176,8 @@ gboolean obdii_loop(gpointer user_data)
 		}
 	}
 
+	Py_DECREF(pArg0);
+	Py_DECREF(pArgs);
 	Py_DECREF(pFunc);
 
 	i++;
