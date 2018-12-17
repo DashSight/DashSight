@@ -104,31 +104,31 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	data->drive_container = gtk_grid_new();
 	gtk_container_add(GTK_CONTAINER(data->window), data->drive_container);
 
-	gtk_grid_set_row_spacing(GTK_GRID(data->drive_container), 100);
-	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 40);
+	gtk_grid_set_row_spacing(GTK_GRID(data->drive_container), 10);
+	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 20);
 
 	data->drive_map = osm_gps_map_new();
 	if (cur_track) {
 		osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(data->drive_map), cur_track->start.lat, cur_track->start.lon, MAP_ZOOM_LEVEL);
 		osm_gps_map_track_add(OSM_GPS_MAP(data->drive_map), cur_track->osm_track);
 	}
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 1, 15, 5);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 6, 19, 27);
 
 	data->timer_display = gtk_label_new(NULL);
 	markup = g_markup_printf_escaped(format, start_time);
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 0, 0, 10, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 0, 1, 10, 3);
 	g_free(markup);
 
 	data->throttle_bar = gtk_progress_bar_new();
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 15, 0, 5, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 20, 1, 3, 1);
 
 	data->engine_load_bar = gtk_progress_bar_new();
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 15, 1, 5, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 20, 3, 3, 1);
 
 	data->taco_draw_area = gtk_drawing_area_new();
 	gtk_widget_set_size_request(data->taco_draw_area, 100, 100);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 10, 0, 5, 2);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 10, 0, 9, 5);
 	g_signal_connect(G_OBJECT(data->taco_draw_area), "draw",
 					G_CALLBACK(taco_draw_callback), data);
 
@@ -136,18 +136,18 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	format = COOLANT_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
 	gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 15, 2, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 20, 4, 1, 1);
 	g_free(markup);
 
 	data->intake_temp_disp = gtk_label_new(NULL);
 	format = INTAKE_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
 	gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 16, 2, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 21, 4, 1, 1);
 	g_free(markup);
 
 	data->return_home = gtk_button_new_with_label("Return");
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->return_home, 15, 3, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->return_home, 20, 7, 1, 1);
 	g_signal_connect(G_OBJECT(data->return_home), "button-press-event",
 			G_CALLBACK(drive_line_return), user_data);
 
