@@ -124,7 +124,7 @@ gboolean obdii_loop(gpointer user_data)
 	obdii_loop_data *obdii_data = user_data;
 	gtk_user_data *data = obdii_data->data;
 	PyObject *pFunc, *pValue;
-	PyObject *pArg0, *pArgs;
+	PyObject *pArgs;
 	PyObject *pModule = obdii_data->pModule;
 	static int i = 0;
 
@@ -133,11 +133,10 @@ gboolean obdii_loop(gpointer user_data)
 		return false;
 	}
 
-	pArgs = PyTuple_New(1);
-	pArg0 = PyUnicode_FromString(obdii_sur_coms[i].name);
+	pArgs = Py_BuildValue("s", obdii_sur_coms[i].name);
 
-	if (!pArg0) {
-		Py_DECREF(pArg0);
+	if (!pArgs) {
+		Py_DECREF(pArgs);
 		Py_DECREF(pModule);
 		PyErr_Print();
 		fprintf(stderr, "Cannot convert argument\n");
@@ -145,7 +144,6 @@ gboolean obdii_loop(gpointer user_data)
 		return false;
 	}
 
-	PyTuple_SetItem(pArgs, 0, pArg0);
 	pFunc = PyObject_GetAttrString(pModule, "c_get_data");
 
 	if (pFunc && PyCallable_Check(pFunc)) {
@@ -176,7 +174,6 @@ gboolean obdii_loop(gpointer user_data)
 		}
 	}
 
-	Py_DECREF(pArg0);
 	Py_DECREF(pArgs);
 	Py_DECREF(pFunc);
 
