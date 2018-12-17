@@ -96,6 +96,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	const char *temp = "0 *C";
 	const char *format = TIMER_FORMAT;
 	char *markup;
+	GtkWidget *tmp;
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
 
@@ -105,7 +106,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_container_add(GTK_CONTAINER(data->window), data->drive_container);
 
 	gtk_grid_set_row_spacing(GTK_GRID(data->drive_container), 10);
-	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 20);
+	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 19);
 
 	data->drive_map = osm_gps_map_new();
 	if (cur_track) {
@@ -120,11 +121,17 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 0, 1, 10, 3);
 	g_free(markup);
 
+	tmp = gtk_label_new(NULL);
+	gtk_label_set_text(GTK_LABEL(tmp), "Throttle: ");
 	data->throttle_bar = gtk_progress_bar_new();
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 20, 1, 3, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 20, 1, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 21, 1, 3, 1);
 
+	tmp = gtk_label_new(NULL);
+	gtk_label_set_text(GTK_LABEL(tmp), "Load: ");
 	data->engine_load_bar = gtk_progress_bar_new();
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 20, 3, 3, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 20, 3, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 21, 3, 3, 1);
 
 	data->taco_draw_area = gtk_drawing_area_new();
 	gtk_widget_set_size_request(data->taco_draw_area, 100, 100);
