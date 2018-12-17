@@ -139,18 +139,24 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	g_signal_connect(G_OBJECT(data->taco_draw_area), "draw",
 					G_CALLBACK(taco_draw_callback), data);
 
+	tmp = gtk_label_new(NULL);
+	gtk_label_set_text(GTK_LABEL(tmp), "Coolant: ");
 	data->coolant_temp_disp = gtk_label_new(NULL);
 	format = COOLANT_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
 	gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 20, 4, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 20, 5, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 21, 5, 1, 1);
 	g_free(markup);
 
+	tmp = gtk_label_new(NULL);
+	gtk_label_set_text(GTK_LABEL(tmp), "Intake: ");
 	data->intake_temp_disp = gtk_label_new(NULL);
 	format = INTAKE_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
 	gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 21, 4, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 22, 5, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 23, 5, 1, 1);
 	g_free(markup);
 
 	data->return_home = gtk_button_new_with_label("Return");
