@@ -133,7 +133,7 @@ gboolean obdii_loop(gpointer user_data)
 		return false;
 	}
 
-	pArgs = Py_BuildValue("s", obdii_sur_coms[i].name);
+	pArgs = Py_BuildValue("(s)", obdii_sur_coms[i].name);
 
 	if (!pArgs) {
 		Py_DECREF(pArgs);
