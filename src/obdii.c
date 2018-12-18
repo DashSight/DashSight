@@ -52,7 +52,9 @@ long python_parse_long(gtk_user_data *data,
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
+		g_mutex_lock(&(data->draw_update));
 		gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
+		g_mutex_unlock(&(data->draw_update));
 		g_free(temp);
 		g_free(markup);
 		break;
@@ -61,7 +63,9 @@ long python_parse_long(gtk_user_data *data,
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
+		g_mutex_lock(&(data->draw_update));
 		gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
+		g_mutex_unlock(&(data->draw_update));
 		g_free(temp);
 		g_free(markup);
 		break;
@@ -82,15 +86,21 @@ float python_parse_float(gtk_user_data *data,
 	switch (com_type) {
 	case OBDII_RPM:
 		data->revs = ret;
+		g_mutex_lock(&(data->draw_update));
 		gtk_widget_queue_draw(data->taco_draw_area);
+		g_mutex_unlock(&(data->draw_update));
 		break;
 	case OBDII_THROTTLE:
+		g_mutex_lock(&(data->draw_update));
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->throttle_bar),
 									ret / 100.0);
+		g_mutex_unlock(&(data->draw_update));
 		break;
 	case OBDII_ENGINE_LOAD:
+		g_mutex_lock(&(data->draw_update));
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->engine_load_bar),
 									ret / 100.0);
+		g_mutex_unlock(&(data->draw_update));
 		break;
 	case OBDII_TIMING_ADV:
 		/* Display timing advance info */

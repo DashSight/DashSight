@@ -50,6 +50,8 @@ gboolean drive_line_return(GtkWidget *widget,
 	g_thread_join(data->obdii_thread);
 	g_thread_join(data->drive_track_thread);
 
+	g_mutex_clear(&(data->draw_update));
+
 	gtk_container_remove(GTK_CONTAINER(data->window), data->drive_container);
 
 	gtk_container_add(GTK_CONTAINER(data->window), data->main_page);
@@ -99,6 +101,9 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	GtkWidget *tmp;
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
+
+	/* Lock before changing display */
+	g_mutex_lock(&(data->draw_update));
 
 	gtk_container_remove(GTK_CONTAINER(data->window), data->load_drive_container);
 
@@ -166,6 +171,8 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 
 	gtk_widget_show_all(data->window);
 
+	g_mutex_unlock(&(data->draw_update));
+
 	while (gtk_events_pending()) {
 		gtk_main_iteration();
 	}
@@ -223,6 +230,8 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	data->load_page = true;
 	data->drive_track_updated = false;
 	data->finished_drive = false;
+
+	g_mutex_init(&(data->draw_update));
 
 	data->drive_track_thread = g_thread_new("Drive Thread",
 											 prepare_to_drive,

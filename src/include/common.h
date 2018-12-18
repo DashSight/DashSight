@@ -77,6 +77,7 @@ typedef struct gtk_user_data
 	bool finished_drive;
 
 	GMutex data_mutex;
+	GMutex draw_update;
 } gtk_user_data;
 
 typedef struct drive_loop_data

@@ -52,7 +52,9 @@ gboolean drive_loop(gpointer user_data)
 								diff_time.tv_sec % 60,
 								diff_time.tv_nsec / (1000 * 1000 * 10));
 	markup = g_markup_printf_escaped(format, clock_time);
+	g_mutex_lock(&(data->draw_update));
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
+	g_mutex_unlock(&(data->draw_update));
 	g_free(clock_time);
 	g_free(markup);
 	if (gps_waiting(&gps_data, 500)) {
@@ -201,7 +203,9 @@ gpointer prepare_to_drive(gpointer user_data)
 								diff_time.tv_sec % 60,
 								diff_time.tv_nsec / (1000 * 1000 * 10));
 	markup = g_markup_printf_escaped(format, clock_time);
+	g_mutex_lock(&(data->draw_update));
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
+	g_mutex_unlock(&(data->draw_update));
 	g_free(clock_time);
 	g_free(markup);
 
