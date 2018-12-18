@@ -26,20 +26,15 @@
 #include "common.h"
 #include "obdii_commands.h"
 
-gboolean drive_loop(gpointer user_data)
+gboolean time_drive_loop(gpointer user_data)
 {
 	drive_loop_data *drive_data = user_data;
 	gtk_user_data *data = drive_data->data;
-	struct gps_data_t gps_data = drive_data->gps_data;
 	struct timespec *start_time = drive_data->start_time;
-	OsmGpsMap *map = drive_data->map;
-	track *cur_track = drive_data->cur_track;
-
 	struct timespec cur_time, diff_time;
 	gchar *clock_time;
 	const char *format = TIMER_FORMAT;
 	char *markup;
-	int ret;
 
 	if (!data || data->finished_drive) {
 		return false;
@@ -57,6 +52,23 @@ gboolean drive_loop(gpointer user_data)
 	g_mutex_unlock(&(data->draw_update));
 	g_free(clock_time);
 	g_free(markup);
+
+	return true;
+}
+
+gboolean map_drive_loop(gpointer user_data)
+{
+	drive_loop_data *drive_data = user_data;
+	gtk_user_data *data = drive_data->data;
+	struct gps_data_t gps_data = drive_data->gps_data;
+	OsmGpsMap *map = drive_data->map;
+	track *cur_track = drive_data->cur_track;
+	int ret;
+
+	if (!data || data->finished_drive) {
+		return false;
+	}
+
 	if (gps_waiting(&gps_data, 500)) {
 		ret = gps_read(&gps_data, NULL, 0);
 
@@ -67,23 +79,24 @@ gboolean drive_loop(gpointer user_data)
 
 		if (!isnan(gps_data.fix.latitude) &&
 			!isnan(gps_data.fix.longitude)) {
+			g_mutex_lock(&(data->draw_update));
 			osm_gps_map_gps_add(map,
 								gps_data.fix.latitude,
 								gps_data.fix.longitude,
 								gps_data.fix.track);
+			g_mutex_unlock(&(data->draw_update));
 
 			if (!cur_track) {
 				/* We don't have a map loaded */
+				g_mutex_lock(&(data->draw_update));
 				osm_gps_map_set_center_and_zoom(map,
 							gps_data.fix.latitude,
 							gps_data.fix.longitude,
 							MAP_ZOOM_LEVEL);
+				g_mutex_unlock(&(data->draw_update));
 			} else if (cur_track &&
 				equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
 				equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
-				clock_gettime(CLOCK_MONOTONIC_RAW, &cur_track->end.time);
-				diff_time = timeval_subtract(&cur_track->end.time, start_time);
-
 				g_mutex_lock(&data->data_mutex);
 				g_cond_signal(&data->finished_drive_cond);
 				data->finished_drive = true;
@@ -105,7 +118,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	track *cur_track;
 	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
-	int ret, pid;
+	int ret, pid_1, pid_2;
 	GSource *source;
 	gchar *clock_time;
 	const char *format = TIMER_FORMAT;
@@ -182,8 +195,12 @@ gpointer prepare_to_drive(gpointer user_data)
 	drive_data->cur_track = cur_track;
 
 	source = g_timeout_source_new(10);
-	g_source_set_callback(source, drive_loop, drive_data, NULL);
-	pid = g_source_attach(source, g_main_context_get_thread_default());
+	g_source_set_callback(source, time_drive_loop, drive_data, NULL);
+	pid_1 = g_source_attach(source, g_main_context_get_thread_default());
+
+	source = g_timeout_source_new(500);
+	g_source_set_callback(source, map_drive_loop, drive_data, NULL);
+	pid_2 = g_source_attach(source, g_main_context_get_thread_default());
 
 	g_mutex_lock(&data->data_mutex);
 
@@ -193,7 +210,8 @@ gpointer prepare_to_drive(gpointer user_data)
 	}
 
 	g_mutex_unlock(&data->data_mutex);
-	g_source_remove(pid);
+	g_source_remove(pid_1);
+	g_source_remove(pid_2);
 	g_free(drive_data);
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
