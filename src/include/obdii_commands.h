@@ -35,16 +35,17 @@ enum return_type {
 	RET_UNICODE
 } return_type;
 
+typedef struct python_args {
+	gtk_user_data *data;
+	PyObject *pValue;
+	enum command_type com_type;
+} python_args;
+
 typedef struct obdii_commands {
 	enum command_type com_type;
 	char *name;
 	enum return_type ret_type;
 } obdii_commands;
-
-long python_parse_long(gtk_user_data *data, PyObject *pValue, enum command_type com_type);
-float python_parse_float(gtk_user_data *data, PyObject *pValue, enum command_type com_type);
-char *python_parse_unicode(PyObject *pValue);
-char *python_parse_str(PyObject *pValue);
 
 gpointer obdii_start_connection(gpointer user_data);
 

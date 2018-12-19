@@ -36,9 +36,12 @@ obdii_commands obdii_sur_coms[] = {
 	{ OBDII_INTAKE_TEMP,  "INTAKE_TEMP",     RET_LONG },
 };
 
-long python_parse_long(gtk_user_data *data,
-						PyObject *pValue,
-						enum command_type com_type) {
+static gboolean python_parse_long(gpointer python_data)
+{
+	python_args *args = python_data;
+	gtk_user_data *data = args->data;
+	PyObject *pValue = args->pValue;
+	enum command_type com_type = args->com_type;
 	long ret = 0;
 	char *temp, *format, *markup;
 
@@ -71,12 +74,15 @@ long python_parse_long(gtk_user_data *data,
 		break;
 	}
 
-	return ret;
+	return false;
 }
 
-float python_parse_float(gtk_user_data *data,
-						PyObject *pValue,
-						enum command_type com_type) {
+static gboolean python_parse_float(gpointer python_data)
+{
+	python_args *args = python_data;
+	gtk_user_data *data = args->data;
+	PyObject *pValue = args->pValue;
+	enum command_type com_type = args->com_type;
 	float ret = 0;
 
 	if (PyFloat_Check(pValue)) {
@@ -110,10 +116,10 @@ float python_parse_float(gtk_user_data *data,
 		break;
 	}
 
-	return ret;
+	return false;
 }
 
-char *python_parse_unicode(PyObject *pValue) {
+static char *python_parse_unicode(PyObject *pValue) {
 	 if (PyBytes_Check(pValue)) {
 		fprintf(stderr, "B: %s\n", PyBytes_AsString(pValue));
 	}
@@ -121,7 +127,7 @@ char *python_parse_unicode(PyObject *pValue) {
 	return PyBytes_AsString(pValue);
 }
 
-char *python_parse_str(PyObject *pValue) {
+static char *python_parse_str(PyObject *pValue) {
 	if (PyUnicode_Check(pValue)) {
 		fprintf(stderr, "U: %s\n", PyUnicode_AsUTF8(pValue));
 	}
@@ -129,10 +135,19 @@ char *python_parse_str(PyObject *pValue) {
 	return PyUnicode_AsUTF8(pValue);
 }
 
+static void python_parse_notify_free(gpointer data)
+{
+	python_args *args = data;
+
+	Py_DECREF(args->pValue);
+	g_free(data);
+}
+
 gboolean obdii_loop(gpointer user_data)
 {
 	obdii_loop_data *obdii_data = user_data;
 	gtk_user_data *data = obdii_data->data;
+	python_args *args = g_new0(python_args, 1);
 	PyObject *pFunc, *pValue;
 	PyObject *pArgs;
 	PyObject *pModule = obdii_data->pModule;
@@ -160,14 +175,20 @@ gboolean obdii_loop(gpointer user_data)
 		pValue = PyObject_CallObject(pFunc, pArgs);
 
 		if (pValue != NULL) {
+			args->data = data;
+			args->pValue = pValue;
+			args->com_type = obdii_sur_coms[i].com_type;
+
 			switch (obdii_sur_coms[i].ret_type) {
 			case RET_LONG:
-				python_parse_long(data, pValue,
-									obdii_sur_coms[i].com_type);
+				g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT,
+											python_parse_long, args,
+											python_parse_notify_free);
 				break;
 			case RET_FLOAT:
-				python_parse_float(data, pValue,
-									obdii_sur_coms[i].com_type);
+				g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT,
+											python_parse_float, args,
+											python_parse_notify_free);
 				break;
 			case RET_STR:
 				python_parse_str(pValue);
@@ -176,7 +197,6 @@ gboolean obdii_loop(gpointer user_data)
 				python_parse_unicode(pValue);
 				break;
 			}
-			Py_DECREF(pValue);
 		} else {
 			PyErr_Print();
 			g_main_loop_quit(data->obdii_loop);
