@@ -96,6 +96,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	GtkWidget *tmp;
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
+	GtkStyleContext *context;
 
 	gtk_container_remove(GTK_CONTAINER(data->window), data->load_drive_container);
 
@@ -121,6 +122,8 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	tmp = gtk_label_new(NULL);
 	gtk_label_set_text(GTK_LABEL(tmp), "Throttle:");
 	data->throttle_bar = gtk_progress_bar_new();
+	context = gtk_widget_get_style_context(data->throttle_bar);
+	gtk_style_context_add_class(context, "throttle_bar");
 	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 1, 1, 1);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 26, 1, 3, 1);
 

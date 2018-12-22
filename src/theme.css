@@ -2,3 +2,7 @@ progressbar progress {
     min-height: 20px;
     min-width: 10px;
 }
+
+.throttle_bar {
+    background-color: #ffb900;
+}
