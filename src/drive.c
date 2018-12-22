@@ -125,7 +125,7 @@ gboolean map_drive_loop(gpointer user_data)
 			args->cur_track = cur_track;
 
 			g_main_context_invoke_full(g_main_context_default(),
-										G_PRIORITY_DEFAULT,
+										G_PRIORITY_LOW,
 										map_drive_update, args,
 										map_drive_update_notify_free);
 
