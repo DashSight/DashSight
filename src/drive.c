@@ -42,7 +42,8 @@ gboolean time_drive_loop(gpointer user_data)
 	const char *format = TIMER_FORMAT;
 	char *markup;
 
-	g_assert(g_main_context_get_thread_default() == g_main_context_default());
+	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
+			g_main_context_get_thread_default() == NULL);
 
 	if (!data || data->finished_drive) {
 		return false;
@@ -69,7 +70,8 @@ static gboolean map_drive_update(gpointer drive_data)
 	struct gps_data_t gps_data = args->gps_data;
 	track *cur_track = args->cur_track;
 
-	g_assert(g_main_context_get_thread_default() == g_main_context_default());
+	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
+			g_main_context_get_thread_default() == NULL);
 
 	osm_gps_map_gps_add(map,
 						gps_data.fix.latitude,
