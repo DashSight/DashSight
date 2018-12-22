@@ -122,7 +122,8 @@ gboolean map_drive_loop(gpointer user_data)
 			args->gps_data = gps_data;
 			args->cur_track = cur_track;
 
-			g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT,
+			g_main_context_invoke_full(g_main_context_default(),
+										G_PRIORITY_DEFAULT,
 										map_drive_update, args,
 										map_drive_update_notify_free);
 
@@ -231,7 +232,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	source = g_timeout_source_new(10);
 	g_source_set_callback(source, time_drive_loop, drive_data, NULL);
 	/* Run in main loop */
-	pid_1 = g_source_attach(source, NULL);
+	pid_1 = g_source_attach(source, g_main_context_default());
 
 	source = g_timeout_source_new(500);
 	g_source_set_callback(source, map_drive_loop, drive_data, NULL);

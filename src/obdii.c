@@ -177,12 +177,14 @@ gboolean obdii_loop(gpointer user_data)
 
 			switch (obdii_sur_coms[i].ret_type) {
 			case RET_LONG:
-				g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT,
+				g_main_context_invoke_full(g_main_context_default(),
+											G_PRIORITY_DEFAULT,
 											python_parse_long, args,
 											python_parse_notify_free);
 				break;
 			case RET_FLOAT:
-				g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT,
+				g_main_context_invoke_full(g_main_context_default(),
+											G_PRIORITY_DEFAULT,
 											python_parse_float, args,
 											python_parse_notify_free);
 				break;
