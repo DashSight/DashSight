@@ -45,6 +45,8 @@ static gboolean python_parse_long(gpointer python_data)
 	long ret = 0;
 	char *temp, *format, *markup;
 
+	g_assert(g_main_context_get_thread_default() == g_main_context_default());
+
 	if (PyLong_Check(pValue)) {
 		ret = PyLong_AsLong(pValue);
 	}
@@ -80,6 +82,8 @@ static gboolean python_parse_float(gpointer python_data)
 	PyObject *pValue = args->pValue;
 	enum command_type com_type = args->com_type;
 	float ret = 0;
+
+	g_assert(g_main_context_get_thread_default() == g_main_context_default());
 
 	if (PyFloat_Check(pValue)) {
 		ret = PyFloat_AsDouble(pValue);

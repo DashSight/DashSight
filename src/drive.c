@@ -26,6 +26,12 @@
 #include "common.h"
 #include "obdii_commands.h"
 
+typedef struct drive_args {
+	OsmGpsMap *map;
+	struct gps_data_t gps_data;
+	track *cur_track;
+} drive_args;
+
 gboolean time_drive_loop(gpointer user_data)
 {
 	drive_loop_data *drive_data = user_data;
@@ -36,8 +42,9 @@ gboolean time_drive_loop(gpointer user_data)
 	const char *format = TIMER_FORMAT;
 	char *markup;
 
+	g_assert(g_main_context_get_thread_default() == g_main_context_default());
+
 	if (!data || data->finished_drive) {
-		g_main_loop_quit(data->drive_loop);
 		return false;
 	}
 
@@ -55,6 +62,35 @@ gboolean time_drive_loop(gpointer user_data)
 	return true;
 }
 
+static gboolean map_drive_update(gpointer drive_data)
+{
+	drive_args *args = drive_data;
+	OsmGpsMap *map = args->map;
+	struct gps_data_t gps_data = args->gps_data;
+	track *cur_track = args->cur_track;
+
+	g_assert(g_main_context_get_thread_default() == g_main_context_default());
+
+	osm_gps_map_gps_add(map,
+						gps_data.fix.latitude,
+						gps_data.fix.longitude,
+						gps_data.fix.track);
+
+	if (!cur_track) {
+		/* We don't have a map loaded */
+		osm_gps_map_set_center_and_zoom(map,
+					gps_data.fix.latitude,
+					gps_data.fix.longitude,
+					MAP_ZOOM_LEVEL);
+	}
+}
+
+static void map_drive_update_notify_free(gpointer data)
+{
+	g_free(data);
+}
+
+
 gboolean map_drive_loop(gpointer user_data)
 {
 	drive_loop_data *drive_data = user_data;
@@ -62,9 +98,11 @@ gboolean map_drive_loop(gpointer user_data)
 	struct gps_data_t gps_data = drive_data->gps_data;
 	OsmGpsMap *map = drive_data->map;
 	track *cur_track = drive_data->cur_track;
+	drive_args *args = g_new0(drive_args, 1);
 	int ret;
 
 	if (!data || data->finished_drive) {
+		g_main_loop_quit(data->drive_loop);
 		return false;
 	}
 
@@ -78,18 +116,15 @@ gboolean map_drive_loop(gpointer user_data)
 
 		if (!isnan(gps_data.fix.latitude) &&
 			!isnan(gps_data.fix.longitude)) {
-			osm_gps_map_gps_add(map,
-								gps_data.fix.latitude,
-								gps_data.fix.longitude,
-								gps_data.fix.track);
+			args->map = map;
+			args->gps_data = gps_data;
+			args->cur_track = cur_track;
 
-			if (!cur_track) {
-				/* We don't have a map loaded */
-				osm_gps_map_set_center_and_zoom(map,
-							gps_data.fix.latitude,
-							gps_data.fix.longitude,
-							MAP_ZOOM_LEVEL);
-			} else if (cur_track &&
+			g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT,
+										map_drive_update, args,
+										map_drive_update_notify_free);
+
+			if (cur_track &&
 				equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
 				equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
 				g_main_loop_quit(data->drive_loop);
@@ -193,10 +228,12 @@ gpointer prepare_to_drive(gpointer user_data)
 
 	source = g_timeout_source_new(10);
 	g_source_set_callback(source, time_drive_loop, drive_data, NULL);
-	pid_1 = g_source_attach(source, g_main_context_get_thread_default());
+	/* Run in main loop */
+	pid_1 = g_source_attach(source, NULL);
 
 	source = g_timeout_source_new(500);
 	g_source_set_callback(source, map_drive_loop, drive_data, NULL);
+	/* Run in this thread loop */
 	pid_2 = g_source_attach(source, g_main_context_get_thread_default());
 
 	data->drive_loop = g_main_loop_new(worker_context, false);
