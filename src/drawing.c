@@ -37,8 +37,6 @@ gboolean taco_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 	width = gtk_widget_get_allocated_width(widget);
 	height = gtk_widget_get_allocated_height(widget);
 
-	g_mutex_lock(&(data->draw_update));
-
 	/* Draw the outside */
 	cairo_set_line_width(cr, 1.0);
 	cairo_arc(cr, mid_x, mid_y, radius, 0, 2 * M_PI);
@@ -76,8 +74,6 @@ gboolean taco_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 	cairo_arc(cr, mid_x, mid_y, radius / 2, 0, M_PI * (2.2 / 3.0));
 	cairo_show_text(cr, "revs x1000");
 	cairo_stroke(cr);
-
-	g_mutex_unlock(&(data->draw_update));
 
 	return false;
 }

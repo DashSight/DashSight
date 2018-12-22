@@ -47,9 +47,7 @@ gboolean time_drive_loop(gpointer user_data)
 								diff_time.tv_sec % 60,
 								diff_time.tv_nsec / (1000 * 1000 * 10));
 	markup = g_markup_printf_escaped(format, clock_time);
-	g_mutex_lock(&(data->draw_update));
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
-	g_mutex_unlock(&(data->draw_update));
 	g_free(clock_time);
 	g_free(markup);
 
@@ -79,21 +77,17 @@ gboolean map_drive_loop(gpointer user_data)
 
 		if (!isnan(gps_data.fix.latitude) &&
 			!isnan(gps_data.fix.longitude)) {
-			g_mutex_lock(&(data->draw_update));
 			osm_gps_map_gps_add(map,
 								gps_data.fix.latitude,
 								gps_data.fix.longitude,
 								gps_data.fix.track);
-			g_mutex_unlock(&(data->draw_update));
 
 			if (!cur_track) {
 				/* We don't have a map loaded */
-				g_mutex_lock(&(data->draw_update));
 				osm_gps_map_set_center_and_zoom(map,
 							gps_data.fix.latitude,
 							gps_data.fix.longitude,
 							MAP_ZOOM_LEVEL);
-				g_mutex_unlock(&(data->draw_update));
 			} else if (cur_track &&
 				equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
 				equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
@@ -221,9 +215,7 @@ gpointer prepare_to_drive(gpointer user_data)
 								diff_time.tv_sec % 60,
 								diff_time.tv_nsec / (1000 * 1000 * 10));
 	markup = g_markup_printf_escaped(format, clock_time);
-	g_mutex_lock(&(data->draw_update));
 	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
-	g_mutex_unlock(&(data->draw_update));
 	g_free(clock_time);
 	g_free(markup);
 
