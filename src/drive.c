@@ -85,6 +85,8 @@ static gboolean map_drive_update(gpointer drive_data)
 					gps_data.fix.longitude,
 					MAP_ZOOM_LEVEL);
 	}
+
+	return false;
 }
 
 static void map_drive_update_notify_free(gpointer data)
