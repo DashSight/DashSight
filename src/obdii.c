@@ -272,6 +272,13 @@ gpointer obdii_start_connection(gpointer user_data)
 
 		Py_DECREF(pModule);
 		Py_Finalize();
+
+		if (!data->finished_drive) {
+			/* We are going to loop again, sleep for a little bit
+			 * as we probably don't have a connection.
+			 */
+			sleep(5);
+		}
 	}
 
 	g_object_unref(data->drive_container);
