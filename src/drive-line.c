@@ -86,9 +86,14 @@ static gboolean drive_file_download_file_press_event(GtkWidget *widget,
 	return true;
 }
 
-drive_display disp_ary[] = {
-	{ THROTTLE_BAR,		DRIVE_PROGRESS_BAR,	"Throttle",	"throttle_bar",		25,		1 },
-	{ LOAD_BAR,			DRIVE_PROGRESS_BAR,	"Load",		"load_bar",			25,		3 }
+drive_display disp_ary[NUM_DDISP_WIDGETS] = {
+	{ THROTTLE_BAR,		DRIVE_PROGRESS_BAR,	"Throttle",			"throttle_bar",		NULL,				25,		1 },
+	{ LOAD_BAR,			DRIVE_PROGRESS_BAR,	"Load",				"load_bar",			NULL,				25,		3 },
+	{ COOLANT_TEMP,		DRIVE_LABEL,		"Coolant (C)",		NULL,				COOLANT_FORMAT,		25,		5 },
+	{ INTAKE_TEMP,		DRIVE_LABEL,		"Intake (C)",		NULL,				INTAKE_FORMAT,		27,		5 },
+	{ MAF,				DRIVE_LABEL,		"MAF (g/s)",		NULL,				MAF_FORMAT,			25,		6 },
+	{ SHORT_O2_B1,		DRIVE_LABEL,		"Short O2 B1",		NULL,				SHORT_O2_T1_FORMAT,	25,		7 },
+	{ LONG_O2_B1,		DRIVE_LABEL,		"Long O2 B1",		NULL,				LONG_O2_T1_FORMAT,	27,		7 }
 };
 
 static gboolean drive_file_load_file_press_event(GtkWidget *widget,
@@ -149,58 +154,21 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 
 			gtk_grid_attach(GTK_GRID(data->drive_container), tmp, disp_ary[i].start_x, disp_ary[i].start_y, 1, 1);
 			gtk_grid_attach(GTK_GRID(data->drive_container), data->ddisp_widgets[i], disp_ary[i].start_x + 1, disp_ary[i].start_y, 3, 1);
+		} else if (disp_ary[i].gtk_type == DRIVE_LABEL) {
+			tmp = gtk_label_new(NULL);
+			tmp_name = g_strdup_printf("%s: ", disp_ary[i].name);
+			gtk_label_set_text(GTK_LABEL(tmp), tmp_name);
+			g_free(tmp_name);
+
+			data->ddisp_widgets[i] = gtk_label_new(NULL);
+			markup = g_markup_printf_escaped(disp_ary[i].format, temp);
+			gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[i]), markup);
+			g_free(markup);
+
+			gtk_grid_attach(GTK_GRID(data->drive_container), tmp, disp_ary[i].start_x, disp_ary[i].start_y, 1, 1);
+			gtk_grid_attach(GTK_GRID(data->drive_container), data->ddisp_widgets[i], disp_ary[i].start_x + 1, disp_ary[i].start_y, 1, 1);
 		}
 	}
-
-	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Coolant (C):");
-	data->coolant_temp_disp = gtk_label_new(NULL);
-	format = COOLANT_FORMAT;
-	markup = g_markup_printf_escaped(format, temp);
-	gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 5, 1, 1);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->coolant_temp_disp, 26, 5, 1, 1);
-	g_free(markup);
-
-	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Intake (C):");
-	data->intake_temp_disp = gtk_label_new(NULL);
-	format = INTAKE_FORMAT;
-	markup = g_markup_printf_escaped(format, temp);
-	gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 27, 5, 1, 1);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 28, 5, 1, 1);
-	g_free(markup);
-
-	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "MAF (g/s):");
-	data->maf_disp = gtk_label_new(NULL);
-	format = MAF_FORMAT;
-	markup = g_markup_printf_escaped(format, temp);
-	gtk_label_set_markup(GTK_LABEL(data->maf_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 6, 1, 1);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->maf_disp, 26, 6, 1, 1);
-	g_free(markup);
-
-	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Short O2 B1:");
-	data->short_o2_t1_disp = gtk_label_new(NULL);
-	format = SHORT_O2_T1_FORMAT;
-	markup = g_markup_printf_escaped(format, temp);
-	gtk_label_set_markup(GTK_LABEL(data->short_o2_t1_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 7, 1, 1);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->short_o2_t1_disp, 26, 7, 1, 1);
-	g_free(markup);
-
-	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Long O2 B1:");
-	data->long_o2_t1_disp = gtk_label_new(NULL);
-	format = LONG_O2_T1_FORMAT;
-	markup = g_markup_printf_escaped(format, temp);
-	gtk_label_set_markup(GTK_LABEL(data->long_o2_t1_disp), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 27, 7, 1, 1);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->long_o2_t1_disp, 28, 7, 1, 1);
-	g_free(markup);
 
 	data->return_home = gtk_button_new_with_label("Return");
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->return_home, 25, 12, 1, 1);

@@ -34,6 +34,8 @@ typedef struct cmd_args {
 
 typedef struct track track;
 
+#define NUM_DDISP_WIDGETS 7
+
 typedef struct gtk_user_data
 {
 	cmd_args *args;
@@ -57,23 +59,19 @@ typedef struct gtk_user_data
 	gchar *drive_track_filepath;
 	GtkWidget *load_drive_container;
 	GtkWidget *drive_container;
-	GMainLoop *obdii_loop, *drive_loop;
-	GtkWidget *drive_map;
-	GtkWidget *drive_grid;
+
 	GtkWidget *drive_file_download_button;
 	GtkWidget *drive_file_load, *drive_file_load_button;
 
-	/* TODO: Make this dynamic */
-	GtkWidget *ddisp_widgets[2];
-
+	GtkWidget *drive_map;
+	GtkWidget *ddisp_widgets[NUM_DDISP_WIDGETS];
 	GtkWidget *return_home;
 	GtkWidget *timer_display;
-	GtkWidget *coolant_temp_disp;
-	GtkWidget *intake_temp_disp;
-	GtkWidget *maf_disp;
-	GtkWidget *short_o2_t1_disp, *long_o2_t1_disp;
 	GtkWidget *taco_draw_area;
+
+	GMainLoop *obdii_loop, *drive_loop;
 	GThread *drive_track_thread, *obdii_thread;
+
 	int revs;
 	void *loaded_track;
 	bool load_page, drive_track_updated;
@@ -89,7 +87,12 @@ typedef struct obdii_loop_data
 
 enum drive_disp_type {
 	THROTTLE_BAR,
-	LOAD_BAR
+	LOAD_BAR,
+	COOLANT_TEMP,
+	INTAKE_TEMP,
+	MAF,
+	SHORT_O2_B1,
+	LONG_O2_B1
 } drive_disp_type;
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"

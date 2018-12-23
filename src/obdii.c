@@ -60,7 +60,7 @@ static gboolean python_parse_long(gpointer python_data)
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
-		gtk_label_set_markup(GTK_LABEL(data->coolant_temp_disp), markup);
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[COOLANT_TEMP]), markup);
 		g_free(temp);
 		g_free(markup);
 		break;
@@ -69,7 +69,7 @@ static gboolean python_parse_long(gpointer python_data)
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
-		gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[INTAKE_TEMP]), markup);
 		g_free(temp);
 		g_free(markup);
 		break;
@@ -78,7 +78,7 @@ static gboolean python_parse_long(gpointer python_data)
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
-		gtk_label_set_markup(GTK_LABEL(data->short_o2_t1_disp), markup);
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[SHORT_O2_B1]), markup);
 		g_free(temp);
 		g_free(markup);
 		break;
@@ -87,7 +87,7 @@ static gboolean python_parse_long(gpointer python_data)
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
-		gtk_label_set_markup(GTK_LABEL(data->long_o2_t1_disp), markup);
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[LONG_O2_B1]), markup);
 		g_free(temp);
 		g_free(markup);
 		break;
@@ -133,7 +133,7 @@ static gboolean python_parse_float(gpointer python_data)
 		temp = g_strdup_printf("%.0f", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
-		gtk_label_set_markup(GTK_LABEL(data->maf_disp), markup);
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[MAF]), markup);
 		g_free(temp);
 		g_free(markup);
 		break;

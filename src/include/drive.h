@@ -37,14 +37,16 @@ typedef struct drive_loop_data
 } drive_loop_data;
 
 enum gtk_type_enum {
-	DRIVE_PROGRESS_BAR
+	DRIVE_PROGRESS_BAR,
+	DRIVE_LABEL
 } gtk_type_enum;
 
 typedef struct drive_display {
 	enum drive_disp_type type;
 	enum gtk_type_enum gtk_type;
-	char *name;
-	char *context_name;
+	const char *name;
+	const char *context_name;
+	const char *format;
 	int start_x;
 	int start_y;
 } drive_display;
