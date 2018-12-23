@@ -260,7 +260,7 @@ gpointer obdii_start_connection(gpointer user_data)
 
 		data->obdii_loop = g_main_loop_new(worker_context, false);
 
-		source = g_timeout_source_new(175);
+		source = g_timeout_source_new(125);
 		g_source_set_callback(source, obdii_loop, obdii_data, NULL);
 		pid = g_source_attach(source, worker_context);
 
