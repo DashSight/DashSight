@@ -36,14 +36,16 @@ typedef struct track track;
 
 typedef struct gtk_user_data
 {
+	/**** Command line argumnets ***/
 	cmd_args *args;
 
+	/*** Main Window ****/
 	GtkWidget *window;
 
-	/* Main page */
+	/**** Main page ****/
 	GtkWidget *main_page;
 
-	/* Record Track */
+	/**** Record Track ****/
 	gchar *record_track_filepath;
 	GtkWidget *record_container;
 	GtkWidget *record_map;
@@ -53,7 +55,7 @@ typedef struct gtk_user_data
 	bool save, record_page;
 	FILE *fd;
 
-	/* Drive Track */
+	/**** Drive Track ****/
 	gchar *drive_track_filepath;
 	GtkWidget *load_drive_container;
 	GtkWidget *drive_container;
@@ -61,14 +63,17 @@ typedef struct gtk_user_data
 	GtkWidget *drive_file_download_button;
 	GtkWidget *drive_file_load, *drive_file_load_button;
 
+	/* Widgets for the drive display */
 	GtkWidget *drive_map;
 	GtkWidget *ddisp_widgets[NUM_DDISP_WIDGETS];
 	GtkWidget *return_home;
 	GtkWidget *taco_draw_area;
 
+	/* Thread and loop control */
 	GMainLoop *obdii_loop, *drive_loop;
 	GThread *drive_track_thread, *obdii_thread;
 
+	/* Values passed around */
 	int revs;
 	void *loaded_track;
 	bool load_page, drive_track_updated;
