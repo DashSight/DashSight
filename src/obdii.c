@@ -171,6 +171,15 @@ gboolean obdii_loop(gpointer user_data)
 		pValue = PyObject_CallObject(pFunc, pArgs);
 
 		if (pValue != NULL) {
+			if (PyInt_Check(pValue) && PyLong_AsLong(pValue) == -1) {
+				/* There was an error form the OBD device */
+				Py_DECREF(pValue);
+				Py_DECREF(pArgs);
+				Py_DECREF(pFunc);
+				g_main_loop_quit(data->obdii_loop);
+				return false;
+			}
+
 			args->data = data;
 			args->pValue = pValue;
 			args->com_type = obdii_sur_coms[i].com_type;
@@ -225,43 +234,45 @@ gpointer obdii_start_connection(gpointer user_data)
 	worker_context = g_main_context_new();
 	g_main_context_push_thread_default(worker_context);
 
-	Py_Initialize();
+	while (!data->finished_drive) {
+		Py_Initialize();
 
-	pName = PyUnicode_DecodeFSDefault("obdii_connect");
-	pModule = PyImport_Import(pName);
-	Py_DECREF(pName);
+		pName = PyUnicode_DecodeFSDefault("obdii_connect");
+		pModule = PyImport_Import(pName);
+		Py_DECREF(pName);
 
-	if (!pModule) {
-		fprintf(stderr, "Unable to import Python module\n");
-		PyErr_Print();
-		return NULL;
+		if (!pModule) {
+			fprintf(stderr, "Unable to import Python module\n");
+			PyErr_Print();
+			return NULL;
+		}
+
+		/* Don't start updating the page until we have it. */
+		while (data->load_page && !data->finished_drive) {
+			sleep(1);
+		}
+
+		g_object_ref(data->drive_container);
+
+		obdii_loop_data *obdii_data = g_new0(obdii_loop_data, 1);;
+		obdii_data->data = data;
+		obdii_data->pModule = pModule;
+
+		data->obdii_loop = g_main_loop_new(worker_context, false);
+
+		source = g_timeout_source_new(175);
+		g_source_set_callback(source, obdii_loop, obdii_data, NULL);
+		pid = g_source_attach(source, worker_context);
+
+		g_main_loop_run(data->obdii_loop);
+		g_main_loop_unref(data->obdii_loop);
+
+		g_source_remove(pid);
+		g_free(obdii_data);
+
+		Py_DECREF(pModule);
+		Py_Finalize();
 	}
-
-	/* Don't start updating the page until we have it. */
-	while (data->load_page && !data->finished_drive) {
-		sleep(1);
-	}
-
-	g_object_ref(data->drive_container);
-
-	obdii_loop_data *obdii_data = g_new0(obdii_loop_data, 1);;
-	obdii_data->data = data;
-	obdii_data->pModule = pModule;
-
-	data->obdii_loop = g_main_loop_new(worker_context, false);
-
-	source = g_timeout_source_new(175);
-	g_source_set_callback(source, obdii_loop, obdii_data, NULL);
-	pid = g_source_attach(source, worker_context);
-
-	g_main_loop_run(data->obdii_loop);
-	g_main_loop_unref(data->obdii_loop);
-
-	g_source_remove(pid);
-	g_free(obdii_data);
-
-	Py_DECREF(pModule);
-	Py_Finalize();
 
 	g_object_unref(data->drive_container);
 
