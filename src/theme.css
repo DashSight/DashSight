@@ -6,3 +6,7 @@ progressbar progress {
 .throttle_bar {
     background-color: #ffb900;
 }
+
+.load_bar {
+    background-color: #1100ff;
+}

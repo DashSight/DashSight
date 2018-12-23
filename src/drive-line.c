@@ -130,6 +130,8 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	tmp = gtk_label_new(NULL);
 	gtk_label_set_text(GTK_LABEL(tmp), "Load:");
 	data->engine_load_bar = gtk_progress_bar_new();
+	context = gtk_widget_get_style_context(data->engine_load_bar);
+	gtk_style_context_add_class(context, "load_bar");
 	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 3, 1, 1);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 26, 3, 3, 1);
 
