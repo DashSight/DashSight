@@ -87,23 +87,21 @@ static gboolean drive_file_download_file_press_event(GtkWidget *widget,
 }
 
 drive_display disp_ary[NUM_DDISP_WIDGETS] = {
-	{ THROTTLE_BAR,		DRIVE_PROGRESS_BAR,	"Throttle",			"throttle_bar",		NULL,				25,		1 },
-	{ LOAD_BAR,			DRIVE_PROGRESS_BAR,	"Load",				"load_bar",			NULL,				25,		3 },
-	{ COOLANT_TEMP,		DRIVE_LABEL,		"Coolant (C)",		NULL,				COOLANT_FORMAT,		25,		5 },
-	{ INTAKE_TEMP,		DRIVE_LABEL,		"Intake (C)",		NULL,				INTAKE_FORMAT,		27,		5 },
-	{ MAF,				DRIVE_LABEL,		"MAF (g/s)",		NULL,				MAF_FORMAT,			25,		6 },
-	{ SHORT_O2_B1,		DRIVE_LABEL,		"Short O2 B1",		NULL,				SHORT_O2_T1_FORMAT,	25,		7 },
-	{ LONG_O2_B1,		DRIVE_LABEL,		"Long O2 B1",		NULL,				LONG_O2_T1_FORMAT,	27,		7 }
+	{ THROTTLE_BAR,		DRIVE_PROGRESS_BAR,	"Throttle:",		NULL,				"throttle_bar",		NULL,				25,		1 },
+	{ LOAD_BAR,			DRIVE_PROGRESS_BAR,	"Load:",			NULL,				"load_bar",			NULL,				25,		3 },
+	{ TIMER,			DRIVE_LABEL,		NULL,				"00:00:00",			NULL,				TIMER_FORMAT,		0,		1 },
+	{ COOLANT_TEMP,		DRIVE_LABEL,		"Coolant (C):",		"0",				NULL,				COOLANT_FORMAT,		25,		5 },
+	{ INTAKE_TEMP,		DRIVE_LABEL,		"Intake (C):",		"0",				NULL,				INTAKE_FORMAT,		27,		5 },
+	{ MAF,				DRIVE_LABEL,		"MAF (g/s):",		"0",				NULL,				MAF_FORMAT,			25,		6 },
+	{ SHORT_O2_B1,		DRIVE_LABEL,		"Short O2 B1:",		"0",				NULL,				SHORT_O2_T1_FORMAT,	25,		7 },
+	{ LONG_O2_B1,		DRIVE_LABEL,		"Long O2 B1:",		"0",				NULL,				LONG_O2_T1_FORMAT,	27,		7 }
 };
 
 static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												GdkEventButton *event,
 												gpointer user_data)
 {
-	const char *start_time = "00:00:00";
-	const char *temp = "0";
-	const char *format = TIMER_FORMAT;
-	char *markup, *tmp_name;
+	char *markup;
 	GtkWidget *tmp;
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
@@ -125,12 +123,6 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	}
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->drive_map, 0, 6, 24, 28);
 
-	data->timer_display = gtk_label_new(NULL);
-	markup = g_markup_printf_escaped(format, start_time);
-	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 0, 1, 10, 3);
-	g_free(markup);
-
 	data->taco_draw_area = gtk_drawing_area_new();
 	gtk_widget_set_size_request(data->taco_draw_area, 100, 100);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 10, 0, 14, 5);
@@ -139,10 +131,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 
 	for (i = 0; i < ARRAY_SIZE(disp_ary); i++) {
 		if (disp_ary[i].gtk_type == DRIVE_PROGRESS_BAR) {
-			tmp = gtk_label_new(NULL);
-			tmp_name = g_strdup_printf("%s: ", disp_ary[i].name);
-			gtk_label_set_text(GTK_LABEL(tmp), tmp_name);
-			g_free(tmp_name);
+			gtk_label_set_text(GTK_LABEL(tmp), disp_ary[i].name);
 
 			data->ddisp_widgets[i] = gtk_progress_bar_new();
 			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->ddisp_widgets[i]), 0);
@@ -155,18 +144,22 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 			gtk_grid_attach(GTK_GRID(data->drive_container), tmp, disp_ary[i].start_x, disp_ary[i].start_y, 1, 1);
 			gtk_grid_attach(GTK_GRID(data->drive_container), data->ddisp_widgets[i], disp_ary[i].start_x + 1, disp_ary[i].start_y, 3, 1);
 		} else if (disp_ary[i].gtk_type == DRIVE_LABEL) {
-			tmp = gtk_label_new(NULL);
-			tmp_name = g_strdup_printf("%s: ", disp_ary[i].name);
-			gtk_label_set_text(GTK_LABEL(tmp), tmp_name);
-			g_free(tmp_name);
+			if (disp_ary[i].name) {
+				tmp = gtk_label_new(NULL);
+				gtk_label_set_text(GTK_LABEL(tmp), disp_ary[i].name);
+			}
 
 			data->ddisp_widgets[i] = gtk_label_new(NULL);
-			markup = g_markup_printf_escaped(disp_ary[i].format, temp);
+			markup = g_markup_printf_escaped(disp_ary[i].format, disp_ary[i].zero);
 			gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[i]), markup);
 			g_free(markup);
 
-			gtk_grid_attach(GTK_GRID(data->drive_container), tmp, disp_ary[i].start_x, disp_ary[i].start_y, 1, 1);
-			gtk_grid_attach(GTK_GRID(data->drive_container), data->ddisp_widgets[i], disp_ary[i].start_x + 1, disp_ary[i].start_y, 1, 1);
+			if (disp_ary[i].type == TIMER) {
+				gtk_grid_attach(GTK_GRID(data->drive_container), data->ddisp_widgets[i], disp_ary[i].start_x, disp_ary[i].start_y, 10, 3);
+			} else {
+				gtk_grid_attach(GTK_GRID(data->drive_container), tmp, disp_ary[i].start_x, disp_ary[i].start_y, 1, 1);
+				gtk_grid_attach(GTK_GRID(data->drive_container), data->ddisp_widgets[i], disp_ary[i].start_x + 1, disp_ary[i].start_y, 1, 1);
+			}
 		}
 	}
 

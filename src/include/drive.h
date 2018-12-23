@@ -45,6 +45,7 @@ typedef struct drive_display {
 	enum drive_disp_type type;
 	enum gtk_type_enum gtk_type;
 	const char *name;
+	const char *zero;
 	const char *context_name;
 	const char *format;
 	int start_x;

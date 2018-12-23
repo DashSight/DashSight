@@ -32,7 +32,7 @@ typedef struct cmd_args {
 
 typedef struct track track;
 
-#define NUM_DDISP_WIDGETS 7
+#define NUM_DDISP_WIDGETS 8
 
 typedef struct gtk_user_data
 {
@@ -64,7 +64,6 @@ typedef struct gtk_user_data
 	GtkWidget *drive_map;
 	GtkWidget *ddisp_widgets[NUM_DDISP_WIDGETS];
 	GtkWidget *return_home;
-	GtkWidget *timer_display;
 	GtkWidget *taco_draw_area;
 
 	GMainLoop *obdii_loop, *drive_loop;
@@ -79,6 +78,7 @@ typedef struct gtk_user_data
 enum drive_disp_type {
 	THROTTLE_BAR,
 	LOAD_BAR,
+	TIMER,
 	COOLANT_TEMP,
 	INTAKE_TEMP,
 	MAF,

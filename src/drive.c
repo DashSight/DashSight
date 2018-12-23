@@ -57,7 +57,7 @@ gboolean time_drive_loop(gpointer user_data)
 								diff_time.tv_sec % 60,
 								diff_time.tv_nsec / (1000 * 1000 * 10));
 	markup = g_markup_printf_escaped(format, clock_time);
-	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
+	gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[TIMER]), markup);
 	g_free(clock_time);
 	g_free(markup);
 
@@ -258,7 +258,7 @@ gpointer prepare_to_drive(gpointer user_data)
 								diff_time.tv_sec % 60,
 								diff_time.tv_nsec / (1000 * 1000 * 10));
 	markup = g_markup_printf_escaped(format, clock_time);
-	gtk_label_set_markup(GTK_LABEL(data->timer_display), markup);
+	gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[TIMER]), markup);
 	g_free(clock_time);
 	g_free(markup);
 
