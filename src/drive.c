@@ -25,7 +25,7 @@
 #include "track.h"
 #include "common.h"
 #include "drive.h"
-#include "obdii_commands.h"
+#include "obdii.h"
 
 typedef struct drive_args {
 	OsmGpsMap *map;

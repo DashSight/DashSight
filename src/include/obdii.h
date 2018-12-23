@@ -37,6 +37,13 @@ enum return_type {
 	RET_UNICODE
 } return_type;
 
+typedef struct obdii_loop_data
+{
+	gtk_user_data *data;
+
+	PyObject *pModule;
+} obdii_loop_data;
+
 typedef struct python_args {
 	gtk_user_data *data;
 	PyObject *pValue;

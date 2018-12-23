@@ -25,7 +25,7 @@
 #include "track.h"
 #include "common.h"
 #include "drive.h"
-#include "obdii_commands.h"
+#include "obdii.h"
 
 static void drive_file_load_file_set_event(GtkFileChooserButton *widget,
 											gpointer user_data)

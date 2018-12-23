@@ -26,10 +26,8 @@
 #include "track.h"
 
 typedef struct cmd_args {
-	enum { NONE, GUI, RECORD_TRACK, CIRC_DRIVE, SINGLE_DRIVE } mode;
 	char *server;
 	char *port;
-	char *gpx;
 } cmd_args;
 
 typedef struct track track;
@@ -39,7 +37,6 @@ typedef struct track track;
 typedef struct gtk_user_data
 {
 	cmd_args *args;
-	FILE *fd;
 
 	GtkWidget *window;
 
@@ -54,6 +51,7 @@ typedef struct gtk_user_data
 	GtkWidget *record_file_save_button;
 	GThread *record_track_thread;
 	bool save, record_page;
+	FILE *fd;
 
 	/* Drive Track */
 	gchar *drive_track_filepath;
@@ -77,13 +75,6 @@ typedef struct gtk_user_data
 	bool load_page, drive_track_updated;
 	bool finished_drive;
 } gtk_user_data;
-
-typedef struct obdii_loop_data
-{
-	gtk_user_data *data;
-
-	PyObject *pModule;
-} obdii_loop_data;
 
 enum drive_disp_type {
 	THROTTLE_BAR,

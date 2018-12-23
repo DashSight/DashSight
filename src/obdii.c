@@ -24,7 +24,7 @@
 #include <gps.h>
 #include "track.h"
 #include "common.h"
-#include "obdii_commands.h"
+#include "obdii.h"
 
 obdii_commands obdii_sur_coms[] = {
 	{ OBDII_RPM,          "RPM",                RET_FLOAT },
