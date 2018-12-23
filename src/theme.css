@@ -3,10 +3,10 @@ progressbar progress {
     min-width: 10px;
 }
 
-.throttle_bar {
+.throttle_bar progress {
     background-color: #ffb900;
 }
 
-.load_bar {
+.load_bar progress {
     background-color: #1100ff;
 }
