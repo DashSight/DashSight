@@ -24,6 +24,7 @@
 #include <gps.h>
 #include "track.h"
 #include "common.h"
+#include "drive.h"
 #include "obdii_commands.h"
 
 typedef struct drive_args {

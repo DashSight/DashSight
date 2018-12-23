@@ -118,11 +118,11 @@ static gboolean python_parse_float(gpointer python_data)
 		gtk_widget_queue_draw(data->taco_draw_area);
 		break;
 	case OBDII_THROTTLE:
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->throttle_bar),
+		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->ddisp_widgets[THROTTLE_BAR]),
 									ret / 100.0);
 		break;
 	case OBDII_ENGINE_LOAD:
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->engine_load_bar),
+		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->ddisp_widgets[LOAD_BAR]),
 									ret / 100.0);
 		break;
 	case OBDII_TIMING_ADV:

@@ -24,6 +24,7 @@
 #include <gps.h>
 #include "track.h"
 #include "common.h"
+#include "drive.h"
 #include "obdii_commands.h"
 
 static void drive_file_load_file_set_event(GtkFileChooserButton *widget,
@@ -85,6 +86,11 @@ static gboolean drive_file_download_file_press_event(GtkWidget *widget,
 	return true;
 }
 
+drive_display disp_ary[] = {
+	{ THROTTLE_BAR,		DRIVE_PROGRESS_BAR,	"Throttle",	"throttle_bar",		25,		1 },
+	{ LOAD_BAR,			DRIVE_PROGRESS_BAR,	"Load",		"load_bar",			25,		3 }
+};
+
 static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												GdkEventButton *event,
 												gpointer user_data)
@@ -92,11 +98,12 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	const char *start_time = "00:00:00";
 	const char *temp = "0";
 	const char *format = TIMER_FORMAT;
-	char *markup;
+	char *markup, *tmp_name;
 	GtkWidget *tmp;
 	gtk_user_data *data = user_data;
 	track *cur_track = data->loaded_track;
 	GtkStyleContext *context;
+	int i;
 
 	gtk_container_remove(GTK_CONTAINER(data->window), data->load_drive_container);
 
@@ -119,29 +126,31 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->timer_display, 0, 1, 10, 3);
 	g_free(markup);
 
-	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Throttle:");
-	data->throttle_bar = gtk_progress_bar_new();
-	context = gtk_widget_get_style_context(data->throttle_bar);
-	gtk_style_context_add_class(context, "throttle_bar");
-	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->throttle_bar), 0);
-	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 1, 1, 1);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 26, 1, 3, 1);
-
-	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Load:");
-	data->engine_load_bar = gtk_progress_bar_new();
-	context = gtk_widget_get_style_context(data->engine_load_bar);
-	gtk_style_context_add_class(context, "load_bar");
-	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->engine_load_bar), 0);
-	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 3, 1, 1);
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 26, 3, 3, 1);
-
 	data->taco_draw_area = gtk_drawing_area_new();
 	gtk_widget_set_size_request(data->taco_draw_area, 100, 100);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->taco_draw_area, 10, 0, 14, 5);
 	g_signal_connect(G_OBJECT(data->taco_draw_area), "draw",
 					G_CALLBACK(taco_draw_callback), data);
+
+	for (i = 0; i < ARRAY_SIZE(disp_ary); i++) {
+		if (disp_ary[i].gtk_type == DRIVE_PROGRESS_BAR) {
+			tmp = gtk_label_new(NULL);
+			tmp_name = g_strdup_printf("%s: ", disp_ary[i].name);
+			gtk_label_set_text(GTK_LABEL(tmp), tmp_name);
+			g_free(tmp_name);
+
+			data->ddisp_widgets[i] = gtk_progress_bar_new();
+			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->ddisp_widgets[i]), 0);
+
+			if (disp_ary[i].context_name) {
+				context = gtk_widget_get_style_context(data->ddisp_widgets[i]);
+				gtk_style_context_add_class(context, disp_ary[i].context_name);
+			}
+
+			gtk_grid_attach(GTK_GRID(data->drive_container), tmp, disp_ary[i].start_x, disp_ary[i].start_y, 1, 1);
+			gtk_grid_attach(GTK_GRID(data->drive_container), data->ddisp_widgets[i], disp_ary[i].start_x + 1, disp_ary[i].start_y, 3, 1);
+		}
+	}
 
 	tmp = gtk_label_new(NULL);
 	gtk_label_set_text(GTK_LABEL(tmp), "Coolant (C):");

@@ -62,13 +62,16 @@ typedef struct gtk_user_data
 	GtkWidget *drive_grid;
 	GtkWidget *drive_file_download_button;
 	GtkWidget *drive_file_load, *drive_file_load_button;
+
+	/* TODO: Make this dynamic */
+	GtkWidget *ddisp_widgets[2];
+
 	GtkWidget *return_home;
 	GtkWidget *timer_display;
 	GtkWidget *coolant_temp_disp;
 	GtkWidget *intake_temp_disp;
 	GtkWidget *maf_disp;
 	GtkWidget *short_o2_t1_disp, *long_o2_t1_disp;
-	GtkWidget *engine_load_bar, *throttle_bar;
 	GtkWidget *taco_draw_area;
 	GThread *drive_track_thread, *obdii_thread;
 	int revs;
@@ -77,22 +80,17 @@ typedef struct gtk_user_data
 	bool finished_drive;
 } gtk_user_data;
 
-typedef struct drive_loop_data
-{
-	gtk_user_data *data;
-
-	struct gps_data_t gps_data;
-	struct timespec *start_time;
-	OsmGpsMap *map;
-	track *cur_track;
-} drive_loop_data;
-
 typedef struct obdii_loop_data
 {
 	gtk_user_data *data;
 
 	PyObject *pModule;
 } obdii_loop_data;
+
+enum drive_disp_type {
+	THROTTLE_BAR,
+	LOAD_BAR
+} drive_disp_type;
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
 
