@@ -151,9 +151,9 @@ gpointer prepare_to_drive(gpointer user_data)
 	track *cur_track;
 	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
-	int ret, pid_1, pid_2;
+	int ret;
 	GMainContext *worker_context;
-	GSource *source;
+	GSource *source_1, *source_2;
 	gchar *clock_time;
 	const char *format = TIMER_FORMAT;
 	char *markup;
@@ -231,22 +231,23 @@ gpointer prepare_to_drive(gpointer user_data)
 	drive_data->map = map;
 	drive_data->cur_track = cur_track;
 
-	source = g_timeout_source_new(10);
-	g_source_set_callback(source, time_drive_loop, drive_data, NULL);
+	source_1 = g_timeout_source_new(10);
+	g_source_set_callback(source_1, time_drive_loop, drive_data, NULL);
 	/* Run in main loop */
-	pid_1 = g_source_attach(source, g_main_context_default());
+	g_source_attach(source_1, g_main_context_default());
 
-	source = g_timeout_source_new(500);
-	g_source_set_callback(source, map_drive_loop, drive_data, NULL);
+	source_2 = g_timeout_source_new(500);
+	g_source_set_callback(source_2, map_drive_loop, drive_data, NULL);
 	/* Run in this thread loop */
-	pid_2 = g_source_attach(source, g_main_context_get_thread_default());
+	g_source_attach(source_2, g_main_context_get_thread_default());
 
 	data->drive_loop = g_main_loop_new(worker_context, false);
 	g_main_loop_run(data->drive_loop);
-	g_main_loop_unref(data->drive_loop);
 
-	g_source_remove(pid_1);
-	g_source_remove(pid_2);
+	g_source_destroy(source_1);
+	g_source_destroy(source_2);
+
+	g_main_loop_unref(data->drive_loop);
 	g_free(drive_data);
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
