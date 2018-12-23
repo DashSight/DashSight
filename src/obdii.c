@@ -32,8 +32,8 @@ obdii_commands obdii_sur_coms[] = {
 	{ OBDII_ENGINE_LOAD,  "ENGINE_LOAD",     RET_FLOAT },
 	{ OBDII_TIMING_ADV,   "TIMING_ADVANCE",  RET_FLOAT },
 	{ OBDII_MAF,          "MAF",             RET_FLOAT },
-	{ OBDII_COOLANT_TEMP, "COOLANT_TEMP",    RET_LONG },
-	{ OBDII_INTAKE_TEMP,  "INTAKE_TEMP",     RET_LONG },
+	{ OBDII_COOLANT_TEMP, "COOLANT_TEMP",    RET_LONG  },
+	{ OBDII_INTAKE_TEMP,  "INTAKE_TEMP",     RET_LONG  },
 };
 
 static gboolean python_parse_long(gpointer python_data)
@@ -83,6 +83,7 @@ static gboolean python_parse_float(gpointer python_data)
 	PyObject *pValue = args->pValue;
 	enum command_type com_type = args->com_type;
 	float ret = 0;
+	char *temp, *format, *markup;
 
 	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
 			g_main_context_get_thread_default() == NULL);
@@ -108,7 +109,13 @@ static gboolean python_parse_float(gpointer python_data)
 		/* Display timing advance info */
 		break;
 	case OBDII_MAF:
-		/* Display the MAF */
+		format = MAF_FORMAT;
+		temp = g_strdup_printf("%.0f", ret);
+		markup = g_markup_printf_escaped(format, temp);
+
+		gtk_label_set_markup(GTK_LABEL(data->maf_disp), markup);
+		g_free(temp);
+		g_free(markup);
 		break;
 	}
 

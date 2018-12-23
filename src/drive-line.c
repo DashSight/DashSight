@@ -163,6 +163,16 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->intake_temp_disp, 28, 5, 1, 1);
 	g_free(markup);
 
+	tmp = gtk_label_new(NULL);
+	gtk_label_set_text(GTK_LABEL(tmp), "MAF (g/s):");
+	data->maf_disp = gtk_label_new(NULL);
+	format = MAF_FORMAT;
+	markup = g_markup_printf_escaped(format, temp);
+	gtk_label_set_markup(GTK_LABEL(data->maf_disp), markup);
+	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 6, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->maf_disp, 26, 6, 1, 1);
+	g_free(markup);
+
 	data->return_home = gtk_button_new_with_label("Return");
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->return_home, 25, 7, 1, 1);
 	g_signal_connect(G_OBJECT(data->return_home), "button-press-event",

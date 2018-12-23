@@ -66,6 +66,7 @@ typedef struct gtk_user_data
 	GtkWidget *timer_display;
 	GtkWidget *coolant_temp_disp;
 	GtkWidget *intake_temp_disp;
+	GtkWidget *maf_disp;
 	GtkWidget *engine_load_bar, *throttle_bar;
 	GtkWidget *taco_draw_area;
 	GThread *drive_track_thread, *obdii_thread;
@@ -96,6 +97,7 @@ typedef struct obdii_loop_data
 
 #define COOLANT_FORMAT "<span font_desc=\"25.0\" foreground=\"green\">\%s</span>"
 #define INTAKE_FORMAT "<span font_desc=\"25.0\" foreground=\"yellow\">\%s</span>"
+#define MAF_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
