@@ -27,13 +27,15 @@
 #include "obdii_commands.h"
 
 obdii_commands obdii_sur_coms[] = {
-	{ OBDII_RPM,          "RPM",             RET_FLOAT },
-	{ OBDII_THROTTLE,     "THROTTLE_POS",    RET_FLOAT },
-	{ OBDII_ENGINE_LOAD,  "ENGINE_LOAD",     RET_FLOAT },
-	{ OBDII_TIMING_ADV,   "TIMING_ADVANCE",  RET_FLOAT },
-	{ OBDII_MAF,          "MAF",             RET_FLOAT },
-	{ OBDII_COOLANT_TEMP, "COOLANT_TEMP",    RET_LONG  },
-	{ OBDII_INTAKE_TEMP,  "INTAKE_TEMP",     RET_LONG  },
+	{ OBDII_RPM,          "RPM",                RET_FLOAT },
+	{ OBDII_THROTTLE,     "THROTTLE_POS",       RET_FLOAT },
+	{ OBDII_ENGINE_LOAD,  "ENGINE_LOAD",        RET_FLOAT },
+	{ OBDII_TIMING_ADV,   "TIMING_ADVANCE",     RET_FLOAT },
+	{ OBDII_MAF,          "MAF",                RET_FLOAT },
+	{ OBDII_COOLANT_TEMP, "COOLANT_TEMP",       RET_LONG  },
+	{ OBDII_INTAKE_TEMP,  "INTAKE_TEMP",        RET_LONG  },
+	{ OBDII_SHORT_O2_T1,  "SHORT_O2_TRIM_B1",   RET_LONG  },
+	{ OBDII_LONG_O2_T1,   "LONG_O2_TRIM_B1",    RET_LONG  },
 };
 
 static gboolean python_parse_long(gpointer python_data)
@@ -68,6 +70,24 @@ static gboolean python_parse_long(gpointer python_data)
 		markup = g_markup_printf_escaped(format, temp);
 
 		gtk_label_set_markup(GTK_LABEL(data->intake_temp_disp), markup);
+		g_free(temp);
+		g_free(markup);
+		break;
+	case OBDII_SHORT_O2_T1:
+		format = SHORT_O2_T1_FORMAT;
+		temp = g_strdup_printf("%lu", ret);
+		markup = g_markup_printf_escaped(format, temp);
+
+		gtk_label_set_markup(GTK_LABEL(data->short_o2_t1_disp), markup);
+		g_free(temp);
+		g_free(markup);
+		break;
+	case OBDII_LONG_O2_T1:
+		format = LONG_O2_T1_FORMAT;
+		temp = g_strdup_printf("%lu", ret);
+		markup = g_markup_printf_escaped(format, temp);
+
+		gtk_label_set_markup(GTK_LABEL(data->long_o2_t1_disp), markup);
 		g_free(temp);
 		g_free(markup);
 		break;

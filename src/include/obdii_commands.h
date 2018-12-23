@@ -25,7 +25,9 @@ enum command_type {
 	OBDII_TIMING_ADV,
 	OBDII_MAF,
 	OBDII_COOLANT_TEMP,
-	OBDII_INTAKE_TEMP
+	OBDII_INTAKE_TEMP,
+	OBDII_SHORT_O2_T1,
+	OBDII_LONG_O2_T1
 } command_type;
 
 enum return_type {

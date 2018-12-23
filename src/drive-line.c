@@ -173,8 +173,28 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->maf_disp, 26, 6, 1, 1);
 	g_free(markup);
 
+	tmp = gtk_label_new(NULL);
+	gtk_label_set_text(GTK_LABEL(tmp), "Short O2 B1:");
+	data->short_o2_t1_disp = gtk_label_new(NULL);
+	format = SHORT_O2_T1_FORMAT;
+	markup = g_markup_printf_escaped(format, temp);
+	gtk_label_set_markup(GTK_LABEL(data->short_o2_t1_disp), markup);
+	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 7, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->short_o2_t1_disp, 26, 7, 1, 1);
+	g_free(markup);
+
+	tmp = gtk_label_new(NULL);
+	gtk_label_set_text(GTK_LABEL(tmp), "Long O2 B1:");
+	data->long_o2_t1_disp = gtk_label_new(NULL);
+	format = LONG_O2_T1_FORMAT;
+	markup = g_markup_printf_escaped(format, temp);
+	gtk_label_set_markup(GTK_LABEL(data->long_o2_t1_disp), markup);
+	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 27, 7, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->long_o2_t1_disp, 28, 7, 1, 1);
+	g_free(markup);
+
 	data->return_home = gtk_button_new_with_label("Return");
-	gtk_grid_attach(GTK_GRID(data->drive_container), data->return_home, 25, 7, 1, 1);
+	gtk_grid_attach(GTK_GRID(data->drive_container), data->return_home, 25, 12, 1, 1);
 	g_signal_connect(G_OBJECT(data->return_home), "button-press-event",
 			G_CALLBACK(drive_line_return), user_data);
 
