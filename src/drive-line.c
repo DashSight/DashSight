@@ -90,7 +90,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 												gpointer user_data)
 {
 	const char *start_time = "00:00:00";
-	const char *temp = "0 *C";
+	const char *temp = "0";
 	const char *format = TIMER_FORMAT;
 	char *markup;
 	GtkWidget *tmp;
@@ -124,6 +124,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	data->throttle_bar = gtk_progress_bar_new();
 	context = gtk_widget_get_style_context(data->throttle_bar);
 	gtk_style_context_add_class(context, "throttle_bar");
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->throttle_bar), 0);
 	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 1, 1, 1);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->throttle_bar, 26, 1, 3, 1);
 
@@ -132,6 +133,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	data->engine_load_bar = gtk_progress_bar_new();
 	context = gtk_widget_get_style_context(data->engine_load_bar);
 	gtk_style_context_add_class(context, "load_bar");
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->engine_load_bar), 0);
 	gtk_grid_attach(GTK_GRID(data->drive_container), tmp, 25, 3, 1, 1);
 	gtk_grid_attach(GTK_GRID(data->drive_container), data->engine_load_bar, 26, 3, 3, 1);
 
@@ -142,7 +144,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 					G_CALLBACK(taco_draw_callback), data);
 
 	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Coolant:");
+	gtk_label_set_text(GTK_LABEL(tmp), "Coolant (C):");
 	data->coolant_temp_disp = gtk_label_new(NULL);
 	format = COOLANT_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
@@ -152,7 +154,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	g_free(markup);
 
 	tmp = gtk_label_new(NULL);
-	gtk_label_set_text(GTK_LABEL(tmp), "Intake:");
+	gtk_label_set_text(GTK_LABEL(tmp), "Intake (C):");
 	data->intake_temp_disp = gtk_label_new(NULL);
 	format = INTAKE_FORMAT;
 	markup = g_markup_printf_escaped(format, temp);
