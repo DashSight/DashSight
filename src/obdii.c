@@ -128,7 +128,7 @@ static char *python_parse_str(PyObject *pValue) {
 		fprintf(stderr, "U: %s\n", PyUnicode_AsUTF8(pValue));
 	}
 
-	return PyUnicode_AsUTF8(pValue);
+	return (char*) PyUnicode_AsUTF8(pValue);
 }
 
 static void python_parse_notify_free(gpointer data)
@@ -171,7 +171,7 @@ gboolean obdii_loop(gpointer user_data)
 		pValue = PyObject_CallObject(pFunc, pArgs);
 
 		if (pValue != NULL) {
-			if (PyInt_Check(pValue) && PyLong_AsLong(pValue) == -1) {
+			if (PyLong_Check(pValue) && PyLong_AsLong(pValue) == -1) {
 				/* There was an error form the OBD device */
 				Py_DECREF(pValue);
 				Py_DECREF(pArgs);
