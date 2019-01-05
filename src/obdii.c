@@ -291,10 +291,12 @@ gpointer obdii_start_connection(gpointer user_data)
 		g_source_set_callback(source, obdii_loop, obdii_data, NULL);
 		pid = g_source_attach(source, worker_context);
 
+		g_main_context_unref(worker_context);
+		g_source_unref(source);
+
 		g_main_loop_run(data->obdii_loop);
 		g_main_loop_unref(data->obdii_loop);
 
-		g_source_remove(pid);
 		g_free(obdii_data);
 
 		Py_DECREF(pModule);
@@ -311,7 +313,6 @@ gpointer obdii_start_connection(gpointer user_data)
 	g_object_unref(data->drive_container);
 
 	g_main_context_pop_thread_default(worker_context);
-	g_main_context_unref(worker_context);
 
 	return NULL;
 }
