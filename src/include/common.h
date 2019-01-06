@@ -101,7 +101,7 @@ enum drive_disp_type {
 #define SHORT_O2_T1_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
 #define LONG_O2_T1_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
 #define TIM_ADVANC_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
-#define FUEL_STATUS_FORMAT "<span font_desc=\"15.0\">\%s</span>"
+#define FUEL_STATUS_FORMAT "<span font_desc=\"5.0\">\%s</span>"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
