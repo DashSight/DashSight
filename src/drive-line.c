@@ -94,7 +94,8 @@ drive_display disp_ary[NUM_DDISP_WIDGETS] = {
 	{ INTAKE_TEMP,		DRIVE_LABEL,		"Intake (C):",		"0",				NULL,				INTAKE_FORMAT,		27,		5 },
 	{ MAF,				DRIVE_LABEL,		"MAF (g/s):",		"0",				NULL,				MAF_FORMAT,			25,		6 },
 	{ SHORT_O2_B1,		DRIVE_LABEL,		"Short O2 B1:",		"0",				NULL,				SHORT_O2_T1_FORMAT,	25,		7 },
-	{ LONG_O2_B1,		DRIVE_LABEL,		"Long O2 B1:",		"0",				NULL,				LONG_O2_T1_FORMAT,	27,		7 }
+	{ LONG_O2_B1,		DRIVE_LABEL,		"Long O2 B1:",		"0",				NULL,				LONG_O2_T1_FORMAT,	27,		7 },
+	{ TIMING_ADVANCED,	DRIVE_LABEL,		"Timing Advanced:",	"0",				NULL,				TIM_ADVANC_FORMAT,	25,		8 }
 };
 
 static gboolean drive_file_load_file_press_event(GtkWidget *widget,

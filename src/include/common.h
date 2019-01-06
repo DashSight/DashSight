@@ -32,7 +32,7 @@ typedef struct cmd_args {
 
 typedef struct track track;
 
-#define NUM_DDISP_WIDGETS 8
+#define NUM_DDISP_WIDGETS 9
 
 typedef struct gtk_user_data
 {
@@ -88,7 +88,8 @@ enum drive_disp_type {
 	INTAKE_TEMP,
 	MAF,
 	SHORT_O2_B1,
-	LONG_O2_B1
+	LONG_O2_B1,
+	TIMING_ADVANCED
 } drive_disp_type;
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
@@ -98,6 +99,7 @@ enum drive_disp_type {
 #define MAF_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
 #define SHORT_O2_T1_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
 #define LONG_O2_T1_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
+#define TIM_ADVANC_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
