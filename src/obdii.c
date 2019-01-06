@@ -294,7 +294,6 @@ gpointer obdii_start_connection(gpointer user_data)
 	PyObject *pName, *pModule;
 	GMainContext *worker_context;
 	GSource *source;
-	int pid;
 
 	worker_context = g_main_context_new();
 	g_main_context_push_thread_default(worker_context);
@@ -327,7 +326,7 @@ gpointer obdii_start_connection(gpointer user_data)
 
 		source = g_timeout_source_new(125);
 		g_source_set_callback(source, obdii_loop, obdii_data, NULL);
-		pid = g_source_attach(source, worker_context);
+		g_source_attach(source, worker_context);
 
 		g_main_context_unref(worker_context);
 		g_source_unref(source);
