@@ -149,7 +149,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	cmd_args args = *data->args;
 	struct gps_data_t gps_data;
 	struct timespec cur_time, diff_time;
-	track *cur_track;
+	track *cur_track = NULL;
 	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
 	int ret;
