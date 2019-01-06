@@ -232,6 +232,8 @@ gpointer prepare_to_drive(gpointer user_data)
 	drive_data->map = map;
 	drive_data->cur_track = cur_track;
 
+	data->drive_loop = g_main_loop_new(worker_context, false);
+
 	source_1 = g_timeout_source_new(10);
 	g_source_set_callback(source_1, time_drive_loop, drive_data, NULL);
 	/* Run in main loop */
@@ -240,15 +242,17 @@ gpointer prepare_to_drive(gpointer user_data)
 	source_2 = g_timeout_source_new(500);
 	g_source_set_callback(source_2, map_drive_loop, drive_data, NULL);
 	/* Run in this thread loop */
-	g_source_attach(source_2, g_main_context_get_thread_default());
+	g_source_attach(source_2, worker_context);
 
-	data->drive_loop = g_main_loop_new(worker_context, false);
+	g_main_context_unref(worker_context);
+	g_source_unref(source_1);
+	g_source_unref(source_2);
+
 	g_main_loop_run(data->drive_loop);
+	g_main_loop_unref(data->drive_loop);
 
 	g_source_destroy(source_1);
-	g_source_destroy(source_2);
 
-	g_main_loop_unref(data->drive_loop);
 	g_free(drive_data);
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
@@ -273,7 +277,6 @@ gpointer prepare_to_drive(gpointer user_data)
 	g_object_unref(data->drive_container);
 
 	g_main_context_pop_thread_default(worker_context);
-	g_main_context_unref(worker_context);
 
 	return NULL;
 }
