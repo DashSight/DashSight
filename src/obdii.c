@@ -36,6 +36,7 @@ obdii_commands obdii_sur_coms[] = {
 	{ OBDII_INTAKE_TEMP,  "INTAKE_TEMP",        RET_LONG  },
 	{ OBDII_SHORT_O2_T1,  "SHORT_O2_TRIM_B1",   RET_LONG  },
 	{ OBDII_LONG_O2_T1,   "LONG_O2_TRIM_B1",    RET_LONG  },
+	{ OBDII_FUEL_STATUS,  "FUEL_STATUS",        RET_STR   },
 };
 
 static gboolean python_parse_long(gpointer python_data)
@@ -142,20 +143,42 @@ static gboolean python_parse_float(gpointer python_data)
 	return false;
 }
 
+static gboolean python_parse_str(gpointer python_data)
+{
+	python_args *args = python_data;
+	gtk_user_data *data = args->data;
+	PyObject *pValue = args->pValue;
+	enum command_type com_type = args->com_type;
+	char *ret;
+	char *temp, *format, *markup;
+
+	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
+			g_main_context_get_thread_default() == NULL);
+
+	if (PyUnicode_Check(pValue)) {
+		ret = (char*) PyUnicode_AsUTF8(pValue);
+	}
+
+	switch (com_type) {
+	case OBDII_FUEL_STATUS:
+		format = FUEL_STATUS_FORMAT;
+		temp = g_strdup_printf("%s", ret);
+		markup = g_markup_printf_escaped(format, temp);
+
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[FUEL_STATUS]), markup);
+		g_free(temp);
+		g_free(markup);
+	}
+
+	return false;
+}
+
 static char *python_parse_unicode(PyObject *pValue) {
 	 if (PyBytes_Check(pValue)) {
 		fprintf(stderr, "B: %s\n", PyBytes_AsString(pValue));
 	}
 
 	return PyBytes_AsString(pValue);
-}
-
-static char *python_parse_str(PyObject *pValue) {
-	if (PyUnicode_Check(pValue)) {
-		fprintf(stderr, "U: %s\n", PyUnicode_AsUTF8(pValue));
-	}
-
-	return (char*) PyUnicode_AsUTF8(pValue);
 }
 
 static void python_parse_notify_free(gpointer data)
@@ -225,7 +248,10 @@ gboolean obdii_loop(gpointer user_data)
 											python_parse_notify_free);
 				break;
 			case RET_STR:
-				python_parse_str(pValue);
+				g_main_context_invoke_full(g_main_context_default(),
+											G_PRIORITY_DEFAULT,
+											python_parse_str, args,
+											python_parse_notify_free);
 				break;
 			case RET_UNICODE:
 				python_parse_unicode(pValue);

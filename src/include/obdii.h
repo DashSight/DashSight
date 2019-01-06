@@ -27,7 +27,8 @@ enum command_type {
 	OBDII_COOLANT_TEMP,
 	OBDII_INTAKE_TEMP,
 	OBDII_SHORT_O2_T1,
-	OBDII_LONG_O2_T1
+	OBDII_LONG_O2_T1,
+	OBDII_FUEL_STATUS
 } command_type;
 
 enum return_type {
