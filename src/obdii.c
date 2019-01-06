@@ -127,7 +127,13 @@ static gboolean python_parse_float(gpointer python_data)
 									ret / 100.0);
 		break;
 	case OBDII_TIMING_ADV:
-		/* Display timing advance info */
+		format = MAF_FORMAT;
+		temp = g_strdup_printf("%.0f", ret);
+		markup = g_markup_printf_escaped(format, temp);
+
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[TIMING_ADVANCED]), markup);
+		g_free(temp);
+		g_free(markup);
 		break;
 	case OBDII_MAF:
 		format = MAF_FORMAT;
