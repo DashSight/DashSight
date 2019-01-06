@@ -165,6 +165,10 @@ static gboolean python_parse_str(gpointer python_data)
 		ret = (char*) PyUnicode_AsUTF8(pValue);
 	}
 
+	if (ret == NULL) {
+		return false;
+	}
+
 	switch (com_type) {
 	case OBDII_FUEL_STATUS:
 		format = FUEL_STATUS_FORMAT;
@@ -175,6 +179,8 @@ static gboolean python_parse_str(gpointer python_data)
 		g_free(temp);
 		g_free(markup);
 	}
+
+	g_free(ret);
 
 	return false;
 }
