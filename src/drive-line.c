@@ -133,7 +133,10 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 
 	for (i = 0; i < ARRAY_SIZE(disp_ary); i++) {
 		if (disp_ary[i].gtk_type == DRIVE_PROGRESS_BAR) {
-			gtk_label_set_text(GTK_LABEL(tmp), disp_ary[i].name);
+			if (disp_ary[i].name) {
+				tmp = gtk_label_new(NULL);
+				gtk_label_set_text(GTK_LABEL(tmp), disp_ary[i].name);
+			}
 
 			data->ddisp_widgets[i] = gtk_progress_bar_new();
 			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->ddisp_widgets[i]), 0);
