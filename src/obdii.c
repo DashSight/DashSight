@@ -155,7 +155,7 @@ static gboolean python_parse_str(gpointer python_data)
 	gtk_user_data *data = args->data;
 	PyObject *pValue = args->pValue;
 	enum command_type com_type = args->com_type;
-	char *ret;
+	char *ret = NULL;
 	char *temp, *format, *markup;
 
 	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
