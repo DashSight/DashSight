@@ -116,7 +116,7 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_container_add(GTK_CONTAINER(data->window), data->drive_container);
 
 	gtk_grid_set_row_spacing(GTK_GRID(data->drive_container), 10);
-	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 8);
+	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 11);
 
 	data->drive_map = osm_gps_map_new();
 	if (cur_track) {
