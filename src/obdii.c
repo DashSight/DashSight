@@ -127,7 +127,7 @@ static gboolean python_parse_float(gpointer python_data)
 									ret / 100.0);
 		break;
 	case OBDII_TIMING_ADV:
-		format = MAF_FORMAT;
+		format = TIM_ADVANC_FORMAT;
 		temp = g_strdup_printf("%.0f", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
