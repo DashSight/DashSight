@@ -94,6 +94,8 @@ static gboolean python_parse_long(gpointer python_data)
 		break;
 	}
 
+	Py_DECREF(pValue);
+	
 	return false;
 }
 
@@ -146,6 +148,8 @@ static gboolean python_parse_float(gpointer python_data)
 		break;
 	}
 
+	Py_DECREF(pValue);
+
 	return false;
 }
 
@@ -182,6 +186,8 @@ static gboolean python_parse_str(gpointer python_data)
 
 	g_free(ret);
 
+	Py_DECREF(pValue);
+
 	return false;
 }
 
@@ -197,7 +203,6 @@ static void python_parse_notify_free(gpointer data)
 {
 	python_args *args = data;
 
-	Py_DECREF(args->pValue);
 	g_free(data);
 }
 
