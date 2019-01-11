@@ -87,16 +87,16 @@ static gboolean drive_file_download_file_press_event(GtkWidget *widget,
 }
 
 drive_display disp_ary[NUM_DDISP_WIDGETS] = {
-	{ THROTTLE_BAR,		DRIVE_PROGRESS_BAR,	"Throttle:",		NULL,				"throttle_bar",		NULL,				26,		1 },
-	{ LOAD_BAR,			DRIVE_PROGRESS_BAR,	"Load:",			NULL,				"load_bar",			NULL,				26,		3 },
-	{ TIMER,			DRIVE_LABEL,		NULL,				"00:00:00",			NULL,				TIMER_FORMAT,		0,		1 },
-	{ COOLANT_TEMP,		DRIVE_LABEL,		"Coolant (C):",		"0",				NULL,				COOLANT_FORMAT,		26,		5 },
-	{ INTAKE_TEMP,		DRIVE_LABEL,		"Intake (C):",		"0",				NULL,				INTAKE_FORMAT,		28,		5 },
-	{ MAF,				DRIVE_LABEL,		"MAF (g/s):",		"0",				NULL,				MAF_FORMAT,			26,		6 },
-	{ SHORT_O2_B1,		DRIVE_LABEL,		"Short O2 B1:",		"0",				NULL,				SHORT_O2_T1_FORMAT,	26,		7 },
-	{ LONG_O2_B1,		DRIVE_LABEL,		"Long O2 B1:",		"0",				NULL,				LONG_O2_T1_FORMAT,	28,		7 },
-	{ TIMING_ADVANCED,	DRIVE_LABEL,		"Timing Adv:",		"0",				NULL,				TIM_ADVANC_FORMAT,	26,		8 },
-	{ FUEL_STATUS,		DRIVE_LABEL,		"Fuel Status:",		"Not Connected",	NULL,				FUEL_STATUS_FORMAT,	26,		9 }
+	{ THROTTLE_BAR,		DRIVE_PROGRESS_BAR,	"Throttle:",		NULL,				"throttle_bar",		NULL,					26,		1 },
+	{ LOAD_BAR,			DRIVE_PROGRESS_BAR,	"Load:",			NULL,				"load_bar",			NULL,					26,		3 },
+	{ TIMER,			DRIVE_LABEL,		NULL,				"00:00:00",			NULL,				TIMER_FORMAT,			0,		1 },
+	{ COOLANT_TEMP,		DRIVE_LABEL,		"Coolant (C):",		"0",				NULL,				COOLANT_FORMAT,			26,		5 },
+	{ INTAKE_TEMP,		DRIVE_LABEL,		"Intake (C):",		"0",				NULL,				INTAKE_FORMAT,			28,		5 },
+	{ MAF,				DRIVE_LABEL,		"MAF (g/s):",		"0",				NULL,				MAF_FORMAT,				26,		6 },
+	{ SHORT_FUEL_B1,	DRIVE_LABEL,		"Short Fuel B1:",	"0",				NULL,				SHORT_FUEL_T1_FORMAT,	26,		7 },
+	{ LONG_FUEL_B1,		DRIVE_LABEL,		"Long Fuel B1:",	"0",				NULL,				LONG_FUEL_T1_FORMAT,	28,		7 },
+	{ TIMING_ADVANCED,	DRIVE_LABEL,		"Timing Adv:",		"0",				NULL,				TIM_ADVANC_FORMAT,		26,		8 },
+	{ FUEL_STATUS,		DRIVE_LABEL,		"Fuel Status:",		"Not Connected",	NULL,				FUEL_STATUS_FORMAT,		26,		9 }
 };
 
 static gboolean drive_file_load_file_press_event(GtkWidget *widget,

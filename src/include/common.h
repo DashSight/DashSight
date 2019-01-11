@@ -87,8 +87,8 @@ enum drive_disp_type {
 	COOLANT_TEMP,
 	INTAKE_TEMP,
 	MAF,
-	SHORT_O2_B1,
-	LONG_O2_B1,
+	SHORT_FUEL_B1,
+	LONG_FUEL_B1,
 	TIMING_ADVANCED,
 	FUEL_STATUS
 } drive_disp_type;
