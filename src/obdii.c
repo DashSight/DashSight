@@ -75,7 +75,7 @@ static gboolean python_parse_long(gpointer python_data)
 		g_free(markup);
 		break;
 	case OBDII_SHORT_FUEL_T1:
-		format = SHORT_O2_T1_FORMAT;
+		format = SHORT_FUEL_T1_FORMAT;
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 
@@ -84,7 +84,7 @@ static gboolean python_parse_long(gpointer python_data)
 		g_free(markup);
 		break;
 	case OBDII_LONG_FUEL_T1:
-		format = LONG_O2_T1_FORMAT;
+		format = LONG_FUEL_T1_FORMAT;
 		temp = g_strdup_printf("%lu", ret);
 		markup = g_markup_printf_escaped(format, temp);
 

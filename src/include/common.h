@@ -98,8 +98,8 @@ enum drive_disp_type {
 #define COOLANT_FORMAT "<span font_desc=\"25.0\" foreground=\"green\">\%s</span>"
 #define INTAKE_FORMAT "<span font_desc=\"25.0\" foreground=\"yellow\">\%s</span>"
 #define MAF_FORMAT "<span font_desc=\"25.0\" foreground=\"#ff7b00\">\%s</span>"
-#define SHORT_O2_T1_FORMAT "<span font_desc=\"20.0\" foreground=\"#545af7\">\%s</span>"
-#define LONG_O2_T1_FORMAT "<span font_desc=\"20.0\" foreground=\"#9500ff\">\%s</span>"
+#define SHORT_FUEL_T1_FORMAT "<span font_desc=\"20.0\" foreground=\"#545af7\">\%s</span>"
+#define LONG_FUEL_T1_FORMAT "<span font_desc=\"20.0\" foreground=\"#9500ff\">\%s</span>"
 #define TIM_ADVANC_FORMAT "<span font_desc=\"20.0\" foreground=\"#5f4e80\">\%s</span>"
 #define FUEL_STATUS_FORMAT "<span font_desc=\"5.0\">\%s</span>"
 
