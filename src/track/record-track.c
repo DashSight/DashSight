@@ -190,6 +190,7 @@ gpointer record_track(gpointer user_data)
 	OsmGpsMapTrack *osm_track;
 	OsmGpsMapPoint *point;
 	OsmGpsMap *map = OSM_GPS_MAP(data->record_map);
+	char tbuf[128];
 
 	struct gps_data_t gps_data;
 	int ret;
@@ -235,10 +236,10 @@ gpointer record_track(gpointer user_data)
 					fprintf(data->fd, "      <trkpt lat=\"%f\" lon=\"%f\">\n",
 							gps_data.fix.latitude,
 							gps_data.fix.longitude);
-					fprintf(data->fd, "        <ele>%f</ele>\n",
+					fprintf(data->fd, "        <ele>%.2git f</ele>\n",
 							gps_data.fix.altitude);
-					fprintf(data->fd, "        <time>%10.0f</time>\n",
-							gps_data.fix.time);
+					fprintf(data->fd, "        <time>%s</time>\n",
+							unix_to_iso8601(gps_data.fix.time, tbuf, sizeof(tbuf)));
 					fprintf(data->fd, "      </trkpt>\n");
 
 					point = osm_gps_map_point_new_degrees(gps_data.fix.latitude,
