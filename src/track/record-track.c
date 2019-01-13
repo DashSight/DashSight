@@ -71,6 +71,18 @@ static void print_gpx_track_stop(FILE *fd)
 	fflush(fd);
 }
 
+static void print_gpx_track_seg_start(FILE *fd)
+{
+	fprintf(fd, "    <trkseg>\n");
+	fflush(fd);
+}
+
+static void print_gpx_track_seg_stop(FILE *fd)
+{
+	fprintf(fd, "    </trkseg>\n");
+	fflush(fd);
+}
+
 static gboolean record_file_save_press_event(GtkWidget *widget,
 											GdkEventButton *event,
 											gpointer user_data)
@@ -134,10 +146,14 @@ static gboolean record_start_button_press_event(GtkWidget *widget,
 		gtk_button_set_label(GTK_BUTTON(data->record_start_button),
 							 "Stop Recording");
 		gtk_widget_set_sensitive(data->record_back_button, false);
+
+		print_gpx_track_seg_start(data->fd);
 	} else if (!data->save) {
 		gtk_button_set_label(GTK_BUTTON(data->record_start_button),
 							 "Start Recording");
 		gtk_widget_set_sensitive(data->record_back_button, true);
+
+		print_gpx_track_seg_stop(data->fd);
 	}
 
 	return false;
