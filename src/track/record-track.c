@@ -60,7 +60,6 @@ static void print_gpx_track_start(FILE *fd, char* track_name)
 {
 	fprintf(fd, "  <trk>\n");
 	fprintf(fd, "    <name>%s</name>\n", track_name);
-	fprintf(fd, "    <trkseg>\n");
 	fflush(fd);
 }
 
