@@ -303,17 +303,17 @@ gpointer obdii_start_connection(gpointer user_data)
 	worker_context = g_main_context_new();
 	g_main_context_push_thread_default(worker_context);
 
-	while (!data->finished_drive) {
-		Py_Initialize();
+	Py_Initialize();
 
+	while (!data->finished_drive) {
 		pName = PyUnicode_DecodeFSDefault("obdii_connect");
 		pModule = PyImport_Import(pName);
 		Py_DECREF(pName);
 
 		if (!pModule) {
 			fprintf(stderr, "Unable to import Python module\n");
-			PyErr_Print();
-			return NULL;
+			sleep(10);
+			continue;
 		}
 
 		/* Don't start updating the page until we have it. */
@@ -342,7 +342,6 @@ gpointer obdii_start_connection(gpointer user_data)
 		g_free(obdii_data);
 
 		Py_DECREF(pModule);
-		Py_Finalize();
 
 		if (!data->finished_drive) {
 			/* We are going to loop again, sleep for a little bit
@@ -351,6 +350,8 @@ gpointer obdii_start_connection(gpointer user_data)
 			sleep(5);
 		}
 	}
+
+	Py_Finalize();
 
 	g_object_unref(data->drive_container);
 
