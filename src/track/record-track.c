@@ -78,6 +78,7 @@ static gboolean record_file_save_press_event(GtkWidget *widget,
 	gtk_user_data *data = user_data;
 	GtkWidget *record_file_save_dialog;
 	int res;
+	gchar *filename;
 
 	record_file_save_dialog =
 			gtk_file_chooser_dialog_new("Choos a track...",
@@ -101,10 +102,17 @@ static gboolean record_file_save_press_event(GtkWidget *widget,
 				fprintf(stderr, "Unable to open GPX file %s for writing\n",
 					    data->record_track_filepath);
 			} else {
+				filename = g_path_get_basename(data->record_track_filepath);
+
+				print_gpx_start(data->fd);
+				print_gpx_metadata(data->fd);
+				print_gpx_track_start(data->fd, filename);
+
 				gtk_button_set_label(GTK_BUTTON(data->record_file_save_button),
-									data->record_track_filepath);
+									filename);
 				gtk_widget_set_sensitive(data->record_start_button, true);
-				/* Set the label as well */
+
+				g_free(filename);
 			}
 		}
 	}
@@ -151,6 +159,8 @@ static gboolean record_finish_button_press_event(GtkWidget *widget,
 
 	/* Do more cleanup */
 	if (data->fd) {
+		print_gpx_track_stop(data->fd);
+		print_gpx_stop(data->fd);
 		fclose(data->fd);
 	}
 	g_free(data->record_track_filepath);
@@ -165,8 +175,7 @@ gpointer record_track(gpointer user_data)
 	OsmGpsMapTrack *osm_track;
 	OsmGpsMapPoint *point;
 	OsmGpsMap *map = OSM_GPS_MAP(data->record_map);
-	gchar *filename;
-	
+
 	struct gps_data_t gps_data;
 	int ret;
 
@@ -180,13 +189,7 @@ gpointer record_track(gpointer user_data)
 			"record-trip-history", false,
 			NULL);
 
-	filename = g_path_get_basename(data->record_track_filepath);
-
 	fprintf(stderr, "Connected to GPSD and opened track file\n");
-
-	print_gpx_start(data->fd);
-	print_gpx_metadata(data->fd);
-	print_gpx_track_start(data->fd, filename);
 
 	/* Read data and write to file until user interrupts us */
 	while (data->record_page) {
@@ -232,11 +235,7 @@ gpointer record_track(gpointer user_data)
 		}
 	}
 
-	print_gpx_track_stop(data->fd);
-	print_gpx_stop(data->fd);
-
 	fprintf(stderr, "Done!\n");
-	g_free(filename);
 	fflush(data->fd);
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
