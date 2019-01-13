@@ -26,6 +26,51 @@
 #include "common.h"
 #include "track.h"
 
+static void print_gpx_start(FILE *fd)
+{
+	fprintf(fd, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+	fprintf(fd, "<gpx version=\"WIP-1.1\" creator=\"DashSight\"\n");
+	fprintf(fd,
+	"        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
+	fprintf(fd, "        xmlns=\"http://www.topografix.com/GPX/1.1\"\n");
+	fprintf(fd,
+	"        xsi:schemaLocation=\"http://www.topografix.com/GPS/1/1\n");
+	fprintf(fd, "        http://www.topografix.com/GPX/1/1/gpx.xsd\">\n");
+	fflush(fd);
+}
+
+static void print_gpx_stop(FILE *fd)
+{
+	fprintf(fd, "</gpx>\n");
+	fflush(fd);
+}
+
+static void print_gpx_metadata(FILE *fd)
+{
+	fprintf(fd, "  <metadata>\n");
+	fprintf(fd, "    <link href=\"https://github.com/alistair23/DashSight\">\n");
+	fprintf(fd, "      <text>DashSight</text>\n");
+	fprintf(fd, "    </link>\n");
+	fprintf(fd, "  </metadata>\n");
+	fflush(fd);
+}
+
+
+static void print_gpx_track_start(FILE *fd, char* track_name)
+{
+	fprintf(fd, "  <trk>\n");
+	fprintf(fd, "    <name>%s</name>\n", track_name);
+	fprintf(fd, "    <trkseg>\n");
+	fflush(fd);
+}
+
+static void print_gpx_track_stop(FILE *fd)
+{
+	fprintf(fd, "    </trkseg>\n");
+	fprintf(fd, "  </trk>\n");
+	fflush(fd);
+}
+
 static gboolean record_file_save_press_event(GtkWidget *widget,
 											GdkEventButton *event,
 											gpointer user_data)
@@ -120,6 +165,7 @@ gpointer record_track(gpointer user_data)
 	OsmGpsMapTrack *osm_track;
 	OsmGpsMapPoint *point;
 	OsmGpsMap *map = OSM_GPS_MAP(data->record_map);
+	gchar *filename;
 	
 	struct gps_data_t gps_data;
 	int ret;
@@ -134,7 +180,13 @@ gpointer record_track(gpointer user_data)
 			"record-trip-history", false,
 			NULL);
 
+	filename = g_path_get_basename(data->record_track_filepath);
+
 	fprintf(stderr, "Connected to GPSD and opened track file\n");
+
+	print_gpx_start(data->fd);
+	print_gpx_metadata(data->fd);
+	print_gpx_track_start(data->fd, filename);
 
 	/* Read data and write to file until user interrupts us */
 	while (data->record_page) {
@@ -162,16 +214,14 @@ gpointer record_track(gpointer user_data)
 									gps_data.fix.track);
 
 				if (data->save && data->fd) {
-					/* Fix this to be in a real formart */
-					fprintf(data->fd, "mode: %d, ", gps_data.fix.mode);
-					fprintf(data->fd, "time: %10.0f, ", gps_data.fix.time);
-					fprintf(data->fd, "latitude: %f, ", gps_data.fix.latitude);
-					fprintf(data->fd, "longitude: %f, ", gps_data.fix.longitude);
-					fprintf(data->fd, "altitude: %f, ", gps_data.fix.altitude);
-					fprintf(data->fd, "speed: %f, ", gps_data.fix.speed);
-					fprintf(data->fd, "track: %f, ", gps_data.fix.track);
-					fprintf(data->fd, "pdop: %f", gps_data.dop.pdop);
-					fprintf(data->fd, "\n");
+					fprintf(data->fd, "      <trkpt lat=\"%f\" lon=\"%f\">\n",
+							gps_data.fix.latitude,
+							gps_data.fix.longitude);
+					fprintf(data->fd, "        <ele>%f</ele>\n",
+							gps_data.fix.altitude);
+					fprintf(data->fd, "        <time>%10.0f</time>\n",
+							gps_data.fix.time);
+					fprintf(data->fd, "      </trkpt>\n");
 
 					point = osm_gps_map_point_new_degrees(gps_data.fix.latitude,
 														  gps_data.fix.longitude);
@@ -182,7 +232,11 @@ gpointer record_track(gpointer user_data)
 		}
 	}
 
+	print_gpx_track_stop(data->fd);
+	print_gpx_stop(data->fd);
+
 	fprintf(stderr, "Done!\n");
+	g_free(filename);
 	fflush(data->fd);
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
