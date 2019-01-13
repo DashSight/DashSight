@@ -47,10 +47,27 @@ track *load_track(char *file, bool loop)
 	line = (char*) malloc(256 * sizeof(char));
 	line = fgets(line, 256, fd);
 
+	/* TODO: Check the meta data */
+
+	/* Skip the XML data and look for the track starting */
 	while (line) {
 		tmp = strtok(line, " ");
+		if (tmp && !strcmp(tmp, "<trk>")) {
+			break;
+		}
+
+		line = fgets(line, 256, fd);
+	}
+
+	while (line) {
+		fprintf(stderr, "1: %s\n", line);
+		tmp = strtok(line, "=");
+		fprintf(stderr, "2: %s\n", tmp);
+		tmp = strtok(tmp, " ");
+		fprintf(stderr, "3: %s\n", tmp);
+
 		while (tmp) {
-			if (!strcmp(tmp, "latitude:")) {
+			if (!strcmp(tmp, "lat")) {
 				cur_lat = atof(strtok(NULL, ","));
 				if (first_run) {
 					ret->start.lat = cur_lat;
@@ -58,7 +75,7 @@ track *load_track(char *file, bool loop)
 				} else if (!loop) {
 					ret->end.lat = cur_lat;
 				}
-			} else if (!strcmp(tmp, "longitude:")) {
+			} else if (!strcmp(tmp, "lon")) {
 				cur_lon = atof(strtok(NULL, ","));
 				if (first_run) {
 					ret->start.lon = cur_lon;
