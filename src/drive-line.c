@@ -209,7 +209,7 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 	g_signal_connect(G_OBJECT(data->drive_file_load), "file-set",
 			G_CALLBACK(drive_file_load_file_set_event), user_data);
 
-	data->drive_file_download_button = gtk_button_new_with_label("Download this map");
+	data->drive_file_download_button = gtk_button_new_with_label("Download track map");
 	gtk_box_pack_start(GTK_BOX(vbox), data->drive_file_download_button, false, false, 10);
 	g_signal_connect(G_OBJECT(data->drive_file_download_button), "button-press-event",
 			G_CALLBACK(drive_file_download_file_press_event), user_data);
