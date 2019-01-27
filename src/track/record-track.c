@@ -29,7 +29,7 @@
 static void print_gpx_start(FILE *fd)
 {
 	fprintf(fd, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-	fprintf(fd, "<gpx version=\"WIP-1.1\" creator=\"DashSight\"\n");
+	fprintf(fd, "<gpx version=\"1.1\" creator=\"DashSight\"\n");
 	fprintf(fd,
 	"        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
 	fprintf(fd, "        xmlns=\"http://www.topografix.com/GPX/1.1\"\n");
