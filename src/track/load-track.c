@@ -27,7 +27,7 @@
 track *load_track(char *file, bool loop)
 {
 	FILE *fd;
-	char *line, *tmp;
+	char *line, *tmp, *tmp_dup;
 	struct timespec cur_time, diff_time;
 	OsmGpsMapPoint *point;
 	bool first_run = true;
@@ -60,40 +60,45 @@ track *load_track(char *file, bool loop)
 		line = fgets(line, 256, fd);
 	}
 
+	line = fgets(line, 256, fd);
+
 	while (line) {
-		fprintf(stderr, "1: %s\n", line);
-		tmp = strtok(line, "=");
-		fprintf(stderr, "2: %s\n", tmp);
-		tmp = strtok(tmp, " ");
-		fprintf(stderr, "3: %s\n", tmp);
+		line[strcspn(line, "\r\n")] = 0;
 
-		while (tmp) {
-			if (!strcmp(tmp, "lat")) {
-				cur_lat = atof(strtok(NULL, ","));
-				if (first_run) {
-					ret->start.lat = cur_lat;
-					ret->end.lat = cur_lat;
-				} else if (!loop) {
-					ret->end.lat = cur_lat;
-				}
-			} else if (!strcmp(tmp, "lon")) {
-				cur_lon = atof(strtok(NULL, ","));
-				if (first_run) {
-					ret->start.lon = cur_lon;
-					ret->end.lon = cur_lon;
-				} else if (!loop) {
-					ret->end.lon = cur_lon;
-				}
-
-				/* Longitude is saved secondly, so store the point now. */
-				point = osm_gps_map_point_new_degrees(cur_lat, cur_lon);
-				osm_gps_map_track_add_point(ret->osm_track, point);
-				osm_gps_map_point_free(point);
+		tmp = g_strrstr(line, "lat=\"");
+		if (tmp) {
+			tmp_dup = g_strdup(tmp);
+			tmp = strtok(tmp_dup, "\"");
+			tmp = strtok(NULL, "\"");
+			cur_lat = atof(tmp);
+			if (first_run) {
+				ret->start.lat = cur_lat;
+				ret->end.lat = cur_lat;
+			} else if (!loop) {
+				ret->end.lat = cur_lat;
 			}
-
-			tmp = strtok(NULL, " ");
+			g_free(tmp_dup);
 		}
-		first_run = false;
+
+		tmp = g_strrstr(line, "lon=\"");
+		if (tmp) {
+			tmp_dup = g_strdup(tmp);
+			tmp = strtok(tmp_dup, "\"");
+			tmp = strtok(NULL, "\"");
+			cur_lon = atof(tmp);
+			if (first_run) {
+				ret->start.lon = cur_lon;
+				ret->end.lon = cur_lon;
+			} else if (!loop) {
+				ret->end.lon = cur_lon;
+			}
+			g_free(tmp_dup);
+
+			point = osm_gps_map_point_new_degrees(cur_lat, cur_lon);
+			osm_gps_map_track_add_point(ret->osm_track, point);
+			osm_gps_map_point_free(point);
+			first_run = false;
+		}
 
 		line = fgets(line, 256, fd);
 	}
