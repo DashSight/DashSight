@@ -52,6 +52,7 @@ track *load_track(char *file, bool loop)
 	/* Skip the XML data and look for the track starting */
 	while (line) {
 		tmp = strtok(line, " ");
+		tmp[strcspn(tmp, "\r\n")] = 0;
 		if (tmp && !strcmp(tmp, "<trk>")) {
 			break;
 		}
