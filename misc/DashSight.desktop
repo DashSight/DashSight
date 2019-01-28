@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=DashSight
+Comment=Laucher for DashSight
+Exec=/bin/sh -c "PYTHONPATH='/home/alistair/DashSight/src/:/home/alistair/python-OBD/:${PYTHONPATH}' /home/alistair/DashSight/src/DashSight"
+Icon=
+Path=/home/alistair/DashSight/src
+Terminal=false
+StartupNotify=false
