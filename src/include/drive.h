@@ -52,5 +52,6 @@ typedef struct drive_display {
 	int start_y;
 } drive_display;
 
+#define LOCATION_MARGIN 0.00005
 
 #endif /* DRIVE_H; */

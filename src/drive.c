@@ -131,8 +131,8 @@ gboolean map_drive_loop(gpointer user_data)
 										map_drive_update_notify_free);
 
 			if (cur_track &&
-				equal(gps_data.fix.latitude, cur_track->end.lat, 0.0005) &&
-				equal(gps_data.fix.longitude, cur_track->end.lon, 0.0005)) {
+				equal(gps_data.fix.latitude, cur_track->end.lat, LOCATION_MARGIN) &&
+				equal(gps_data.fix.longitude, cur_track->end.lon, LOCATION_MARGIN)) {
 				g_main_loop_quit(data->drive_loop);
 				data->finished_drive = true;
 				return false;
@@ -214,8 +214,8 @@ gpointer prepare_to_drive(gpointer user_data)
 									gps_data.fix.track);
 
 				if (cur_track &&
-					equal(gps_data.fix.latitude, cur_track->start.lat, 0.0005) &&
-					equal(gps_data.fix.longitude, cur_track->start.lon, 0.0005)) {
+					equal(gps_data.fix.latitude, cur_track->start.lat, LOCATION_MARGIN) &&
+					equal(gps_data.fix.longitude, cur_track->start.lon, LOCATION_MARGIN)) {
 					clock_gettime(CLOCK_MONOTONIC_RAW, start_time);
 					break;
 				}
