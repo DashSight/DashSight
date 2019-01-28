@@ -90,6 +90,19 @@ static gboolean map_drive_update(gpointer drive_data)
 	return false;
 }
 
+static gboolean map_drive_clear(gpointer drive_data)
+{
+	drive_args *args = drive_data;
+	OsmGpsMap *map = args->map;
+
+	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
+			g_main_context_get_thread_default() == NULL);
+
+	osm_gps_map_gps_clear(map);
+
+	return false;
+}
+
 static void map_drive_update_notify_free(gpointer data)
 {
 	g_free(data);
@@ -137,8 +150,18 @@ gboolean map_drive_loop(gpointer user_data)
 				data->finished_drive = true;
 				return false;
 			}
+			return true;
 		}
 	}
+
+	/* We didn't update the map location, clear the marker as that probably
+	 * means we lost GPS signal.
+	 */
+	args->map = map;
+	g_main_context_invoke_full(g_main_context_default(),
+								G_PRIORITY_LOW,
+								map_drive_clear, args,
+								map_drive_update_notify_free);
 
 	return true;
 }
