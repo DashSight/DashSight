@@ -1,9 +1,0 @@
-
-# Setting up
-
-# Running
-Ensure that gpsd is running
-
-```sudo gpsd /dev/ttyS2 -F /var/run/gpsd.sock
-```
-
