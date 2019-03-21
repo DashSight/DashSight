@@ -353,8 +353,9 @@ gpointer obdii_start_connection(gpointer user_data)
 		g_source_unref(source);
 
 		g_main_loop_run(data->obdii_loop);
-		g_main_loop_unref(data->obdii_loop);
 
+		/* We only get here after obdii_loop() has finished */
+		g_main_loop_unref(data->obdii_loop);
 		g_free(obdii_data);
 
 		Py_DECREF(pModule);
