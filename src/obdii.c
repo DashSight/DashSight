@@ -34,8 +34,8 @@ obdii_commands obdii_sur_coms[] = {
 	{ OBDII_MAF,             "MAF",                RET_FLOAT },
 	{ OBDII_COOLANT_TEMP,    "COOLANT_TEMP",       RET_LONG  },
 	{ OBDII_INTAKE_TEMP,     "INTAKE_TEMP",        RET_LONG  },
-	{ OBDII_SHORT_FUEL_T1,   "SHORT_FUEL_TRIM_1",   RET_LONG  },
-	{ OBDII_LONG_FUEL_T1,    "LONG_FUEL_TRIM_1",    RET_LONG  },
+	{ OBDII_SHORT_FUEL_T1,   "SHORT_FUEL_TRIM_1",  RET_LONG  },
+	{ OBDII_LONG_FUEL_T1,    "LONG_FUEL_TRIM_1",   RET_LONG  },
 	{ OBDII_FUEL_STATUS,     "FUEL_STATUS",        RET_STR   },
 };
 
