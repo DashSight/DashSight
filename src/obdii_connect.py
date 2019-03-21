@@ -14,7 +14,10 @@ class LapTimerOBD(object):
 
 	def get_data(self, cmd):
 		"""
-		Get the current OBDII data and increment the command.
+			Get the current OBDII data and increment the command.
+
+			Returns -1 on failure. On success the fail returned by the
+			car is returned.
 		"""
 		if self.connection.status() != OBDStatus.CAR_CONNECTED:
 			print("No connection to car")
