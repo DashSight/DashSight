@@ -217,6 +217,22 @@ gboolean obdii_loop(gpointer user_data)
 	static int i = 0;
 
 	if (!data || data->finished_drive) {
+		pFunc = PyObject_GetAttrString(pModule, "c_enter_low_power");
+
+		if (pFunc && PyCallable_Check(pFunc)) {
+			pValue = PyObject_CallObject(pFunc, NULL);
+
+			if (pValue != NULL && PyLong_Check(pValue)) {
+				if (PyLong_AsLong(pValue) != 0) {
+					fprintf(stderr, "ELM327 failed to enter low power state\n");
+				}
+
+				Py_DECREF(pValue);
+			}
+		}
+
+		Py_DECREF(pFunc);
+
 		g_main_loop_quit(data->obdii_loop);
 		return false;
 	}
