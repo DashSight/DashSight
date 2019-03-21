@@ -272,10 +272,10 @@ gpointer prepare_to_drive(gpointer user_data)
 	g_source_unref(source_2);
 
 	g_main_loop_run(data->drive_loop);
+
+	/* We only get here after obdii_loop() has finished */
 	g_main_loop_unref(data->drive_loop);
-
 	g_source_destroy(source_1);
-
 	g_free(drive_data);
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
