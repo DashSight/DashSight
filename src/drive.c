@@ -125,7 +125,7 @@ gboolean map_drive_loop(gpointer user_data)
 	}
 
 	if (gps_waiting(&gps_data, 500)) {
-		ret = gps_read(&gps_data, NULL, 0);
+		ret = gps_read(&gps_data);
 
 		if (ret < 0) {
 			fprintf(stderr, "gps_read error: %d\n", ret);
@@ -222,7 +222,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	/* Poll until we hit the start line */
 	while (cur_track && !data->finished_drive) {
 		if (gps_waiting(&gps_data, 500)) {
-			ret = gps_read(&gps_data, NULL, 0);
+			ret = gps_read(&gps_data);
 
 			if (ret < 0) {
 				fprintf(stderr, "gps_read error: %d\n", ret);
