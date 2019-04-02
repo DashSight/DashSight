@@ -15,13 +15,15 @@
 
 CC ?= gcc
 CFLAGS ?= -g
-LDFLAGS ?= -lm -lgps
+LDFLAGS ?= -lm
 
 GTK_CFLAGS = $(shell pkg-config --cflags gtk+-3.0 osmgpsmap-1.0)
 GTK_LDFLAGS = $(shell pkg-config --libs gtk+-3.0 osmgpsmap-1.0)
 
-PYTHON_CFLAGS =  $(shell python3-config --includes)
-PYTHON_LFALGS =  $(shell python3-config --libs)
+PYTHON_CFLAGS = $(shell python3-config --includes)
+PYTHON_LDFLAGS = $(shell python3-config --libs)
+
+GPSD_LDFLAGS = -lgps
 
 .PHONY: all
 all: DashSight
@@ -32,10 +34,10 @@ HEADERS = $(wildcard include/*.h)
 .PRECIOUS: DashSight $(OBJECTS)
 
 DashSight: $(OBJECTS)
-	$(CC) $(GTK_CFLAGS) $(PYTHON_CFLAGS) $(OBJECTS) -Wall $(LDFLAGS) -o $@ $(GTK_LDFLAGS) $(PYTHON_LFALGS)
+	$(CC) $(GTK_CFLAGS) $(PYTHON_CFLAGS) $(OBJECTS) -Wall $(LDFLAGS) -o $@ $(GTK_LDFLAGS) $(PYTHON_LDFLAGS) $(GPSD_LDFLAGS)
 
 %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) $(GTK_CFLAGS) $(PYTHON_CFLAGS) -Iinclude -c $< -o $@ $(GTK_LDFLAGS) $(PYTHON_LFALGS)
+	$(CC) $(CFLAGS) $(GTK_CFLAGS) $(PYTHON_CFLAGS) -Iinclude -c $< -o $@ $(GTK_LDFLAGS) $(PYTHON_LDFLAGS) $(GPSD_LDFLAGS)
 
 .PHONY: clean
 clean:
