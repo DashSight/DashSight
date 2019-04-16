@@ -275,7 +275,9 @@ gboolean record_button_press_event(GtkWidget *widget,
 
 	data->record_container = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 
-	data->record_map = osm_gps_map_new();
+	data->record_map = g_object_new(OSM_TYPE_GPS_MAP,
+									"map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
+									NULL);
 	gtk_paned_pack1(GTK_PANED(data->record_container), data->record_map, true, true);
 
 	gtk_paned_pack2(GTK_PANED(data->record_container), vbox, false, false);

@@ -118,7 +118,9 @@ static gboolean drive_file_load_file_press_event(GtkWidget *widget,
 	gtk_grid_set_row_spacing(GTK_GRID(data->drive_container), 10);
 	gtk_grid_set_column_spacing(GTK_GRID(data->drive_container), 11);
 
-	data->drive_map = osm_gps_map_new();
+	data->drive_map = g_object_new(OSM_TYPE_GPS_MAP,
+									"map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
+									NULL);
 	if (cur_track) {
 		osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(data->drive_map), cur_track->start.lat, cur_track->start.lon, MAP_ZOOM_LEVEL);
 		osm_gps_map_track_add(OSM_GPS_MAP(data->drive_map), cur_track->osm_track);
@@ -197,7 +199,9 @@ gboolean drive_line_button_press_event(GtkWidget *widget,
 
 	data->load_drive_container = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 
-	data->drive_map = osm_gps_map_new();
+	data->drive_map = g_object_new(OSM_TYPE_GPS_MAP,
+									"map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
+									NULL);
 	gtk_paned_pack1(GTK_PANED(data->load_drive_container), data->drive_map, true, true);
 
 	gtk_paned_pack2(GTK_PANED(data->load_drive_container), vbox, false, false);
