@@ -6,7 +6,7 @@ from obd import OBDStatus
 
 class LapTimerOBD(object):
 	def __init__(self):
-		self.connection = obd.OBD("/dev/ttyS1", start_low_power=True)
+		self.connection = obd.OBD("/dev/ttyS3", start_low_power=True)
 
 		if self.connection.status() != OBDStatus.CAR_CONNECTED:
 			print("Unable to connect to the car")
