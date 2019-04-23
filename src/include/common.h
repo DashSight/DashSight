@@ -94,6 +94,8 @@ enum drive_disp_type {
 } drive_disp_type;
 
 #define TIMER_FORMAT "<span font_desc=\"55.0\">\%s</span>"
+#define TIMER_FORMAT_GOOD "<span font_desc=\"55.0\" foreground=\"green\">\%s</span>"
+#define TIMER_FORMAT_BAD "<span font_desc=\"55.0\" foreground=\"red\">\%s</span>"
 
 #define COOLANT_FORMAT "<span font_desc=\"25.0\" foreground=\"green\">\%s</span>"
 #define INTAKE_FORMAT "<span font_desc=\"25.0\" foreground=\"yellow\">\%s</span>"

@@ -32,6 +32,7 @@ typedef struct drive_loop_data
 
 	struct gps_data_t gps_data;
 	struct timespec *start_time;
+	struct timespec best_time;
 	OsmGpsMap *map;
 	track *cur_track;
 } drive_loop_data;

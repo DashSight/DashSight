@@ -40,7 +40,7 @@ gboolean time_drive_loop(gpointer user_data)
 	struct timespec *start_time = drive_data->start_time;
 	struct timespec cur_time, diff_time;
 	gchar *clock_time;
-	const char *format = TIMER_FORMAT;
+	char *format;
 	char *markup;
 
 	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
@@ -52,6 +52,13 @@ gboolean time_drive_loop(gpointer user_data)
 
 	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
 	diff_time = timeval_subtract(&cur_time, start_time);
+
+	if (timeval_cmp(&drive_data->best_time, &diff_time)) {
+		format = TIMER_FORMAT_GOOD;
+	} else {
+		format = TIMER_FORMAT_BAD;
+	}
+
 	clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
 								diff_time.tv_sec / 60,
 								diff_time.tv_sec % 60,
@@ -171,7 +178,7 @@ gpointer prepare_to_drive(gpointer user_data)
 	gtk_user_data *data = user_data;
 	cmd_args args = *data->args;
 	struct gps_data_t gps_data;
-	struct timespec cur_time, diff_time;
+	struct timespec cur_time, diff_time, best_time;
 	track *cur_track = NULL;
 	struct timespec *start_time;
 	OsmGpsMap *map = OSM_GPS_MAP(data->drive_map);
@@ -218,6 +225,9 @@ gpointer prepare_to_drive(gpointer user_data)
 	}
 
 	g_object_ref(data->drive_container);
+
+	best_time.tv_sec = 0;
+	best_time.tv_nsec = 0;
 
 	while (!data->finished_drive) {
 		/* Poll until we hit the start line */
@@ -291,8 +301,10 @@ gpointer prepare_to_drive(gpointer user_data)
 		g_free(clock_time);
 		g_free(markup);
 
-		if (timeval_cmp(&drive_data->best_time, &diff_time)) {
-			drive_data->best_time = diff_time;
+		if ((best_time.tv_sec == 0 && best_time.tv_nsec == 0) ||
+			timeval_cmp(&best_time, &diff_time)) {
+			/* best_time is greater then diff_time, update the best_time */
+			best_time = diff_time;
 		}
 
 		fprintf(stderr, "Finished the drive, total time: %ld:%ld:%ld\n",
