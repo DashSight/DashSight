@@ -257,6 +257,10 @@ gpointer prepare_to_drive(gpointer user_data)
 			}
 		}
 
+		if (data->finished_drive) {
+			continue;
+		}
+
 		fprintf(stderr, "Starting the drive\n");
 
 		drive_loop_data *drive_data = g_new0(drive_loop_data, 1);
