@@ -54,9 +54,9 @@ gboolean time_drive_loop(gpointer user_data)
 	diff_time = timeval_subtract(&cur_time, start_time);
 
 	if (timeval_cmp(&drive_data->best_time, &diff_time)) {
-		format = TIMER_FORMAT_GOOD;
-	} else {
 		format = TIMER_FORMAT_BAD;
+	} else {
+		format = TIMER_FORMAT_GOOD;
 	}
 
 	clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
