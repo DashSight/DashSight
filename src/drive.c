@@ -219,80 +219,87 @@ gpointer prepare_to_drive(gpointer user_data)
 
 	g_object_ref(data->drive_container);
 
-	/* Poll until we hit the start line */
-	while (cur_track && !data->finished_drive) {
-		if (gps_waiting(&gps_data, 500)) {
-			ret = gps_read(&gps_data);
+	while (!data->finished_drive) {
+		/* Poll until we hit the start line */
+		while (cur_track && !data->finished_drive) {
+			if (gps_waiting(&gps_data, 500)) {
+				ret = gps_read(&gps_data);
 
-			if (ret < 0) {
-				fprintf(stderr, "gps_read error: %d\n", ret);
-				exit(1);
-			}
+				if (ret < 0) {
+					fprintf(stderr, "gps_read error: %d\n", ret);
+					exit(1);
+				}
 
-			if (!isnan(gps_data.fix.latitude) &&
-				!isnan(gps_data.fix.longitude)) {
-				osm_gps_map_gps_add(map,
-									gps_data.fix.latitude,
-									gps_data.fix.longitude,
-									gps_data.fix.track);
+				if (!isnan(gps_data.fix.latitude) &&
+					!isnan(gps_data.fix.longitude)) {
+					osm_gps_map_gps_add(map,
+										gps_data.fix.latitude,
+										gps_data.fix.longitude,
+										gps_data.fix.track);
 
-				if (cur_track &&
-					equal(gps_data.fix.latitude, cur_track->start.lat, LOCATION_MARGIN) &&
-					equal(gps_data.fix.longitude, cur_track->start.lon, LOCATION_MARGIN)) {
-					clock_gettime(CLOCK_MONOTONIC_RAW, start_time);
-					break;
+					if (cur_track &&
+						equal(gps_data.fix.latitude, cur_track->start.lat, LOCATION_MARGIN) &&
+						equal(gps_data.fix.longitude, cur_track->start.lon, LOCATION_MARGIN)) {
+						clock_gettime(CLOCK_MONOTONIC_RAW, start_time);
+						break;
+					}
 				}
 			}
 		}
+
+		fprintf(stderr, "Starting the drive\n");
+
+		drive_loop_data *drive_data = g_new0(drive_loop_data, 1);
+		drive_data->data = data;
+		drive_data->gps_data = gps_data;
+		drive_data->start_time = start_time;
+		drive_data->best_time = best_time;
+		drive_data->map = map;
+		drive_data->cur_track = cur_track;
+
+		data->drive_loop = g_main_loop_new(worker_context, false);
+
+		source_1 = g_timeout_source_new(10);
+		g_source_set_callback(source_1, time_drive_loop, drive_data, NULL);
+		/* Run in main loop */
+		g_source_attach(source_1, g_main_context_default());
+
+		source_2 = g_timeout_source_new(500);
+		g_source_set_callback(source_2, map_drive_loop, drive_data, NULL);
+		/* Run in this thread loop */
+		g_source_attach(source_2, worker_context);
+
+		g_main_context_unref(worker_context);
+		g_source_unref(source_1);
+		g_source_unref(source_2);
+
+		g_main_loop_run(data->drive_loop);
+
+		/* We only get here after obdii_loop() has finished */
+		g_main_loop_unref(data->drive_loop);
+		g_source_destroy(source_1);
+		g_free(drive_data);
+
+		clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
+		diff_time = timeval_subtract(&cur_time, start_time);
+		clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
+									diff_time.tv_sec / 60,
+									diff_time.tv_sec % 60,
+									diff_time.tv_nsec / (1000 * 1000 * 10));
+		markup = g_markup_printf_escaped(format, clock_time);
+		gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[TIMER]), markup);
+		g_free(clock_time);
+		g_free(markup);
+
+		if (timeval_cmp(&drive_data->best_time, &diff_time)) {
+			drive_data->best_time = diff_time;
+		}
+
+		fprintf(stderr, "Finished the drive, total time: %ld:%ld:%ld\n",
+				diff_time.tv_sec / 60,
+				diff_time.tv_sec % 60,
+				diff_time.tv_nsec / (1000 * 1000 * 10));
 	}
-
-	fprintf(stderr, "Starting the drive\n");
-
-	drive_loop_data *drive_data = g_new0(drive_loop_data, 1);
-	drive_data->data = data;
-	drive_data->gps_data = gps_data;
-	drive_data->start_time = start_time;
-	drive_data->map = map;
-	drive_data->cur_track = cur_track;
-
-	data->drive_loop = g_main_loop_new(worker_context, false);
-
-	source_1 = g_timeout_source_new(10);
-	g_source_set_callback(source_1, time_drive_loop, drive_data, NULL);
-	/* Run in main loop */
-	g_source_attach(source_1, g_main_context_default());
-
-	source_2 = g_timeout_source_new(500);
-	g_source_set_callback(source_2, map_drive_loop, drive_data, NULL);
-	/* Run in this thread loop */
-	g_source_attach(source_2, worker_context);
-
-	g_main_context_unref(worker_context);
-	g_source_unref(source_1);
-	g_source_unref(source_2);
-
-	g_main_loop_run(data->drive_loop);
-
-	/* We only get here after obdii_loop() has finished */
-	g_main_loop_unref(data->drive_loop);
-	g_source_destroy(source_1);
-	g_free(drive_data);
-
-	clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
-	diff_time = timeval_subtract(&cur_time, start_time);
-	clock_time = g_strdup_printf("%02ld:%02ld:%02ld",
-								diff_time.tv_sec / 60,
-								diff_time.tv_sec % 60,
-								diff_time.tv_nsec / (1000 * 1000 * 10));
-	markup = g_markup_printf_escaped(format, clock_time);
-	gtk_label_set_markup(GTK_LABEL(data->ddisp_widgets[TIMER]), markup);
-	g_free(clock_time);
-	g_free(markup);
-
-	fprintf(stderr, "Finished the drive, total time: %ld:%ld:%ld\n",
-			diff_time.tv_sec / 60,
-			diff_time.tv_sec % 60,
-			diff_time.tv_nsec / (1000 * 1000 * 10));
 
 	gps_stream(&gps_data, WATCH_DISABLE, NULL);
 	gps_close(&gps_data);
