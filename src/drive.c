@@ -46,7 +46,7 @@ gboolean time_drive_loop(gpointer user_data)
 	g_assert(g_main_context_get_thread_default() == g_main_context_default() ||
 			g_main_context_get_thread_default() == NULL);
 
-	if (!data || data->finished_drive) {
+	if (!data || data->finished_drive || data->finish_line) {
 		return false;
 	}
 
@@ -126,7 +126,7 @@ gboolean map_drive_loop(gpointer user_data)
 	drive_args *args = g_new0(drive_args, 1);
 	int ret;
 
-	if (!data || data->finished_drive) {
+	if (!data || data->finished_drive || data->finish_line) {
 		g_main_loop_quit(data->drive_loop);
 		return false;
 	}
@@ -154,7 +154,7 @@ gboolean map_drive_loop(gpointer user_data)
 				equal(gps_data.fix.latitude, cur_track->end.lat, LOCATION_MARGIN) &&
 				equal(gps_data.fix.longitude, cur_track->end.lon, LOCATION_MARGIN)) {
 				g_main_loop_quit(data->drive_loop);
-				data->finished_drive = true;
+				data->finish_line = true;
 				return false;
 			}
 			return true;

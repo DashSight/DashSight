@@ -78,6 +78,7 @@ typedef struct gtk_user_data
 	void *loaded_track;
 	bool load_page, drive_track_updated;
 	bool finished_drive;
+	bool finish_line;
 } gtk_user_data;
 
 enum drive_disp_type {
