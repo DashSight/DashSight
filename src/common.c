@@ -44,6 +44,22 @@ struct timespec timeval_subtract(struct timespec *x, struct timespec *y)
 	return result;
 }
 
+/* Returns true if x > y */
+bool timeval_cmp(struct timespec *x, struct timespec *y)
+{
+	if (x->tv_sec > y->tv_sec) {
+		return true;
+	}
+
+	if (x->tv_sec == y->tv_sec) {
+		if (x->tv_nsec > y->tv_nsec) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 struct gps_data_t connect_to_gpsd(cmd_args args)
 {
 	struct gps_data_t gps_data;

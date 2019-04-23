@@ -115,5 +115,6 @@ gpointer prepare_to_drive(gpointer user_data);
 bool equal(float a, float b, float epsilon);
 
 struct timespec timeval_subtract(struct timespec *x, struct timespec *y);
+bool timeval_cmp(struct timespec *x, struct timespec *y);
 
 #endif /* COMMON_H */
