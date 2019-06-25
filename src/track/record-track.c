@@ -210,7 +210,11 @@ gpointer record_track(gpointer user_data)
 	/* Read data and write to file until user interrupts us */
 	while (data->record_page) {
 		if (gps_waiting(&gps_data, 500)) {
+#if (GPSD_API_MAJOR_VERSION >= 7)
+			ret = gps_read(&gps_data, NULL, 0);
+#else
 			ret = gps_read(&gps_data);
+#endif
 
 			if (ret < 0) {
 				fprintf(stderr, "gps_read error: %d\n", ret);
