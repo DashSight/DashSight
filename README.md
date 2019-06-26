@@ -12,9 +12,8 @@ Although DashSight is written using standard glib and GTK+3 APIs it is designed 
   * DashSight uses GTK+3 for graphic display and glib for helper functions
 * osm-gps-map
   * DashSight uses osm-gps-map for the map rendering.
-* Python-OBD and Python3
-  * DashSight relies on Python-OBD for the OBD communication.
-  * https://github.com/brendan-w/python-OBD
+* [Python-OBD](https://github.com/brendan-w/python-OBD) and Python3
+  * DashSight relies on [Python-OBD](https://github.com/brendan-w/python-OBD) for the OBD communication.
 
 ## Current features
 
@@ -33,12 +32,16 @@ Although DashSight is written using standard glib and GTK+3 APIs it is designed 
 * Ability to display the current speed?
 * Replace osm-gps-map with something that is maintained
 * Make the code more portable so it can run on any system
-* Rewrite the entire thing in Rust and Qt5?
+* Rewrite the entire thing in Rust and Qt5/GTK4?
 
 ## Using DashSight
 
 Currently DashSight only runs on the following specilised hardware.
 
-DashSight runs on the Pine64 Single Board Computer (SBC). This provides the CPU, GPU and WiFi for the device. DashSight then uses an expansion board to add GPS and OBDII to the Pine64 SBC. The schematics and design for the board can be found here: https://github.com/alistair23/DashSight-Mezzanine-Card.
+DashSight runs on the Pine64 Single Board Computer (SBC). This provides the CPU, GPU and WiFi for the device. DashSight then uses an expansion board to add GPS and OBDII to the Pine64 SBC. The schematics and design for the board can be found in the [DashSight Mezzanine Card repo](https://github.com/alistair23/DashSight-Mezzanine-Card)
 
-At the moment DashSight runs in a custom ARM Arch setup, but that is temporary. The goal is to use Yocto/OpenEmbedded to build images that can be directly deployed to the board. This is being worked on with the meta-pine64 layer (https://github.com/alistair23/meta-pine64.git) and the meta-dashsight layer (https://github.com/alistair23/meta-dashsight).
+You can see a production run of the board below:
+
+![DashSight Mezzanine Card Photo 3](https://github.com/alistair23/DashSight-Mezzanine-Card/blob/master/PCB-Fabrication/v2.0-A/Photos/Photo3.jpg "DashSight Mezzanine Card Photo 3")
+
+DashSight uses Yocto/OpenEmbedded to build images that can be directly deployed to the board. This uses the [meta-pine64 layer](https://github.com/alistair23/meta-pine64.git) and the [meta-dashsight layer](https://github.com/alistair23/meta-dashsight).
