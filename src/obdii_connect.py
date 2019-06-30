@@ -40,9 +40,18 @@ class LapTimerOBD(object):
         ret = self.connection.query(obd.commands[cmd])
 
         try:
+            # Try to get the magnitude
             ret = ret.value.magnitude
         except:
-            ret = ret.value
+            # If we couldn't get the magnitude, let's try a tuple.
+            # The FUEL_STATUS command returns a 2 length tuple
+            if len(ret.value) == 2:
+                if ret.value[0] is not None:
+                    ret = ret.value[0]
+                elif ret.value[1] is not None:
+                    ret = ret.value[1]
+            else:
+                ret = ret.value
 
         return ret
 
