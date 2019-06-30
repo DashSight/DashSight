@@ -183,8 +183,6 @@ static gboolean python_parse_str(gpointer python_data)
 		g_free(markup);
 	}
 
-	g_free(ret);
-
 	Py_DECREF(pValue);
 
 	return false;
