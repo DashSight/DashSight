@@ -22,7 +22,7 @@ use gtk::prelude::*;
 use gio::prelude::*;
 use gdk::prelude::*;
 
-use gtk::Image;
+use gtk::{Box, Image};
 
 use std::env;
 
@@ -38,7 +38,12 @@ fn main() {
         win.fullscreen();
         win.set_title("DashSight");
 
-        let image = Image::new_from_file("SplashPage.png");
+        let main_image = Image::new_from_file("SplashPage.png");
+
+        let main_page = Box::new(gtk::Orientation::Vertical, 0);
+		Box::pack_start(&main_page,
+						&main_image,
+						true, true, 0);
 
         win.show_all();
     });
