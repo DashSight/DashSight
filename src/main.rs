@@ -22,7 +22,7 @@ use gtk::prelude::*;
 use gio::prelude::*;
 use gdk::prelude::*;
 
-use gtk::{Box, Image};
+use gtk::{Box, ButtonBox, Image};
 
 use std::env;
 
@@ -38,12 +38,26 @@ fn main() {
         win.fullscreen();
         win.set_title("DashSight");
 
-        let main_image = Image::new_from_file("SplashPage.png");
+        let button_box = ButtonBox::new(gtk::Orientation::Horizontal);
+
+        let record_button_image = Image::new_from_file("RecordTrack.png");
+        let record_button = gtk::Button::new_with_label("Record new track");
+        gtk::Container::add(&button_box.clone().upcast::<gtk::Container>(), &record_button);
+        gtk::Button::set_always_show_image(&record_button, true);
+        gtk::Button::set_image(&record_button, Some(&record_button_image));
 
         let main_page = Box::new(gtk::Orientation::Vertical, 0);
+
+        let main_image = Image::new_from_file("SplashPage.png");
 		Box::pack_start(&main_page,
 						&main_image,
 						true, true, 0);
+
+		Box::pack_start(&main_page,
+						&button_box,
+						true, true, 0);
+
+		gtk::Container::add(&win.clone().upcast::<gtk::Container>(), &main_page);
 
         win.show_all();
     });
