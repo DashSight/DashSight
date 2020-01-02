@@ -20,53 +20,80 @@
       <placeholder/>
     </child>
     <child>
-      <object class="GtkBox" id="SplashImage">
-        <property name="visible">True</property>
+      <object class="GtkStack" id="MainStack">
         <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
+        <property name="hhomogeneous">False</property>
         <child>
-          <object class="GtkImage" id="SplashImag">
-            <property name="width_request">640</property>
-            <property name="height_request">320</property>
+          <object class="GtkBox" id="SplashImage">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="pixbuf">SplashPage.png</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox" id="MainButtons">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkButton" id="RecordTrack">
-                <property name="label" translatable="yes">Record a new Track</property>
+              <object class="GtkImage" id="SplashImag">
+                <property name="width_request">640</property>
+                <property name="height_request">320</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">RecordTrac</property>
-                <property name="image_position">top</property>
-                <property name="always_show_image">True</property>
+                <property name="can_focus">False</property>
+                <property name="pixbuf">SplashPage.png</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="DriveLine">
-                <property name="label" translatable="yes">Drive a single line</property>
+              <object class="GtkBox" id="MainButtons">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">DriveLin</property>
-                <property name="image_position">top</property>
-                <property name="always_show_image">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkButton" id="RecordTrack">
+                    <property name="label" translatable="yes">Record a new Track</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="image">RecordTrac</property>
+                    <property name="image_position">top</property>
+                    <property name="always_show_image">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="DriveLine">
+                    <property name="label" translatable="yes">Drive a single line</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="image">DriveLin</property>
+                    <property name="image_position">top</property>
+                    <property name="always_show_image">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="Close">
+                    <property name="label">gtk-close</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="use_stock">True</property>
+                    <property name="image_position">top</property>
+                    <property name="always_show_image">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -74,28 +101,7 @@
                 <property name="position">1</property>
               </packing>
             </child>
-            <child>
-              <object class="GtkButton" id="Close">
-                <property name="label">gtk-close</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
-                <property name="image_position">top</property>
-                <property name="always_show_image">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
         </child>
       </object>
     </child>

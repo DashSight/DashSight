@@ -42,26 +42,38 @@ impl Display {
         window.set_application(Some(gtk_app));
         window.fullscreen();
 
-        let record_button: gtk::ToolButton = builder
+        let stack = builder
+            .get_object::<gtk::Stack>("MainStack")
+            .expect("Can't find MainStack in ui file.");
+
+        /* Setup the start page */
+        let child = builder
+            .get_object::<gtk::Box>("SplashImage")
+            .expect("Can't find SplashImage in ui file.");
+        stack.add_named(&child, "SplashImage");
+
+        let record_button: gtk::Button = builder
             .get_object("RecordTrack")
-            .expect("Couldn't get builder");
+            .expect("Couldn't get RecordTrack");
         record_button.connect_clicked(|_| {
             track::record::button_press_event()
         });
 
-        let drive_line_button: gtk::ToolButton = builder
+        let drive_line_button: gtk::Button = builder
             .get_object("DriveLine")
-            .expect("Couldn't get text_view");
+            .expect("Couldn't get DriveLine");
         drive_line_button.connect_clicked(|_| {
             track::line::button_press_event()
         });
 
-        let close_button: gtk::ToolButton = builder
+        let close_button: gtk::Button = builder
             .get_object("Close")
-            .expect("Couldn't get text_view");
+            .expect("Couldn't get Close");
         close_button.connect_clicked(|_| {
             gtk::main_quit();
         });
+
+        stack.set_visible_child_name("SplashImage");
 
         window.show_all();
 
