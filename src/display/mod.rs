@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-extern crate gtk;
-extern crate gio;
-extern crate gdk;
-
 use gtk::prelude::*;
 use gio::prelude::*;
 
- pub struct Display {
+use crate::track;
+
+use crate::track::line;
+use crate::track::record;
+
+pub struct Display {
     main_window: gtk::ApplicationWindow,
     pub builder: gtk::Builder,
 }
@@ -39,17 +40,36 @@ impl Display {
             .get_object("MainPage")
             .expect("Couldn't find MainPage in ui file.");
         window.set_application(Some(gtk_app));
-
         window.fullscreen();
-        window.set_title("DashSight");
+
+        let record_button: gtk::ToolButton = builder
+            .get_object("RecordTrack")
+            .expect("Couldn't get builder");
+        record_button.connect_clicked(|_| {
+            track::record::button_press_event()
+        });
+
+        let drive_line_button: gtk::ToolButton = builder
+            .get_object("DriveLine")
+            .expect("Couldn't get text_view");
+        drive_line_button.connect_clicked(|_| {
+            track::line::button_press_event()
+        });
+
+        let close_button: gtk::ToolButton = builder
+            .get_object("Close")
+            .expect("Couldn't get text_view");
+        close_button.connect_clicked(|_| {
+            gtk::main_quit();
+        });
 
         window.show_all();
 
-    	Display {
-    		main_window: window,
-	    	builder
-    	}
-	}
+        Display {
+            main_window: window,
+            builder
+        }
+    }
 
     pub fn on_startup(gtk_app: &gtk::Application) {
         // Create application

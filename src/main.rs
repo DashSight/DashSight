@@ -15,10 +15,7 @@
  */
 
 mod display;
-
-extern crate gtk;
-extern crate gio;
-extern crate gdk;
+mod track;
 
 use gtk::prelude::*;
 use gio::prelude::*;
