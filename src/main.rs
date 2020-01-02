@@ -44,26 +44,26 @@ fn main() {
         let record_button_image = Image::new_from_file("RecordTrack.png");
         let record_button = gtk::Button::new_with_label("Record new track");
         gtk::Container::add(&button_box.clone().upcast::<gtk::Container>(), &record_button);
-        gtk::Button::set_always_show_image(&record_button, true);
-        gtk::Button::set_image(&record_button, Some(&record_button_image));
+        record_button.set_always_show_image(true);
+        record_button.set_image(Some(&record_button_image));
         record_button.connect_clicked(|_| {
             track::record::button_press_event()
         });
 
-        let drive_button_image = Image::new_from_file("DriveTrack.png");
+        let drive_button_image = Image::new_from_file("DriveLine.png");
         let drive_button = gtk::Button::new_with_label("Drive a single line");
         gtk::Container::add(&button_box.clone().upcast::<gtk::Container>(), &drive_button);
-        gtk::Button::set_always_show_image(&drive_button, true);
-        gtk::Button::set_image(&drive_button, Some(&drive_button_image));
+        drive_button.set_always_show_image(true);
+        drive_button.set_image(Some(&drive_button_image));
         drive_button.connect_clicked(|_| {
             track::line::button_press_event()
         });
 
         let close_button = gtk::Button::new_with_label("Close!");
         gtk::Container::add(&button_box.clone().upcast::<gtk::Container>(), &close_button);
-        // close_button.connect_clicked(|_| {
-        //     win.close();
-        // });
+        close_button.connect_clicked(|_| {
+            gtk::main_quit();
+        });
 
         let main_page = Box::new(gtk::Orientation::Vertical, 0);
 
