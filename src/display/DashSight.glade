@@ -103,6 +103,72 @@
             </child>
           </object>
         </child>
+        <child>
+          <object class="GtkPaned" id="RecordPage">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkButtonBox" id="RecordVerticalBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <property name="layout_style">center</property>
+                <child>
+                  <object class="GtkButton" id="RecordFileSaveButton">
+                    <property name="label">gtk-file</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="use_stock">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="StartRecording">
+                    <property name="label" translatable="yes">Start Recording</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="RecordBackButton">
+                    <property name="label" translatable="yes">Back to main page</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="name">page0</property>
+            <property name="title" translatable="yes">page0</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
     </child>
   </object>
