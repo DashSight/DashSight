@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-use crate::display::*;
-
-pub fn button_press_event(display: DisplayRef) {
+#[macro_export]
+macro_rules! upgrade_weak {
+    ($x:expr, $r:expr) => {{
+        match $x.upgrade() {
+            Some(o) => o,
+            None => return $r,
+        }
+    }};
+    ($x:expr) => {
+        upgrade_weak!($x, ())
+    };
 }

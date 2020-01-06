@@ -14,5 +14,18 @@
  * limitations under the License.
  */
 
-pub fn button_press_event() {
+use crate::display::*;
+
+use gtk::prelude::*;
+use gio::prelude::*;
+
+pub fn button_press_event(display: DisplayRef) {
+	println!("In here");
+	let builder = display.builder.clone();
+
+    let stack = builder
+        .get_object::<gtk::Stack>("MainStack")
+        .expect("Can't find MainStack in ui file.");
+
+     stack.set_visible_child_name("RecordPage");
 }

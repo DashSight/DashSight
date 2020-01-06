@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#[macro_use]
+mod utils;
 mod display;
 mod track;
 
