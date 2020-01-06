@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-pub mod record;
 pub mod line;
+pub mod record;

@@ -19,8 +19,8 @@ use crate::utils;
 
 use std::process;
 
-use gtk::prelude::*;
 use gio::prelude::*;
+use gtk::prelude::*;
 
 use std::sync::Arc;
 
@@ -54,7 +54,6 @@ impl Display {
             .add_from_string(glade_src)
             .expect("Couldn't add RecordPage.glade from string");
 
-
         let window: gtk::ApplicationWindow = builder
             .get_object("MainPage")
             .expect("Couldn't find MainPage in ui file.");
@@ -79,7 +78,10 @@ impl Display {
         stack.set_visible_child_name("SplashImage");
         window.show_all();
 
-        DisplayRef::new(Self {main_window: window.clone(), builder: builder.clone()})
+        DisplayRef::new(Self {
+            main_window: window.clone(),
+            builder: builder.clone(),
+        })
     }
 
     pub fn on_startup(gtk_app: &gtk::Application) {
@@ -113,9 +115,7 @@ impl Display {
             track::line::button_press_event(display)
         });
 
-        let close_button: gtk::Button = builder
-            .get_object("Close")
-            .expect("Couldn't get Close");
+        let close_button: gtk::Button = builder.get_object("Close").expect("Couldn't get Close");
 
         // We use a strong reference here to make sure that Display isn't dropped
         let display_clone = display.clone();

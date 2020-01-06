@@ -19,18 +19,16 @@ mod utils;
 mod display;
 mod track;
 
-use gtk::prelude::*;
 use gio::prelude::*;
+use gtk::prelude::*;
 
 use std::env;
 
 use crate::display::Display;
 
 fn main() {
-    let uiapp = gtk::Application::new(
-        Some("org.alistair23.DashSight"),
-        Default::default(),
-        ).expect("Application::new failed");
+    let uiapp = gtk::Application::new(Some("org.alistair23.DashSight"), Default::default())
+        .expect("Application::new failed");
 
     uiapp.connect_activate(|app| {
         Display::on_startup(app);
