@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-#[macro_use]
-use crate::utils;
-
 use std::process;
 
 use gio::prelude::*;
@@ -26,11 +23,7 @@ use std::sync::Arc;
 
 use crate::track;
 
-use crate::track::line;
-use crate::track::record;
-
 pub struct Display {
-    main_window: gtk::ApplicationWindow,
     pub builder: gtk::Builder,
 }
 
@@ -79,7 +72,6 @@ impl Display {
         window.show_all();
 
         DisplayRef::new(Self {
-            main_window: window.clone(),
             builder: builder.clone(),
         })
     }

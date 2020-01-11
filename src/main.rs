@@ -20,7 +20,6 @@ mod display;
 mod track;
 
 use gio::prelude::*;
-use gtk::prelude::*;
 
 use std::env;
 

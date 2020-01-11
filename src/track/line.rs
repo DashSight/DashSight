@@ -16,4 +16,4 @@
 
 use crate::display::*;
 
-pub fn button_press_event(display: DisplayRef) {}
+pub fn button_press_event(_display: DisplayRef) {}
