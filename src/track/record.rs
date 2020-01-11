@@ -16,11 +16,9 @@
 
 use crate::display::*;
 
-use gio::prelude::*;
 use gtk::prelude::*;
 
 pub fn button_press_event(display: DisplayRef) {
-    println!("In here");
     let builder = display.builder.clone();
 
     let stack = builder
@@ -28,4 +26,14 @@ pub fn button_press_event(display: DisplayRef) {
         .expect("Can't find MainStack in ui file.");
 
     stack.set_visible_child_name("RecordPage");
+
+    let record_page = builder
+        .get_object::<gtk::Paned>("RecordPage")
+        .expect("Can't find RecordPage in ui file.");
+
+    let champlain_gtk = champlain::gtk_embed::new();
+    let _champlain_view =
+        champlain::gtk_embed::get_view(champlain_gtk.clone()).expect("Unable to get ChamplainView");
+
+    record_page.pack1(&champlain_gtk, true, true);
 }
