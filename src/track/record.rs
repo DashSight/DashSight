@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use std::process;
 use crate::display::*;
 
 use gtk::prelude::*;
@@ -30,6 +31,12 @@ pub fn button_press_event(display: DisplayRef) {
     let record_page = builder
         .get_object::<gtk::Paned>("RecordPage")
         .expect("Can't find RecordPage in ui file.");
+
+    let clutter_init_error = champlain::gtk_embed::clutter_init();
+    if clutter_init_error != champlain::gtk_embed::ClutterInitError::CLUTTER_INIT_SUCCESS {
+        println!("Unable to init clutter");
+        process::exit(0);
+    }
 
     let champlain_gtk = champlain::gtk_embed::new();
     let _champlain_view =
