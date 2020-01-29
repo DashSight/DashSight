@@ -43,4 +43,12 @@ pub fn button_press_event(display: DisplayRef) {
         champlain::gtk_embed::get_view(champlain_gtk.clone()).expect("Unable to get ChamplainView");
 
     record_page.pack1(&champlain_gtk, true, true);
+
+    let back_button = builder
+        .get_object::<gtk::Button>("RecordBackButton")
+        .expect("Can't find RecordBackButton in ui file.");
+
+    back_button.connect_clicked(move |_| {
+        stack.set_visible_child_name("SplashImage");
+    });
 }
