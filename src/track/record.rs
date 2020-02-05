@@ -16,7 +16,6 @@
 
 use std::process;
 use crate::display::*;
-
 use gtk::prelude::*;
 
 pub fn button_press_event(display: DisplayRef) {
@@ -32,17 +31,23 @@ pub fn button_press_event(display: DisplayRef) {
         .get_object::<gtk::Paned>("RecordPage")
         .expect("Can't find RecordPage in ui file.");
 
-    let clutter_init_error = champlain::gtk_embed::clutter_init();
-    if clutter_init_error != champlain::gtk_embed::ClutterInitError::CLUTTER_INIT_SUCCESS {
+    let clutter_init_error = champlain::gtk_clutter::init();
+    if clutter_init_error != champlain::gtk_clutter::Error::CLUTTER_INIT_SUCCESS {
         println!("Unable to init clutter");
         process::exit(0);
     }
 
-    let champlain_gtk = champlain::gtk_embed::new();
-    let _champlain_view =
-        champlain::gtk_embed::get_view(champlain_gtk.clone()).expect("Unable to get ChamplainView");
+    let champlain_widget = champlain::gtk_embed::new();
+    let champlain_view =
+        champlain::gtk_embed::get_view(champlain_widget.clone()).expect("Unable to get ChamplainView");
 
-    record_page.pack1(&champlain_gtk, true, true);
+    let map_frame = builder
+        .get_object::<gtk::Frame>("RecordPageMapFrame")
+        .expect("Can't find RecordPageMapFrame in ui file.");
+
+    map_frame.add(&champlain_widget);
+
+    record_page.pack1(&map_frame, true, true);
 
     let back_button = builder
         .get_object::<gtk::Button>("RecordBackButton")
@@ -51,4 +56,6 @@ pub fn button_press_event(display: DisplayRef) {
     back_button.connect_clicked(move |_| {
         stack.set_visible_child_name("SplashImage");
     });
+
+    record_page.show_all();
 }
