@@ -150,6 +150,8 @@ fn record_page_run(display: DisplayRef, rec_info: RecordInfoRef) {
 
     let mut reader = io::BufReader::new(&gpsd_connect);
 
+    let marker = champlain::marker::new();
+
     loop {
         if let Some(cur_child) = stack.get_visible_child_name() {
             if cur_child != "RecordPage" {
@@ -180,6 +182,11 @@ fn record_page_run(display: DisplayRef, rec_info: RecordInfoRef) {
                     t.alt.unwrap_or(0.0),
                     t.track.unwrap_or(0.0),
                     t.speed.unwrap_or(0.0),
+                );
+                champlain::location::set_location(
+                    champlain::location::actor_to_location(marker),
+                    t.lat.unwrap_or(0.0),
+                    t.lon.unwrap_or(0.0),
                 );
             }
             ResponseData::Sky(_) => {}
