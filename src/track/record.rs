@@ -24,7 +24,6 @@ use std::io;
 use std::io::prelude::*;
 use std::io::Error;
 use std::net::TcpStream;
-use std::path::PathBuf;
 use std::process;
 use std::rc::Rc;
 
@@ -79,6 +78,20 @@ fn print_gpx_track_stop(fd: &mut File) -> Result<(), std::io::Error> {
     Ok(())
 }
 
+fn print_gpx_point_info(
+    fd: &mut File,
+    lat: f64,
+    lon: f64,
+    alt: f32,
+    time: String,
+) -> Result<(), std::io::Error> {
+    write!(fd, "      <trkpt lat=\"{}\" lon=\"{}\">\n", lat, lon)?;
+    write!(fd, "        <ele>{}git f</ele>\n", alt)?;
+    write!(fd, "        <time>{}</time>\n", time)?;
+    write!(fd, "      </trkpt>\n")?;
+    Ok(())
+}
+
 fn print_gpx_track_seg_start(fd: &mut File) -> Result<(), std::io::Error> {
     fd.write_all(b"    <trkseg>\n")?;
     Ok(())
@@ -128,7 +141,7 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
     }
 }
 
-fn record_page_run(display: DisplayRef, rec_info: RecordInfoRef) {
+fn record_page_run(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
     let builder = display.builder.clone();
     let stack = builder
         .get_object::<gtk::Stack>("MainStack")
@@ -188,6 +201,21 @@ fn record_page_run(display: DisplayRef, rec_info: RecordInfoRef) {
                     t.lat.unwrap_or(0.0),
                     t.lon.unwrap_or(0.0),
                 );
+
+                let rec_info = std::rc::Rc::get_mut(rec_info_weak);
+
+                if let Some(ri) = rec_info {
+                    if ri.track_file.is_ok() {
+                        let mut track = ri.track_file.as_mut().unwrap();
+                        print_gpx_point_info(
+                            &mut track,
+                            t.lat.unwrap_or(0.0),
+                            t.lon.unwrap_or(0.0),
+                            t.alt.unwrap_or(0.0),
+                            t.time.unwrap_or("".to_string()),
+                        );
+                    }
+                }
             }
             ResponseData::Sky(_) => {}
             ResponseData::Pps(_) => {}
@@ -229,7 +257,7 @@ pub fn button_press_event(display: DisplayRef) {
     // Make this as big as possible
     record_page.set_position(1000);
 
-    let rec_info = RecordInfo::new();
+    let mut rec_info = RecordInfo::new();
 
     let file_picker_button = builder
         .get_object::<gtk::Button>("RecordFileSaveButton")
@@ -256,5 +284,5 @@ pub fn button_press_event(display: DisplayRef) {
 
     record_page.show_all();
 
-    record_page_run(display, rec_info);
+    record_page_run(display, &mut rec_info);
 }
