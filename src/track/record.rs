@@ -29,6 +29,7 @@ use std::rc::Rc;
 
 pub struct RecordInfo {
     pub track_file: Result<File, std::io::Error>,
+    pub save: bool,
 }
 
 pub type RecordInfoRef = Rc<RecordInfo>;
@@ -38,6 +39,7 @@ impl RecordInfo {
         let default_error = Error::new(std::io::ErrorKind::NotFound, "No file yet");
         RecordInfoRef::new(Self {
             track_file: Err(default_error),
+            save: false,
         })
     }
 }
@@ -126,16 +128,40 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
                     .open(filepath.clone());
 
                 if let Ok(mut fd) = track_file {
-                    print_gpx_start(&mut fd);
-                    print_gpx_metadata(&mut fd);
+                    print_gpx_start(&mut fd).unwrap();
+                    print_gpx_metadata(&mut fd).unwrap();
                     if let Some(filename) = filepath.file_name() {
                         if let Some(name) = filename.to_str() {
-                            print_gpx_track_start(&mut fd, name.to_string());
+                            print_gpx_track_start(&mut fd, name.to_string()).unwrap();
                         }
                     }
 
                     ri.track_file = fd.try_clone();
                 }
+            }
+        }
+    }
+}
+
+fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
+    let rec_info = std::rc::Rc::get_mut(rec_info_weak);
+
+    let builder = display.builder.clone();
+    let record_button = builder
+        .get_object::<gtk::Button>("RecordButton")
+        .expect("Can't find RecordButton in ui file.");
+
+    if let Some(ri) = rec_info {
+        ri.save = !ri.save;
+
+        if ri.track_file.is_ok() {
+            let mut track = ri.track_file.as_mut().unwrap();
+            if ri.save {
+                record_button.set_label("Stop Recording");
+                print_gpx_track_seg_start(&mut track).unwrap();
+            } else {
+                record_button.set_label("Start Recording");
+                print_gpx_track_seg_stop(&mut track).unwrap();
             }
         }
     }
@@ -213,7 +239,8 @@ fn record_page_run(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
                             t.lon.unwrap_or(0.0),
                             t.alt.unwrap_or(0.0),
                             t.time.unwrap_or("".to_string()),
-                        );
+                        )
+                        .unwrap();
                     }
                 }
             }
@@ -271,14 +298,39 @@ pub fn button_press_event(display: DisplayRef) {
         record_page_file_picker(display, &mut rec_info);
     });
 
+    let record_button = builder
+        .get_object::<gtk::Button>("RecordButton")
+        .expect("Can't find RecordButton in ui file.");
+
+    let display_weak = DisplayRef::downgrade(&display);
+    let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
+    record_button.connect_clicked(move |_| {
+        let display = upgrade_weak!(display_weak);
+        let mut rec_info = upgrade_weak!(rec_info_weak);
+        record_page_record_button(display, &mut rec_info);
+    });
+
     let back_button = builder
         .get_object::<gtk::Button>("RecordBackButton")
         .expect("Can't find RecordBackButton in ui file.");
 
+    let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
     // We use a strong reference here to make sure that rec_info isn't dropped
     let rec_info_clone = rec_info.clone();
     back_button.connect_clicked(move |_| {
         let _rec_info_weak = RecordInfoRef::downgrade(&rec_info_clone).upgrade().unwrap();
+
+        let mut rec_info = upgrade_weak!(rec_info_weak);
+        let rec_info_mut = std::rc::Rc::get_mut(&mut rec_info);
+
+        if let Some(ri) = rec_info_mut {
+            if ri.track_file.is_ok() {
+                let mut track = ri.track_file.as_mut().unwrap();
+                print_gpx_track_stop(&mut track).unwrap();
+                print_gpx_stop(&mut track).unwrap();
+                track.sync_all().unwrap();
+            }
+        }
         stack.set_visible_child_name("SplashImage");
     });
 
