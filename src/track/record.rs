@@ -162,7 +162,7 @@ fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfo
     }
 }
 
-fn record_page_run(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
+fn record_page_run(display: DisplayRef, rec_info_weak: RecordInfoRef) {
     let builder = display.builder.clone();
     let stack = builder
         .get_object::<gtk::Stack>("MainStack")
@@ -186,6 +186,8 @@ fn record_page_run(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
 
     let marker = champlain::marker::new();
 
+    let rec_info = rec_info_weak.clone();
+
     loop {
         if let Some(cur_child) = stack.get_visible_child_name() {
             if cur_child != "RecordPage" {
@@ -201,7 +203,8 @@ fn record_page_run(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
             }
             Err(err) => {
                 println!("Failed to get a message from GPSD: {:?}", err);
-                return;
+                std::thread::sleep(std::time::Duration::from_millis(10));
+                continue;
             }
         }
 
@@ -223,11 +226,8 @@ fn record_page_run(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
                     t.lon.unwrap_or(0.0),
                 );
 
-                let rec_info = std::rc::Rc::get_mut(rec_info_weak);
-
-                if let Some(ri) = rec_info {
-                    if ri.track_file.is_ok() {
-                        let mut track = ri.track_file.as_mut().unwrap();
+                if rec_info.track_file.is_ok() {
+                    if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
                         print_gpx_point_info(
                             &mut track,
                             t.lat.unwrap_or(0.0),
@@ -277,7 +277,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     record_page.pack1(&map_frame, true, true);
 
-    let mut rec_info = RecordInfo::new();
+    let rec_info = RecordInfo::new();
 
     let file_picker_button = builder
         .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
@@ -329,5 +329,5 @@ pub fn button_press_event(display: DisplayRef) {
 
     record_page.show_all();
 
-    record_page_run(display, &mut rec_info);
+    record_page_run(display, rec_info);
 }
