@@ -111,9 +111,6 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
     }
 
     let builder = display.builder.clone();
-    let window: gtk::ApplicationWindow = builder
-        .get_object("MainPage")
-        .expect("Couldn't find MainPage in ui file.");
 
     let file_picker_button = builder
         .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
