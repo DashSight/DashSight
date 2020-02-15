@@ -112,32 +112,28 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
         .get_object("MainPage")
         .expect("Couldn't find MainPage in ui file.");
 
-    let file_chooser = gtk::FileChooserDialog::new(
-        Some("Choos a track..."),
-        Some(&window),
-        gtk::FileChooserAction::Save,
-    );
-    let response = file_chooser.run();
-    if gtk::ResponseType::from(response) == gtk::ResponseType::Accept {
-        if let Some(ri) = rec_info {
-            if let Some(filepath) = file_chooser.get_filename() {
-                let track_file = OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .create(true)
-                    .open(filepath.clone());
+    let file_picker_button = builder
+        .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
+        .expect("Can't find RecordFileSaveButton in ui file.");
 
-                if let Ok(mut fd) = track_file {
-                    print_gpx_start(&mut fd).unwrap();
-                    print_gpx_metadata(&mut fd).unwrap();
-                    if let Some(filename) = filepath.file_name() {
-                        if let Some(name) = filename.to_str() {
-                            print_gpx_track_start(&mut fd, name.to_string()).unwrap();
-                        }
+    if let Some(ri) = rec_info {
+        if let Some(filepath) = file_picker_button.get_filename() {
+            let track_file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .create(true)
+                .open(filepath.clone());
+
+            if let Ok(mut fd) = track_file {
+                print_gpx_start(&mut fd).unwrap();
+                print_gpx_metadata(&mut fd).unwrap();
+                if let Some(filename) = filepath.file_name() {
+                    if let Some(name) = filename.to_str() {
+                        print_gpx_track_start(&mut fd, name.to_string()).unwrap();
                     }
-
-                    ri.track_file = fd.try_clone();
                 }
+
+                ri.track_file = fd.try_clone();
             }
         }
     }
@@ -148,7 +144,7 @@ fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfo
 
     let builder = display.builder.clone();
     let record_button = builder
-        .get_object::<gtk::Button>("RecordButton")
+        .get_object::<gtk::ToggleButton>("RecordButton")
         .expect("Can't find RecordButton in ui file.");
 
     if let Some(ri) = rec_info {
@@ -157,10 +153,10 @@ fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfo
         if ri.track_file.is_ok() {
             let mut track = ri.track_file.as_mut().unwrap();
             if ri.save {
-                record_button.set_label("Stop Recording");
+                record_button.set_label("gtk-media-stop");
                 print_gpx_track_seg_start(&mut track).unwrap();
             } else {
-                record_button.set_label("Start Recording");
+                record_button.set_label("gtk-media-record");
                 print_gpx_track_seg_stop(&mut track).unwrap();
             }
         }
@@ -285,19 +281,19 @@ pub fn button_press_event(display: DisplayRef) {
     let mut rec_info = RecordInfo::new();
 
     let file_picker_button = builder
-        .get_object::<gtk::Button>("RecordFileSaveButton")
+        .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
         .expect("Can't find RecordFileSaveButton in ui file.");
 
     let display_weak = DisplayRef::downgrade(&display);
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
-    file_picker_button.connect_clicked(move |_| {
+    file_picker_button.connect_file_set(move |_| {
         let display = upgrade_weak!(display_weak);
         let mut rec_info = upgrade_weak!(rec_info_weak);
         record_page_file_picker(display, &mut rec_info);
     });
 
     let record_button = builder
-        .get_object::<gtk::Button>("RecordButton")
+        .get_object::<gtk::ToggleButton>("RecordButton")
         .expect("Can't find RecordButton in ui file.");
 
     let display_weak = DisplayRef::downgrade(&display);

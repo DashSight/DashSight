@@ -41,12 +41,11 @@
         <property name="homogeneous">True</property>
         <property name="layout_style">center</property>
         <child>
-          <object class="GtkButton" id="RecordFileSaveButton">
-            <property name="label">gtk-file</property>
+          <object class="GtkFileChooserButton" id="RecordFileSaveButton">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="use_stock">True</property>
+            <property name="can_focus">False</property>
+            <property name="action">save</property>
+            <property name="title" translatable="yes">Save Track</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -55,7 +54,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="RecordButton">
+          <object class="GtkToggleButton" id="RecordButton">
             <property name="label">gtk-media-record</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
