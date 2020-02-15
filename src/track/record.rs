@@ -105,7 +105,10 @@ fn print_gpx_track_seg_stop(fd: &mut File) -> Result<(), std::io::Error> {
 }
 
 fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
-    let rec_info = std::rc::Rc::get_mut(rec_info_weak);
+    let rec_info;
+    unsafe {
+        rec_info = std::rc::Rc::get_mut_unchecked(rec_info_weak);
+    }
 
     let builder = display.builder.clone();
     let window: gtk::ApplicationWindow = builder
@@ -116,49 +119,48 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
         .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
         .expect("Can't find RecordFileSaveButton in ui file.");
 
-    if let Some(ri) = rec_info {
-        if let Some(filepath) = file_picker_button.get_filename() {
-            let track_file = OpenOptions::new()
-                .read(true)
-                .write(true)
-                .create(true)
-                .open(filepath.clone());
+    if let Some(filepath) = file_picker_button.get_filename() {
+        let track_file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(filepath.clone());
 
-            if let Ok(mut fd) = track_file {
-                print_gpx_start(&mut fd).unwrap();
-                print_gpx_metadata(&mut fd).unwrap();
-                if let Some(filename) = filepath.file_name() {
-                    if let Some(name) = filename.to_str() {
-                        print_gpx_track_start(&mut fd, name.to_string()).unwrap();
-                    }
+        if let Ok(mut fd) = track_file {
+            print_gpx_start(&mut fd).unwrap();
+            print_gpx_metadata(&mut fd).unwrap();
+            if let Some(filename) = filepath.file_name() {
+                if let Some(name) = filename.to_str() {
+                    print_gpx_track_start(&mut fd, name.to_string()).unwrap();
                 }
-
-                ri.track_file = fd.try_clone();
             }
+
+            rec_info.track_file = fd.try_clone();
         }
     }
 }
 
 fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
-    let rec_info = std::rc::Rc::get_mut(rec_info_weak);
+    let rec_info;
+    unsafe {
+        rec_info = std::rc::Rc::get_mut_unchecked(rec_info_weak);
+    }
 
     let builder = display.builder.clone();
     let record_button = builder
         .get_object::<gtk::ToggleButton>("RecordButton")
         .expect("Can't find RecordButton in ui file.");
 
-    if let Some(ri) = rec_info {
-        ri.save = !ri.save;
+    rec_info.save = !rec_info.save;
 
-        if ri.track_file.is_ok() {
-            let mut track = ri.track_file.as_mut().unwrap();
-            if ri.save {
-                record_button.set_label("gtk-media-stop");
-                print_gpx_track_seg_start(&mut track).unwrap();
-            } else {
-                record_button.set_label("gtk-media-record");
-                print_gpx_track_seg_stop(&mut track).unwrap();
-            }
+    if rec_info.track_file.is_ok() {
+        let mut track = rec_info.track_file.as_mut().unwrap();
+        if rec_info.save {
+            record_button.set_label("gtk-media-stop");
+            print_gpx_track_seg_start(&mut track).unwrap();
+        } else {
+            record_button.set_label("gtk-media-record");
+            print_gpx_track_seg_stop(&mut track).unwrap();
         }
     }
 }
