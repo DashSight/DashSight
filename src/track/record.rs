@@ -106,10 +106,7 @@ fn print_gpx_track_seg_stop(fd: &mut File) -> Result<(), std::io::Error> {
 }
 
 fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
-    let rec_info;
-    unsafe {
-        rec_info = std::sync::Arc::get_mut_unchecked(rec_info_weak);
-    }
+    let rec_info = std::sync::Arc::get_mut(rec_info_weak).unwrap();
 
     let builder = display.builder.clone();
 
@@ -139,10 +136,7 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
 }
 
 fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
-    let rec_info;
-    unsafe {
-        rec_info = std::sync::Arc::get_mut_unchecked(rec_info_weak);
-    }
+    let rec_info = std::sync::Arc::get_mut(rec_info_weak).unwrap();
 
     let builder = display.builder.clone();
     let record_button = builder
