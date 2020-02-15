@@ -281,8 +281,6 @@ pub fn button_press_event(display: DisplayRef) {
     map_frame.add(&champlain_widget);
 
     record_page.pack1(&map_frame, true, true);
-    // Make this as big as possible
-    record_page.set_position(1000);
 
     let mut rec_info = RecordInfo::new();
 

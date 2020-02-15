@@ -7,82 +7,91 @@
     <property name="can_focus">False</property>
     <property name="pixbuf">DriveLine.png</property>
   </object>
+  <object class="GtkPaned" id="RecordPage">
+    <property name="visible">True</property>
+    <property name="can_focus">True</property>
+    <property name="position">1000</property>
+    <property name="position_set">True</property>
+    <child>
+      <object class="GtkFrame" id="RecordPageMapFrame">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label_xalign">0</property>
+        <property name="shadow_type">none</property>
+        <child>
+          <placeholder/>
+        </child>
+        <child type="label_item">
+          <placeholder/>
+        </child>
+        <style>
+          <class name="app-notification"/>
+        </style>
+      </object>
+      <packing>
+        <property name="resize">False</property>
+        <property name="shrink">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButtonBox" id="RecordVerticalBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="homogeneous">True</property>
+        <property name="layout_style">center</property>
+        <child>
+          <object class="GtkButton" id="RecordFileSaveButton">
+            <property name="label">gtk-file</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_stock">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="RecordButton">
+            <property name="label">gtk-media-record</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_stock">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="RecordBackButton">
+            <property name="label">gtk-go-back</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_stock">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="resize">True</property>
+        <property name="shrink">False</property>
+      </packing>
+    </child>
+  </object>
   <object class="GtkImage" id="RecordTrac">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="pixbuf">RecordTrack.png</property>
   </object>
-    <object class="GtkPaned" id="RecordPage">
-      <property name="visible">True</property>
-      <property name="can_focus">True</property>
-      <child>
-        <object class="GtkFrame" id="RecordPageMapFrame">
-          <property name="visible">True</property>
-          <property name="can_focus">False</property>
-          <property name="label_xalign">0</property>
-          <property name="shadow_type">none</property>
-          <child>
-            <placeholder/>
-          </child>
-          <child type="label_item">
-           <placeholder/>
-          </child>
-          <style>
-            <class name="app-notification"/>
-          </style>
-        </object>
-      </child>
-      <child>
-        <object class="GtkButtonBox" id="RecordVerticalBox">
-          <property name="visible">True</property>
-          <property name="can_focus">False</property>
-          <property name="orientation">vertical</property>
-          <property name="layout_style">center</property>
-          <child>
-            <object class="GtkButton" id="RecordFileSaveButton">
-              <property name="label">gtk-file</property>
-              <property name="visible">True</property>
-              <property name="can_focus">True</property>
-              <property name="receives_default">True</property>
-              <property name="use_stock">True</property>
-            </object>
-            <packing>
-              <property name="expand">True</property>
-              <property name="fill">True</property>
-              <property name="position">0</property>
-            </packing>
-          </child>
-          <child>
-            <object class="GtkButton" id="RecordButton">
-              <property name="label" translatable="yes">Start Recording</property>
-              <property name="visible">True</property>
-              <property name="can_focus">True</property>
-              <property name="receives_default">True</property>
-            </object>
-            <packing>
-              <property name="expand">True</property>
-              <property name="fill">True</property>
-              <property name="position">1</property>
-            </packing>
-          </child>
-          <child>
-            <object class="GtkButton" id="RecordBackButton">
-              <property name="label" translatable="yes">Back to main page</property>
-              <property name="visible">True</property>
-              <property name="can_focus">True</property>
-              <property name="receives_default">True</property>
-            </object>
-            <packing>
-              <property name="expand">True</property>
-              <property name="fill">True</property>
-              <property name="position">2</property>
-            </packing>
-          </child>
-        </object>
-        <packing>
-          <property name="resize">True</property>
-          <property name="shrink">False</property>
-        </packing>
-      </child>
-    </object>
 </interface>
