@@ -202,6 +202,7 @@ fn record_page_run(rec_info_weak: RecordInfoRef) -> glib::source::Continue {
 
         match gpsd_message {
             ResponseData::Device(_) => {}
+            ResponseData::Version(_) => {}
             ResponseData::Tpv(t) => {
                 println!(
                     "{:3} {:8.5} {:8.5} {:6.1} m {:5.1} ° {:6.3} m/s",
