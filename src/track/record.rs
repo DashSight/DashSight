@@ -160,6 +160,8 @@ fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfo
             record_button.set_label("gtk-media-record");
             print_gpx_track_seg_stop(&mut track).unwrap();
         }
+    } else {
+        record_button.set_active(false);
     }
 }
 
