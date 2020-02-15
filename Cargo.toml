@@ -6,6 +6,7 @@ authors = ["Alistair Francis <alistair@alistair23.me>"]
 edition = "2018"
 
 [dependencies]
+glib = "0.9.3"
 champlain = { git = "https://github.com/alistair23/champlain.git" }
 gtk = "0.8.0"
 gio = "0.8.0"

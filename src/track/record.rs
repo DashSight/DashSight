@@ -15,6 +15,7 @@
  */
 
 use crate::display::*;
+use glib;
 use gpsd_proto::{get_data, ResponseData};
 use gtk;
 use gtk::prelude::*;
@@ -25,14 +26,14 @@ use std::io::prelude::*;
 use std::io::Error;
 use std::net::TcpStream;
 use std::process;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct RecordInfo {
     pub track_file: Result<File, std::io::Error>,
     pub save: bool,
 }
 
-pub type RecordInfoRef = Rc<RecordInfo>;
+pub type RecordInfoRef = Arc<RecordInfo>;
 
 impl RecordInfo {
     pub fn new() -> RecordInfoRef {
@@ -107,7 +108,7 @@ fn print_gpx_track_seg_stop(fd: &mut File) -> Result<(), std::io::Error> {
 fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
     let rec_info;
     unsafe {
-        rec_info = std::rc::Rc::get_mut_unchecked(rec_info_weak);
+        rec_info = std::sync::Arc::get_mut_unchecked(rec_info_weak);
     }
 
     let builder = display.builder.clone();
@@ -140,7 +141,7 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
 fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
     let rec_info;
     unsafe {
-        rec_info = std::rc::Rc::get_mut_unchecked(rec_info_weak);
+        rec_info = std::sync::Arc::get_mut_unchecked(rec_info_weak);
     }
 
     let builder = display.builder.clone();
@@ -162,23 +163,21 @@ fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfo
     }
 }
 
-fn record_page_run(display: DisplayRef, rec_info_weak: RecordInfoRef) {
-    let builder = display.builder.clone();
-    let stack = builder
-        .get_object::<gtk::Stack>("MainStack")
-        .expect("Can't find MainStack in ui file.");
-
+fn record_page_run(rec_info_weak: RecordInfoRef) -> glib::source::Continue {
     let gpsd_connect;
 
-    let stream = TcpStream::connect("127.0.0.1:2947");
+    loop {
+        let stream = TcpStream::connect("127.0.0.1:2947");
 
-    match stream {
-        Ok(stream) => {
-            gpsd_connect = stream;
-        }
-        Err(err) => {
-            println!("Failed to connect to GPSD: {:?}", err);
-            return;
+        match stream {
+            Ok(stream) => {
+                gpsd_connect = stream;
+                break;
+            }
+            Err(err) => {
+                println!("Failed to connect to GPSD: {:?}", err);
+                return glib::source::Continue(true);
+            }
         }
     }
 
@@ -189,12 +188,6 @@ fn record_page_run(display: DisplayRef, rec_info_weak: RecordInfoRef) {
     let rec_info = rec_info_weak.clone();
 
     loop {
-        if let Some(cur_child) = stack.get_visible_child_name() {
-            if cur_child != "RecordPage" {
-                return;
-            }
-        }
-
         let gpsd_message;
         let msg = get_data(&mut reader);
         match msg {
@@ -203,7 +196,6 @@ fn record_page_run(display: DisplayRef, rec_info_weak: RecordInfoRef) {
             }
             Err(err) => {
                 println!("Failed to get a message from GPSD: {:?}", err);
-                std::thread::sleep(std::time::Duration::from_millis(10));
                 continue;
             }
         }
@@ -314,7 +306,7 @@ pub fn button_press_event(display: DisplayRef) {
         let _rec_info_weak = RecordInfoRef::downgrade(&rec_info_clone).upgrade().unwrap();
 
         let mut rec_info = upgrade_weak!(rec_info_weak);
-        let rec_info_mut = std::rc::Rc::get_mut(&mut rec_info);
+        let rec_info_mut = std::sync::Arc::get_mut(&mut rec_info);
 
         if let Some(ri) = rec_info_mut {
             if ri.track_file.is_ok() {
@@ -329,5 +321,9 @@ pub fn button_press_event(display: DisplayRef) {
 
     record_page.show_all();
 
-    record_page_run(display, rec_info);
+    let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
+    glib::source::idle_add(move || {
+        let rec_info = rec_info_weak.upgrade().unwrap();
+        record_page_run(rec_info)
+    });
 }
