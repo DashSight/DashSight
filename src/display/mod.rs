@@ -19,7 +19,7 @@ use std::process;
 use gio::prelude::*;
 use gtk::prelude::*;
 
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::track;
 
@@ -28,7 +28,7 @@ pub struct Display {
 }
 
 // We use Arc to avoid it being dropped
-pub type DisplayRef = Arc<Display>;
+pub type DisplayRef = Rc<Display>;
 
 impl Display {
     pub fn new(gtk_app: &gtk::Application) -> DisplayRef {
