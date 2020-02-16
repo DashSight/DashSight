@@ -15,7 +15,6 @@
  */
 
 use crate::display::*;
-use glib;
 use gpsd_proto::{get_data, ResponseData};
 use gtk;
 use gtk::prelude::*;
@@ -27,22 +26,29 @@ use std::io::prelude::*;
 use std::io::Error;
 use std::net::TcpStream;
 use std::process;
+use std::ptr::NonNull;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::thread;
 
 pub struct RecordInfo {
     pub track_file: Result<File, std::io::Error>,
     pub save: Mutex<Cell<bool>>,
+    map: NonNull<champlain::view::ChamplainView>,
 }
+
+unsafe impl Send for RecordInfo {}
+unsafe impl Sync for RecordInfo {}
 
 pub type RecordInfoRef = Arc<RecordInfo>;
 
 impl RecordInfo {
-    pub fn new() -> RecordInfoRef {
+    pub fn new(champlain_view: *mut champlain::view::ChamplainView) -> RecordInfoRef {
         let default_error = Error::new(std::io::ErrorKind::NotFound, "No file yet");
         RecordInfoRef::new(Self {
             track_file: Err(default_error),
             save: Mutex::new(Cell::new(false)),
+            map: NonNull::new(champlain_view).unwrap(),
         })
     }
 }
@@ -164,80 +170,80 @@ fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
     }
 }
 
-fn record_page_run(rec_info_weak: RecordInfoRef) -> glib::source::Continue {
-    static mut GPSD_CONNECT_STAT: Option<TcpStream> = None;
+fn record_page_run(rec_info_weak: RecordInfoRef) {
+    let gpsd_connect;
 
-    unsafe {
-        if GPSD_CONNECT_STAT.is_none() {
-            let stream = TcpStream::connect("127.0.0.1:2947");
-
-            match stream {
-                Ok(stream) => {
-                    GPSD_CONNECT_STAT = Some(stream);
-                }
-                Err(err) => {
-                    println!("Failed to connect to GPSD: {:?}", err);
-                }
+    loop {
+        let stream = TcpStream::connect("127.0.0.1:2947");
+        match stream {
+            Ok(stream) => {
+                gpsd_connect = stream;
+                break;
             }
-        }
-
-        if let Some(gpsd_connect) = &GPSD_CONNECT_STAT {
-            let mut reader = io::BufReader::new(gpsd_connect);
-            let marker = champlain::marker::new();
-
-            let rec_info = rec_info_weak.clone();
-
-            let gpsd_message;
-            let msg = get_data(&mut reader);
-            match msg {
-                Ok(msg) => {
-                    gpsd_message = msg;
-                }
-                Err(err) => {
-                    println!("Failed to get a message from GPSD: {:?}", err);
-                    return glib::source::Continue(true);
-                }
-            }
-
-            match gpsd_message {
-                ResponseData::Device(_) => {}
-                ResponseData::Version(_) => {}
-                ResponseData::Tpv(t) => {
-                    println!(
-                        "{:3} {:8.5} {:8.5} {:6.1} m {:5.1} ° {:6.3} m/s",
-                        t.mode.to_string(),
-                        t.lat.unwrap_or(0.0),
-                        t.lon.unwrap_or(0.0),
-                        t.alt.unwrap_or(0.0),
-                        t.track.unwrap_or(0.0),
-                        t.speed.unwrap_or(0.0),
-                    );
-                    champlain::location::set_location(
-                        champlain::location::actor_to_location(marker),
-                        t.lat.unwrap_or(0.0),
-                        t.lon.unwrap_or(0.0),
-                    );
-
-                    if rec_info.track_file.is_ok() && rec_info.save.lock().unwrap().get() {
-                        if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
-                            print_gpx_point_info(
-                                &mut track,
-                                t.lat.unwrap_or(0.0),
-                                t.lon.unwrap_or(0.0),
-                                t.alt.unwrap_or(0.0),
-                                t.time.unwrap_or("".to_string()),
-                            )
-                            .unwrap();
-                        }
-                    }
-                }
-                ResponseData::Sky(_) => {}
-                ResponseData::Pps(_) => {}
-                ResponseData::Gst(_) => {}
+            Err(err) => {
+                println!("Failed to connect to GPSD: {:?}", err);
+                std::thread::sleep(std::time::Duration::from_secs(5));
+                continue;
             }
         }
     }
-    glib::source::Continue(true)
+
+    let mut reader = io::BufReader::new(gpsd_connect);
+    let marker = champlain::marker::new();
+
+    let rec_info = rec_info_weak.clone();
+
+    let mut gpsd_message;
+    loop {
+        let msg = get_data(&mut reader);
+        match msg {
+            Ok(msg) => {
+                gpsd_message = msg;
+            }
+            Err(err) => {
+                println!("Failed to get a message from GPSD: {:?}", err);
+                std::thread::sleep(std::time::Duration::from_millis(10));
+                continue;
+            }
+        }
+
+        match gpsd_message {
+            ResponseData::Device(_) => {}
+            ResponseData::Version(_) => {}
+            ResponseData::Tpv(t) => {
+                println!(
+                    "{:3} {:8.5} {:8.5} {:6.1} m {:5.1} ° {:6.3} m/s",
+                    t.mode.to_string(),
+                    t.lat.unwrap_or(0.0),
+                    t.lon.unwrap_or(0.0),
+                    t.alt.unwrap_or(0.0),
+                    t.track.unwrap_or(0.0),
+                    t.speed.unwrap_or(0.0),
+                );
+                champlain::location::set_location(
+                    champlain::location::actor_to_location(marker),
+                    t.lat.unwrap_or(0.0),
+                    t.lon.unwrap_or(0.0),
+                );
+
+                if rec_info.track_file.is_ok() && rec_info.save.lock().unwrap().get() {
+                    if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
+                        print_gpx_point_info(
+                            &mut track,
+                            t.lat.unwrap_or(0.0),
+                            t.lon.unwrap_or(0.0),
+                            t.alt.unwrap_or(0.0),
+                            t.time.unwrap_or("".to_string()),
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+            ResponseData::Sky(_) => {}
+            ResponseData::Pps(_) => {}
+            ResponseData::Gst(_) => {}
+        }
+    }
 }
 
 pub fn button_press_event(display: DisplayRef) {
@@ -260,7 +266,7 @@ pub fn button_press_event(display: DisplayRef) {
     }
 
     let champlain_widget = champlain::gtk_embed::new();
-    let _champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
+    let champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
         .expect("Unable to get ChamplainView");
 
     let map_frame = builder
@@ -271,7 +277,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     record_page.pack1(&map_frame, true, true);
 
-    let rec_info = RecordInfo::new();
+    let rec_info = RecordInfo::new(champlain_view);
 
     let file_picker_button = builder
         .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
@@ -297,6 +303,12 @@ pub fn button_press_event(display: DisplayRef) {
         record_page_record_button(display, rec_info);
     });
 
+    let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
+    let _handler = thread::spawn(move || {
+        let rec_info = rec_info_weak.upgrade().unwrap();
+        record_page_run(rec_info)
+    });
+
     let back_button = builder
         .get_object::<gtk::Button>("RecordBackButton")
         .expect("Can't find RecordBackButton in ui file.");
@@ -306,6 +318,8 @@ pub fn button_press_event(display: DisplayRef) {
     let rec_info_clone = rec_info.clone();
     back_button.connect_clicked(move |_| {
         let _rec_info_weak = RecordInfoRef::downgrade(&rec_info_clone).upgrade().unwrap();
+
+        // handler.join().unwrap();
 
         let mut rec_info = upgrade_weak!(rec_info_weak);
         let rec_info_mut = std::sync::Arc::get_mut(&mut rec_info).unwrap();
@@ -320,10 +334,4 @@ pub fn button_press_event(display: DisplayRef) {
     });
 
     record_page.show_all();
-
-    let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
-    glib::source::idle_add(move || {
-        let rec_info = rec_info_weak.upgrade().unwrap();
-        record_page_run(rec_info)
-    });
 }
