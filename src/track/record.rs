@@ -162,18 +162,15 @@ fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfo
 fn record_page_run(rec_info_weak: RecordInfoRef) -> glib::source::Continue {
     let gpsd_connect;
 
-    loop {
-        let stream = TcpStream::connect("127.0.0.1:2947");
+    let stream = TcpStream::connect("127.0.0.1:2947");
 
-        match stream {
-            Ok(stream) => {
-                gpsd_connect = stream;
-                break;
-            }
-            Err(err) => {
-                println!("Failed to connect to GPSD: {:?}", err);
-                return glib::source::Continue(true);
-            }
+    match stream {
+        Ok(stream) => {
+            gpsd_connect = stream;
+        }
+        Err(err) => {
+            println!("Failed to connect to GPSD: {:?}", err);
+            return glib::source::Continue(true);
         }
     }
 
