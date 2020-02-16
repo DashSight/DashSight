@@ -19,12 +19,14 @@ use gpsd_proto::{get_data, ResponseData};
 use gtk;
 use gtk::prelude::*;
 use std::cell::Cell;
+use std::cell::RefCell;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
 use std::io::prelude::*;
 use std::io::Error;
 use std::net::TcpStream;
+use std::path::PathBuf;
 use std::process;
 use std::ptr::NonNull;
 use std::sync::Arc;
@@ -32,8 +34,11 @@ use std::sync::Mutex;
 use std::thread;
 
 pub struct RecordInfo {
-    pub track_file: Result<File, std::io::Error>,
+    pub track_file: RefCell<std::path::PathBuf>,
+    pub new_file: Mutex<Cell<bool>>,
     pub save: Mutex<Cell<bool>>,
+    pub toggle_save: Mutex<Cell<bool>>,
+    pub close: Mutex<Cell<bool>>,
     map: NonNull<champlain::view::ChamplainView>,
 }
 
@@ -44,10 +49,12 @@ pub type RecordInfoRef = Arc<RecordInfo>;
 
 impl RecordInfo {
     pub fn new(champlain_view: *mut champlain::view::ChamplainView) -> RecordInfoRef {
-        let default_error = Error::new(std::io::ErrorKind::NotFound, "No file yet");
         RecordInfoRef::new(Self {
-            track_file: Err(default_error),
+            track_file: RefCell::new(PathBuf::new()),
+            new_file: Mutex::new(Cell::new(false)),
             save: Mutex::new(Cell::new(false)),
+            toggle_save: Mutex::new(Cell::new(false)),
+            close: Mutex::new(Cell::new(false)),
             map: NonNull::new(champlain_view).unwrap(),
         })
     }
@@ -113,12 +120,7 @@ fn print_gpx_track_seg_stop(fd: &mut File) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
-    let rec_info;
-    unsafe {
-        rec_info = std::sync::Arc::get_mut_unchecked(rec_info_weak);
-    }
-
+fn record_page_file_picker(display: DisplayRef, rec_info: RecordInfoRef) {
     let builder = display.builder.clone();
 
     let file_picker_button = builder
@@ -126,23 +128,8 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
         .expect("Can't find RecordFileSaveButton in ui file.");
 
     if let Some(filepath) = file_picker_button.get_filename() {
-        let track_file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(filepath.clone());
-
-        if let Ok(mut fd) = track_file {
-            print_gpx_start(&mut fd).unwrap();
-            print_gpx_metadata(&mut fd).unwrap();
-            if let Some(filename) = filepath.file_name() {
-                if let Some(name) = filename.to_str() {
-                    print_gpx_track_start(&mut fd, name.to_string()).unwrap();
-                }
-            }
-
-            rec_info.track_file = fd.try_clone();
-        }
+        rec_info.new_file.lock().unwrap().set(true);
+        rec_info.track_file.replace(filepath);
     }
 }
 
@@ -155,15 +142,14 @@ fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
     let val = rec_info.save.lock().unwrap().get();
     rec_info.save.lock().unwrap().set(!val);
 
-    if rec_info.track_file.is_ok() {
-        if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
+    if rec_info.track_file.borrow().exists() {
+        if rec_info.track_file.borrow().exists() {
             if rec_info.save.lock().unwrap().get() {
                 record_button.set_label("gtk-media-stop");
-                print_gpx_track_seg_start(&mut track).unwrap();
             } else {
                 record_button.set_label("gtk-media-record");
-                print_gpx_track_seg_stop(&mut track).unwrap();
             }
+            rec_info.toggle_save.lock().unwrap().set(true);
         }
     } else {
         record_button.set_active(false);
@@ -194,7 +180,46 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
     let rec_info = rec_info_weak.clone();
 
     let mut gpsd_message;
-    loop {
+    let mut track_file: Result<File, std::io::Error> =
+        Err(Error::new(std::io::ErrorKind::NotFound, "No file yet"));
+
+    while !rec_info.close.lock().unwrap().get() {
+        if rec_info.new_file.lock().unwrap().get() {
+            track_file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .create(true)
+                .open(rec_info.track_file.borrow().clone());
+
+            match track_file.as_mut() {
+                Ok(mut fd) => {
+                    print_gpx_start(&mut fd).unwrap();
+                    print_gpx_metadata(&mut fd).unwrap();
+                    if let Some(filename) = rec_info.track_file.borrow().file_name() {
+                        if let Some(name) = filename.to_str() {
+                            print_gpx_track_start(&mut fd, name.to_string()).unwrap();
+                        }
+                    }
+                }
+                _ => {}
+            }
+            rec_info.new_file.lock().unwrap().set(false);
+        }
+
+        if rec_info.toggle_save.lock().unwrap().get() {
+            match track_file.as_mut() {
+                Ok(mut fd) => {
+                    if rec_info.save.lock().unwrap().get() {
+                        print_gpx_track_seg_start(&mut fd).unwrap();
+                    } else {
+                        print_gpx_track_seg_stop(&mut fd).unwrap();
+                    }
+                }
+                _ => {}
+            }
+            rec_info.toggle_save.lock().unwrap().set(false);
+        }
+
         let msg = get_data(&mut reader);
         match msg {
             Ok(msg) => {
@@ -226,16 +251,19 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                     t.lon.unwrap_or(0.0),
                 );
 
-                if rec_info.track_file.is_ok() && rec_info.save.lock().unwrap().get() {
-                    if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
-                        print_gpx_point_info(
-                            &mut track,
-                            t.lat.unwrap_or(0.0),
-                            t.lon.unwrap_or(0.0),
-                            t.alt.unwrap_or(0.0),
-                            t.time.unwrap_or("".to_string()),
-                        )
-                        .unwrap();
+                if rec_info.save.lock().unwrap().get() {
+                    match track_file.as_mut() {
+                        Ok(mut fd) => {
+                            print_gpx_point_info(
+                                &mut fd,
+                                t.lat.unwrap_or(0.0),
+                                t.lon.unwrap_or(0.0),
+                                t.alt.unwrap_or(0.0),
+                                t.time.unwrap_or("".to_string()),
+                            )
+                            .unwrap();
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -243,6 +271,15 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
             ResponseData::Pps(_) => {}
             ResponseData::Gst(_) => {}
         }
+    }
+
+    match track_file.as_mut() {
+        Ok(mut fd) => {
+            print_gpx_track_stop(&mut fd).unwrap();
+            print_gpx_stop(&mut fd).unwrap();
+            fd.sync_all().unwrap();
+        }
+        _ => {}
     }
 }
 
@@ -287,8 +324,8 @@ pub fn button_press_event(display: DisplayRef) {
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
     file_picker_button.connect_file_set(move |_| {
         let display = upgrade_weak!(display_weak);
-        let mut rec_info = upgrade_weak!(rec_info_weak);
-        record_page_file_picker(display, &mut rec_info);
+        let rec_info = upgrade_weak!(rec_info_weak);
+        record_page_file_picker(display, rec_info);
     });
 
     let record_button = builder
@@ -313,23 +350,14 @@ pub fn button_press_event(display: DisplayRef) {
         .get_object::<gtk::Button>("RecordBackButton")
         .expect("Can't find RecordBackButton in ui file.");
 
-    let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
     // We use a strong reference here to make sure that rec_info isn't dropped
     let rec_info_clone = rec_info.clone();
     back_button.connect_clicked(move |_| {
-        let _rec_info_weak = RecordInfoRef::downgrade(&rec_info_clone).upgrade().unwrap();
+        let rec_info = RecordInfoRef::downgrade(&rec_info_clone).upgrade().unwrap();
+        rec_info.close.lock().unwrap().set(true);
 
         // handler.join().unwrap();
 
-        let mut rec_info = upgrade_weak!(rec_info_weak);
-        let rec_info_mut = std::sync::Arc::get_mut(&mut rec_info).unwrap();
-
-        if rec_info_mut.track_file.is_ok() {
-            let mut track = rec_info_mut.track_file.as_mut().unwrap();
-            print_gpx_track_stop(&mut track).unwrap();
-            print_gpx_stop(&mut track).unwrap();
-            track.sync_all().unwrap();
-        }
         stack.set_visible_child_name("SplashImage");
     });
 
