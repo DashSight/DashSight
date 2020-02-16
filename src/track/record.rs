@@ -165,76 +165,79 @@ fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
 }
 
 fn record_page_run(rec_info_weak: RecordInfoRef) -> glib::source::Continue {
-    let gpsd_connect;
+    static mut GPSD_CONNECT_STAT: Option<TcpStream> = None;
 
-    let stream = TcpStream::connect("127.0.0.1:2947");
+    unsafe {
+        if GPSD_CONNECT_STAT.is_none() {
+            let stream = TcpStream::connect("127.0.0.1:2947");
 
-    match stream {
-        Ok(stream) => {
-            gpsd_connect = stream;
-        }
-        Err(err) => {
-            println!("Failed to connect to GPSD: {:?}", err);
-            return glib::source::Continue(true);
-        }
-    }
-
-    let mut reader = io::BufReader::new(&gpsd_connect);
-
-    let marker = champlain::marker::new();
-
-    let rec_info = rec_info_weak.clone();
-
-    loop {
-        let gpsd_message;
-        let msg = get_data(&mut reader);
-        match msg {
-            Ok(msg) => {
-                gpsd_message = msg;
-            }
-            Err(err) => {
-                println!("Failed to get a message from GPSD: {:?}", err);
-                continue;
-            }
-        }
-
-        match gpsd_message {
-            ResponseData::Device(_) => {}
-            ResponseData::Version(_) => {}
-            ResponseData::Tpv(t) => {
-                println!(
-                    "{:3} {:8.5} {:8.5} {:6.1} m {:5.1} ° {:6.3} m/s",
-                    t.mode.to_string(),
-                    t.lat.unwrap_or(0.0),
-                    t.lon.unwrap_or(0.0),
-                    t.alt.unwrap_or(0.0),
-                    t.track.unwrap_or(0.0),
-                    t.speed.unwrap_or(0.0),
-                );
-                champlain::location::set_location(
-                    champlain::location::actor_to_location(marker),
-                    t.lat.unwrap_or(0.0),
-                    t.lon.unwrap_or(0.0),
-                );
-
-                if rec_info.track_file.is_ok() && rec_info.save.lock().unwrap().get() {
-                    if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
-                        print_gpx_point_info(
-                            &mut track,
-                            t.lat.unwrap_or(0.0),
-                            t.lon.unwrap_or(0.0),
-                            t.alt.unwrap_or(0.0),
-                            t.time.unwrap_or("".to_string()),
-                        )
-                        .unwrap();
-                    }
+            match stream {
+                Ok(stream) => {
+                    GPSD_CONNECT_STAT = Some(stream);
+                }
+                Err(err) => {
+                    println!("Failed to connect to GPSD: {:?}", err);
                 }
             }
-            ResponseData::Sky(_) => {}
-            ResponseData::Pps(_) => {}
-            ResponseData::Gst(_) => {}
+        }
+
+        if let Some(gpsd_connect) = &GPSD_CONNECT_STAT {
+            let mut reader = io::BufReader::new(gpsd_connect);
+            let marker = champlain::marker::new();
+
+            let rec_info = rec_info_weak.clone();
+
+            let gpsd_message;
+            let msg = get_data(&mut reader);
+            match msg {
+                Ok(msg) => {
+                    gpsd_message = msg;
+                }
+                Err(err) => {
+                    println!("Failed to get a message from GPSD: {:?}", err);
+                    return glib::source::Continue(true);
+                }
+            }
+
+            match gpsd_message {
+                ResponseData::Device(_) => {}
+                ResponseData::Version(_) => {}
+                ResponseData::Tpv(t) => {
+                    println!(
+                        "{:3} {:8.5} {:8.5} {:6.1} m {:5.1} ° {:6.3} m/s",
+                        t.mode.to_string(),
+                        t.lat.unwrap_or(0.0),
+                        t.lon.unwrap_or(0.0),
+                        t.alt.unwrap_or(0.0),
+                        t.track.unwrap_or(0.0),
+                        t.speed.unwrap_or(0.0),
+                    );
+                    champlain::location::set_location(
+                        champlain::location::actor_to_location(marker),
+                        t.lat.unwrap_or(0.0),
+                        t.lon.unwrap_or(0.0),
+                    );
+
+                    if rec_info.track_file.is_ok() && rec_info.save.lock().unwrap().get() {
+                        if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
+                            print_gpx_point_info(
+                                &mut track,
+                                t.lat.unwrap_or(0.0),
+                                t.lon.unwrap_or(0.0),
+                                t.alt.unwrap_or(0.0),
+                                t.time.unwrap_or("".to_string()),
+                            )
+                            .unwrap();
+                        }
+                    }
+                }
+                ResponseData::Sky(_) => {}
+                ResponseData::Pps(_) => {}
+                ResponseData::Gst(_) => {}
+            }
         }
     }
+    glib::source::Continue(true)
 }
 
 pub fn button_press_event(display: DisplayRef) {
