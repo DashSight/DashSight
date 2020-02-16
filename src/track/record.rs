@@ -19,6 +19,7 @@ use glib;
 use gpsd_proto::{get_data, ResponseData};
 use gtk;
 use gtk::prelude::*;
+use std::cell::Cell;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
@@ -27,10 +28,11 @@ use std::io::Error;
 use std::net::TcpStream;
 use std::process;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 pub struct RecordInfo {
     pub track_file: Result<File, std::io::Error>,
-    pub save: bool,
+    pub save: Mutex<Cell<bool>>,
 }
 
 pub type RecordInfoRef = Arc<RecordInfo>;
@@ -40,7 +42,7 @@ impl RecordInfo {
         let default_error = Error::new(std::io::ErrorKind::NotFound, "No file yet");
         RecordInfoRef::new(Self {
             track_file: Err(default_error),
-            save: false,
+            save: Mutex::new(Cell::new(false)),
         })
     }
 }
@@ -135,24 +137,24 @@ fn record_page_file_picker(display: DisplayRef, rec_info_weak: &mut RecordInfoRe
     }
 }
 
-fn record_page_record_button(display: DisplayRef, rec_info_weak: &mut RecordInfoRef) {
-    let rec_info = std::sync::Arc::get_mut(rec_info_weak).unwrap();
-
+fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
     let builder = display.builder.clone();
     let record_button = builder
         .get_object::<gtk::ToggleButton>("RecordButton")
         .expect("Can't find RecordButton in ui file.");
 
-    rec_info.save = !rec_info.save;
+    let val = rec_info.save.lock().unwrap().get();
+    rec_info.save.lock().unwrap().set(!val);
 
     if rec_info.track_file.is_ok() {
-        let mut track = rec_info.track_file.as_mut().unwrap();
-        if rec_info.save {
-            record_button.set_label("gtk-media-stop");
-            print_gpx_track_seg_start(&mut track).unwrap();
-        } else {
-            record_button.set_label("gtk-media-record");
-            print_gpx_track_seg_stop(&mut track).unwrap();
+        if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
+            if rec_info.save.lock().unwrap().get() {
+                record_button.set_label("gtk-media-stop");
+                print_gpx_track_seg_start(&mut track).unwrap();
+            } else {
+                record_button.set_label("gtk-media-record");
+                print_gpx_track_seg_stop(&mut track).unwrap();
+            }
         }
     } else {
         record_button.set_active(false);
@@ -285,8 +287,8 @@ pub fn button_press_event(display: DisplayRef) {
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
     record_button.connect_clicked(move |_| {
         let display = upgrade_weak!(display_weak);
-        let mut rec_info = upgrade_weak!(rec_info_weak);
-        record_page_record_button(display, &mut rec_info);
+        let rec_info = upgrade_weak!(rec_info_weak);
+        record_page_record_button(display, rec_info);
     });
 
     let back_button = builder
