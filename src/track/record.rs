@@ -217,7 +217,7 @@ fn record_page_run(rec_info_weak: RecordInfoRef) -> glib::source::Continue {
                     t.lon.unwrap_or(0.0),
                 );
 
-                if rec_info.track_file.is_ok() {
+                if rec_info.track_file.is_ok() && rec_info.save.lock().unwrap().get() {
                     if let Ok(mut track) = rec_info.track_file.as_ref().unwrap().try_clone() {
                         print_gpx_point_info(
                             &mut track,
