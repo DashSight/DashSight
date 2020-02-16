@@ -302,15 +302,13 @@ pub fn button_press_event(display: DisplayRef) {
         let _rec_info_weak = RecordInfoRef::downgrade(&rec_info_clone).upgrade().unwrap();
 
         let mut rec_info = upgrade_weak!(rec_info_weak);
-        let rec_info_mut = std::sync::Arc::get_mut(&mut rec_info);
+        let rec_info_mut = std::sync::Arc::get_mut(&mut rec_info).unwrap();
 
-        if let Some(ri) = rec_info_mut {
-            if ri.track_file.is_ok() {
-                let mut track = ri.track_file.as_mut().unwrap();
-                print_gpx_track_stop(&mut track).unwrap();
-                print_gpx_stop(&mut track).unwrap();
-                track.sync_all().unwrap();
-            }
+        if rec_info_mut.track_file.is_ok() {
+            let mut track = rec_info_mut.track_file.as_mut().unwrap();
+            print_gpx_track_stop(&mut track).unwrap();
+            print_gpx_stop(&mut track).unwrap();
+            track.sync_all().unwrap();
         }
         stack.set_visible_child_name("SplashImage");
     });
