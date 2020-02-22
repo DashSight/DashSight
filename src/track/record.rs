@@ -296,8 +296,8 @@ pub fn button_press_event(display: DisplayRef) {
         .get_object::<gtk::Paned>("RecordPage")
         .expect("Can't find RecordPage in ui file.");
 
-    let clutter_init_error = champlain::clutter::init();
-    if clutter_init_error != champlain::clutter::Error::CLUTTER_INIT_SUCCESS {
+    let clutter_init_error = champlain::gtk_clutter::init();
+    if clutter_init_error != champlain::gtk_clutter::Error::CLUTTER_INIT_SUCCESS {
         println!("Unable to init clutter");
         process::exit(0);
     }
