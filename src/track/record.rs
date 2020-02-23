@@ -306,6 +306,8 @@ pub fn button_press_event(display: DisplayRef) {
     let champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
         .expect("Unable to get ChamplainView");
 
+    champlain::view::set_kinetic_mode(champlain_view, true);
+
     let map_frame = builder
         .get_object::<gtk::Frame>("RecordPageMapFrame")
         .expect("Can't find RecordPageMapFrame in ui file.");
