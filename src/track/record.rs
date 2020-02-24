@@ -262,6 +262,11 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                                 t.time.unwrap_or("".to_string()),
                             )
                             .unwrap();
+                            champlain::view::center_on(
+                                rec_info.map.as_ptr(),
+                                t.lat.unwrap_or(0.0),
+                                t.lon.unwrap_or(0.0),
+                            );
                         }
                         _ => {}
                     }
@@ -305,8 +310,12 @@ pub fn button_press_event(display: DisplayRef) {
     let champlain_widget = champlain::gtk_embed::new();
     let champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
         .expect("Unable to get ChamplainView");
+    let champlain_actor = champlain::clutter_actor::clutter_actor(champlain_view);
 
     champlain::view::set_kinetic_mode(champlain_view, true);
+    champlain::view::set_zoom_on_double_click(champlain_view, true);
+    champlain::view::set_zoom_level(champlain_view, 5);
+    champlain::clutter_actor::set_reactive(champlain_actor, true);
 
     let map_frame = builder
         .get_object::<gtk::Frame>("RecordPageMapFrame")
