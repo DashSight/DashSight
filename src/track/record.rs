@@ -257,6 +257,11 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                     t.lat.unwrap_or(0.0),
                     t.lon.unwrap_or(0.0),
                 );
+                champlain::view::center_on(
+                    rec_info.map.as_ptr(),
+                    t.lat.unwrap_or(0.0),
+                    t.lon.unwrap_or(0.0),
+                );
 
                 if rec_info.save.lock().unwrap().get() {
                     match track_file.as_mut() {
@@ -269,11 +274,6 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                                 t.time.unwrap_or("".to_string()),
                             )
                             .unwrap();
-                            champlain::view::center_on(
-                                rec_info.map.as_ptr(),
-                                t.lat.unwrap_or(0.0),
-                                t.lon.unwrap_or(0.0),
-                            );
                         }
                         _ => {}
                     }
