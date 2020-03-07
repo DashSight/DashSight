@@ -15,7 +15,7 @@
  */
 
 use crate::display::*;
-use gpsd_proto::{get_data, ResponseData, handshake};
+use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
 use gtk::prelude::*;
 use std::cell::Cell;
@@ -180,7 +180,10 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
 
     let rec_info = rec_info_weak.clone();
 
-    champlain::view::add_layer(rec_info.map.as_ptr(), champlain::clutter_actor::to_champlain_layer(marker));
+    champlain::view::add_layer(
+        rec_info.map.as_ptr(),
+        champlain::clutter_actor::to_champlain_layer(marker),
+    );
 
     let mut gpsd_message;
     let mut track_file: Result<File, std::io::Error> =
