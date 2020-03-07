@@ -179,11 +179,9 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
     let point = champlain::point::new();
 
     let rec_info = rec_info_weak.clone();
+    let champlain_view = rec_info.map.as_ptr();
 
-    champlain::view::add_layer(
-        rec_info.map.as_ptr(),
-        champlain::clutter_actor::to_champlain_layer(point),
-    );
+    let layer = champlain::markerlayer::new();
 
     let mut gpsd_message;
     let mut track_file: Result<File, std::io::Error> =
@@ -243,33 +241,30 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
         match gpsd_message {
             ResponseData::Device(_) => {}
             ResponseData::Tpv(t) => {
-                println!(
-                    "{:3} {:8.5} {:8.5} {:6.1} m {:5.1} ° {:6.3} m/s",
-                    t.mode.to_string(),
-                    t.lat.unwrap_or(0.0),
-                    t.lon.unwrap_or(0.0),
-                    t.alt.unwrap_or(0.0),
-                    t.track.unwrap_or(0.0),
-                    t.speed.unwrap_or(0.0),
-                );
+                let lat = t.lat.unwrap_or(0.0);
+                let lon = t.lon.unwrap_or(0.0);
+
                 champlain::location::set_location(
-                    champlain::location::actor_to_location(point),
-                    t.lat.unwrap_or(0.0),
-                    t.lon.unwrap_or(0.0),
+                    champlain::location::to_location(point),
+                    lat,
+                    lon,
                 );
-                champlain::view::center_on(
-                    rec_info.map.as_ptr(),
-                    t.lat.unwrap_or(0.0),
-                    t.lon.unwrap_or(0.0),
+                champlain::markerlayer::add_marker(
+                    layer,
+                    champlain::clutter::to_champlain_marker(point),
                 );
+                champlain::markerlayer::animate_in_all_markers(layer);
+
+                champlain::view::set_zoom_level(champlain_view, 12);
+                champlain::view::center_on(champlain_view, lat, lon);
 
                 if rec_info.save.lock().unwrap().get() {
                     match track_file.as_mut() {
                         Ok(mut fd) => {
                             print_gpx_point_info(
                                 &mut fd,
-                                t.lat.unwrap_or(0.0),
-                                t.lon.unwrap_or(0.0),
+                                lat,
+                                lon,
                                 t.alt.unwrap_or(0.0),
                                 t.time.unwrap_or("".to_string()),
                             )
