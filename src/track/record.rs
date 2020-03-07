@@ -15,7 +15,7 @@
  */
 
 use crate::display::*;
-use gpsd_proto::{get_data, ResponseData};
+use gpsd_proto::{get_data, ResponseData, handshake};
 use gtk;
 use gtk::prelude::*;
 use std::cell::Cell;
@@ -174,7 +174,8 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
         }
     }
 
-    let mut reader = io::BufReader::new(gpsd_connect);
+    let mut reader = io::BufReader::new(&gpsd_connect);
+    let mut writer = io::BufWriter::new(&gpsd_connect);
     let marker = champlain::marker::new();
 
     let rec_info = rec_info_weak.clone();
@@ -182,6 +183,8 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
     let mut gpsd_message;
     let mut track_file: Result<File, std::io::Error> =
         Err(Error::new(std::io::ErrorKind::NotFound, "No file yet"));
+
+    handshake(&mut reader, &mut writer).unwrap();
 
     while !rec_info.close.lock().unwrap().get() {
         if rec_info.new_file.lock().unwrap().get() {
