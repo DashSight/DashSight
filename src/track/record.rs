@@ -180,6 +180,8 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
 
     let rec_info = rec_info_weak.clone();
 
+    champlain::view::add_layer(rec_info.map.as_ptr(), champlain::clutter_actor::to_champlain_layer(marker));
+
     let mut gpsd_message;
     let mut track_file: Result<File, std::io::Error> =
         Err(Error::new(std::io::ErrorKind::NotFound, "No file yet"));
@@ -312,7 +314,7 @@ pub fn button_press_event(display: DisplayRef) {
     let champlain_widget = champlain::gtk_embed::new();
     let champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
         .expect("Unable to get ChamplainView");
-    let champlain_actor = champlain::clutter_actor::clutter_actor(champlain_view);
+    let champlain_actor = champlain::view::to_clutter_actor(champlain_view);
 
     champlain::view::set_kinetic_mode(champlain_view, true);
     champlain::view::set_zoom_on_double_click(champlain_view, true);
