@@ -255,6 +255,7 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                     lat,
                     lon,
                 );
+                champlain::markerlayer::animate_in_all_markers(layer);
 
                 champlain::view::set_zoom_level(champlain_view, 12);
                 champlain::view::center_on(champlain_view, lat, lon);
