@@ -176,13 +176,13 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
 
     let mut reader = io::BufReader::new(&gpsd_connect);
     let mut writer = io::BufWriter::new(&gpsd_connect);
-    let marker = champlain::marker::new();
+    let point = champlain::point::new();
 
     let rec_info = rec_info_weak.clone();
 
     champlain::view::add_layer(
         rec_info.map.as_ptr(),
-        champlain::clutter_actor::to_champlain_layer(marker),
+        champlain::clutter_actor::to_champlain_layer(point),
     );
 
     let mut gpsd_message;
@@ -253,7 +253,7 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                     t.speed.unwrap_or(0.0),
                 );
                 champlain::location::set_location(
-                    champlain::location::actor_to_location(marker),
+                    champlain::location::actor_to_location(point),
                     t.lat.unwrap_or(0.0),
                     t.lon.unwrap_or(0.0),
                 );
