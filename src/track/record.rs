@@ -183,13 +183,13 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
     let mut writer = io::BufWriter::new(&gpsd_connect);
 
     let layer = champlain::markerlayer::new();
-    champlain::view::add_layer(
-        rec_info.map.as_ptr(),
+    champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
         champlain::markerlayer::to_layer(layer),
-    );
+    ));
+    champlain::view::add_layer(champlain_view, champlain::markerlayer::to_layer(layer));
 
     let point = champlain::point::new();
-    champlain::markerlayer::add_marker(layer, champlain::clutter::to_champlain_marker(point));
+    champlain::markerlayer::add_marker(layer, champlain::clutter_actor::to_champlain_marker(point));
 
     let mut gpsd_message;
     let mut track_file: Result<File, std::io::Error> =
@@ -253,7 +253,7 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                 let lon = t.lon.unwrap_or(0.0);
 
                 champlain::location::set_location(
-                    champlain::location::to_location(point),
+                    champlain::clutter_actor::to_location(point),
                     lat,
                     lon,
                 );
