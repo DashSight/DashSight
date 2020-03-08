@@ -159,6 +159,11 @@ fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
 fn record_page_run(rec_info_weak: RecordInfoRef) {
     let gpsd_connect;
 
+    let rec_info = rec_info_weak.clone();
+    let champlain_view = rec_info.map.as_ptr();
+
+    champlain::view::set_zoom_level(champlain_view, 12);
+
     loop {
         let stream = TcpStream::connect("127.0.0.1:2947");
         match stream {
@@ -176,9 +181,6 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
 
     let mut reader = io::BufReader::new(&gpsd_connect);
     let mut writer = io::BufWriter::new(&gpsd_connect);
-
-    let rec_info = rec_info_weak.clone();
-    let champlain_view = rec_info.map.as_ptr();
 
     let layer = champlain::markerlayer::new();
     champlain::view::add_layer(
@@ -257,7 +259,6 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                 );
                 champlain::markerlayer::animate_in_all_markers(layer);
 
-                champlain::view::set_zoom_level(champlain_view, 12);
                 champlain::view::center_on(champlain_view, lat, lon);
 
                 if rec_info.save.lock().unwrap().get() {
