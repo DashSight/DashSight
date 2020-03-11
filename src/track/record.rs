@@ -158,11 +158,10 @@ fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
 
 fn record_page_run(rec_info_weak: RecordInfoRef) {
     let gpsd_connect;
+    let mut first_connect = true;
 
     let rec_info = rec_info_weak.clone();
     let champlain_view = rec_info.map.as_ptr();
-
-    champlain::view::set_zoom_level(champlain_view, 12);
 
     loop {
         let stream = TcpStream::connect("127.0.0.1:2947");
@@ -188,7 +187,9 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
     ));
     champlain::view::add_layer(champlain_view, champlain::markerlayer::to_layer(layer));
 
-    let point = champlain::point::new();
+    let point_colour = champlain::clutter_colour::new(100, 200, 255, 100);
+
+    let point = champlain::point::new_full(12.0, point_colour);
     champlain::markerlayer::add_marker(layer, champlain::clutter_actor::to_champlain_marker(point));
 
     let mut gpsd_message;
@@ -257,9 +258,13 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                     lat,
                     lon,
                 );
-                champlain::markerlayer::animate_in_all_markers(layer);
 
-                champlain::view::center_on(champlain_view, lat, lon);
+                if first_connect {
+                    champlain::markerlayer::animate_in_all_markers(layer);
+                    champlain::view::set_zoom_level(champlain_view, 15);
+                    champlain::view::center_on(champlain_view, lat, lon);
+                    first_connect = false;
+                }
 
                 if rec_info.save.lock().unwrap().get() {
                     match track_file.as_mut() {
