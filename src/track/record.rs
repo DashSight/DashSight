@@ -192,6 +192,10 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
     let point = champlain::point::new_full(12.0, point_colour);
     champlain::markerlayer::add_marker(layer, champlain::clutter_actor::to_champlain_marker(point));
 
+    let path_layer = champlain::path_layer::new();
+    champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+    champlain::path_layer::set_visible(path_layer, true);
+
     let mut gpsd_message;
     let mut track_file: Result<File, std::io::Error> =
         Err(Error::new(std::io::ErrorKind::NotFound, "No file yet"));
@@ -267,6 +271,12 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
                 }
 
                 if rec_info.save.lock().unwrap().get() {
+                    let coord = champlain::coordinate::new_full(lon, lat);
+                    champlain::path_layer::add_node(
+                        path_layer,
+                        champlain::coordinate::to_location(coord),
+                    );
+
                     match track_file.as_mut() {
                         Ok(mut fd) => {
                             print_gpx_point_info(
