@@ -15,6 +15,7 @@
  */
 
 use crate::display::*;
+use crate::record::print;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
 use gtk::prelude::*;
@@ -23,7 +24,6 @@ use std::cell::RefCell;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
-use std::io::prelude::*;
 use std::io::Error;
 use std::net::TcpStream;
 use std::path::PathBuf;
@@ -33,22 +33,22 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 
-pub struct RecordInfo {
-    pub track_file: RefCell<std::path::PathBuf>,
-    pub new_file: Mutex<Cell<bool>>,
-    pub save: Mutex<Cell<bool>>,
-    pub toggle_save: Mutex<Cell<bool>>,
-    pub close: Mutex<Cell<bool>>,
+struct RecordInfo {
+    track_file: RefCell<std::path::PathBuf>,
+    new_file: Mutex<Cell<bool>>,
+    save: Mutex<Cell<bool>>,
+    toggle_save: Mutex<Cell<bool>>,
+    close: Mutex<Cell<bool>>,
     map: NonNull<champlain::view::ChamplainView>,
 }
 
 unsafe impl Send for RecordInfo {}
 unsafe impl Sync for RecordInfo {}
 
-pub type RecordInfoRef = Arc<RecordInfo>;
+type RecordInfoRef = Arc<RecordInfo>;
 
 impl RecordInfo {
-    pub fn new(champlain_view: *mut champlain::view::ChamplainView) -> RecordInfoRef {
+    fn new(champlain_view: *mut champlain::view::ChamplainView) -> RecordInfoRef {
         RecordInfoRef::new(Self {
             track_file: RefCell::new(PathBuf::new()),
             new_file: Mutex::new(Cell::new(false)),
@@ -60,67 +60,7 @@ impl RecordInfo {
     }
 }
 
-fn print_gpx_start(fd: &mut File) -> Result<(), std::io::Error> {
-    fd.write_all(b"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")?;
-    fd.write_all(b"<gpx version=\"1.1\" creator=\"DashSight\"\n")?;
-    fd.write_all(b"        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")?;
-    fd.write_all(b"        xmlns=\"http://www.topografix.com/GPX/1.1\"\n")?;
-    fd.write_all(b"        xsi:schemaLocation=\"http://www.topografix.com/GPS/1/1\n")?;
-    fd.write_all(b"        http://www.topografix.com/GPX/1/1/gpx.xsd\">\n")?;
-    Ok(())
-}
-
-fn print_gpx_stop(fd: &mut File) -> Result<(), std::io::Error> {
-    fd.write_all(b"</gpx>\n")?;
-    Ok(())
-}
-
-fn print_gpx_metadata(fd: &mut File) -> Result<(), std::io::Error> {
-    fd.write_all(b"  <metadata>\n")?;
-    fd.write_all(b"    <link href=\"https://github.com/alistair23/DashSight\">\n")?;
-    fd.write_all(b"      <text>DashSight</text>\n")?;
-    fd.write_all(b"    </link>\n")?;
-    fd.write_all(b"  </metadata>\n")?;
-    Ok(())
-}
-
-fn print_gpx_track_start(fd: &mut File, track_name: String) -> Result<(), std::io::Error> {
-    fd.write_all(b"  <trk>\n")?;
-    write!(fd, "    <name>{}</name>\n", track_name)?;
-    Ok(())
-}
-
-fn print_gpx_track_stop(fd: &mut File) -> Result<(), std::io::Error> {
-    fd.write_all(b"    </trkseg>\n")?;
-    fd.write_all(b"  </trk>\n")?;
-    Ok(())
-}
-
-fn print_gpx_point_info(
-    fd: &mut File,
-    lat: f64,
-    lon: f64,
-    alt: f32,
-    time: String,
-) -> Result<(), std::io::Error> {
-    write!(fd, "      <trkpt lat=\"{}\" lon=\"{}\">\n", lat, lon)?;
-    write!(fd, "        <ele>{}git f</ele>\n", alt)?;
-    write!(fd, "        <time>{}</time>\n", time)?;
-    write!(fd, "      </trkpt>\n")?;
-    Ok(())
-}
-
-fn print_gpx_track_seg_start(fd: &mut File) -> Result<(), std::io::Error> {
-    fd.write_all(b"    <trkseg>\n")?;
-    Ok(())
-}
-
-fn print_gpx_track_seg_stop(fd: &mut File) -> Result<(), std::io::Error> {
-    fd.write_all(b"    </trkseg>\n")?;
-    Ok(())
-}
-
-fn record_page_file_picker(display: DisplayRef, rec_info: RecordInfoRef) {
+fn file_picker_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
     let builder = display.builder.clone();
 
     let file_picker_button = builder
@@ -133,7 +73,7 @@ fn record_page_file_picker(display: DisplayRef, rec_info: RecordInfoRef) {
     }
 }
 
-fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
+fn record_button_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
     let builder = display.builder.clone();
     let record_button = builder
         .get_object::<gtk::ToggleButton>("RecordButton")
@@ -156,7 +96,7 @@ fn record_page_record_button(display: DisplayRef, rec_info: RecordInfoRef) {
     }
 }
 
-fn record_page_run(rec_info_weak: RecordInfoRef) {
+fn run(rec_info_weak: RecordInfoRef) {
     let gpsd_connect;
     let mut first_connect = true;
 
@@ -212,11 +152,11 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
 
             match track_file.as_mut() {
                 Ok(mut fd) => {
-                    print_gpx_start(&mut fd).unwrap();
-                    print_gpx_metadata(&mut fd).unwrap();
+                    print::gpx_start(&mut fd).unwrap();
+                    print::gpx_metadata(&mut fd).unwrap();
                     if let Some(filename) = rec_info.track_file.borrow().file_name() {
                         if let Some(name) = filename.to_str() {
-                            print_gpx_track_start(&mut fd, name.to_string()).unwrap();
+                            print::gpx_track_start(&mut fd, name.to_string()).unwrap();
                         }
                     }
                 }
@@ -229,9 +169,9 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
             match track_file.as_mut() {
                 Ok(mut fd) => {
                     if rec_info.save.lock().unwrap().get() {
-                        print_gpx_track_seg_start(&mut fd).unwrap();
+                        print::gpx_track_seg_start(&mut fd).unwrap();
                     } else {
-                        print_gpx_track_seg_stop(&mut fd).unwrap();
+                        print::gpx_track_seg_stop(&mut fd).unwrap();
                     }
                 }
                 _ => {}
@@ -279,7 +219,7 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
 
                     match track_file.as_mut() {
                         Ok(mut fd) => {
-                            print_gpx_point_info(
+                            print::gpx_point_info(
                                 &mut fd,
                                 lat,
                                 lon,
@@ -300,8 +240,8 @@ fn record_page_run(rec_info_weak: RecordInfoRef) {
 
     match track_file.as_mut() {
         Ok(mut fd) => {
-            print_gpx_track_stop(&mut fd).unwrap();
-            print_gpx_stop(&mut fd).unwrap();
+            print::gpx_track_stop(&mut fd).unwrap();
+            print::gpx_stop(&mut fd).unwrap();
             fd.sync_all().unwrap();
         }
         _ => {}
@@ -356,7 +296,7 @@ pub fn button_press_event(display: DisplayRef) {
     file_picker_button.connect_file_set(move |_| {
         let display = upgrade_weak!(display_weak);
         let rec_info = upgrade_weak!(rec_info_weak);
-        record_page_file_picker(display, rec_info);
+        file_picker_clicked(display, rec_info);
     });
 
     let record_button = builder
@@ -368,13 +308,13 @@ pub fn button_press_event(display: DisplayRef) {
     record_button.connect_clicked(move |_| {
         let display = upgrade_weak!(display_weak);
         let rec_info = upgrade_weak!(rec_info_weak);
-        record_page_record_button(display, rec_info);
+        record_button_clicked(display, rec_info);
     });
 
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
     let _handler = thread::spawn(move || {
         let rec_info = rec_info_weak.upgrade().unwrap();
-        record_page_run(rec_info)
+        run(rec_info)
     });
 
     let back_button = builder
