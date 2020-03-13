@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-use std::process;
-
+use crate::drive;
+use crate::record;
 use gio::prelude::*;
 use gtk::prelude::*;
-
+use std::process;
 use std::rc::Rc;
-
-use crate::track;
 
 pub struct Display {
     pub builder: gtk::Builder,
@@ -95,7 +93,7 @@ impl Display {
         let display_weak = DisplayRef::downgrade(&display);
         record_button.connect_clicked(move |_| {
             let display = upgrade_weak!(display_weak);
-            track::record::button_press_event(display)
+            record::track::button_press_event(display)
         });
 
         let drive_line_button: gtk::Button = builder
@@ -105,7 +103,7 @@ impl Display {
         let display_weak = DisplayRef::downgrade(&display);
         drive_line_button.connect_clicked(move |_| {
             let display = upgrade_weak!(display_weak);
-            track::line::button_press_event(display)
+            drive::prepare::button_press_event(display)
         });
 
         let close_button: gtk::Button = builder.get_object("Close").expect("Couldn't get Close");

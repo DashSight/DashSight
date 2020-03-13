@@ -5,12 +5,12 @@
   <object class="GtkImage" id="DriveLin">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="pixbuf">DriveLine.png</property>
+    <property name="pixbuf">icons/DriveLine.png</property>
   </object>
   <object class="GtkImage" id="RecordTrac">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="pixbuf">RecordTrack.png</property>
+    <property name="pixbuf">icons/RecordTrack.png</property>
   </object>
   <object class="GtkApplicationWindow" id="MainPage">
     <property name="can_focus">False</property>

@@ -14,25 +14,4 @@
  * limitations under the License.
  */
 
-#[macro_use]
-mod utils;
-mod display;
-mod drive;
-mod record;
-
-use gio::prelude::*;
-
-use std::env;
-
-use crate::display::Display;
-
-fn main() {
-    let uiapp = gtk::Application::new(Some("org.alistair23.DashSight"), Default::default())
-        .expect("Application::new failed");
-
-    uiapp.connect_activate(|app| {
-        Display::on_startup(app);
-    });
-
-    uiapp.run(&env::args().collect::<Vec<_>>());
-}
+pub mod track;
