@@ -44,6 +44,10 @@ impl Display {
         builder
             .add_from_string(glade_src)
             .expect("Couldn't add RecordPage.glade from string");
+        let glade_src = include_str!("LoadMapPage.glade");
+        builder
+            .add_from_string(glade_src)
+            .expect("Couldn't add LoadMapPage.glade from string");
 
         let window: gtk::ApplicationWindow = builder
             .get_object("MainPage")
@@ -66,6 +70,12 @@ impl Display {
             .get_object("RecordPage")
             .expect("Couldn't find RecordPage in ui file.");
         stack.add_named(&record_page, "RecordPage");
+
+        /* Setup the load map page */
+        let load_map_page: gtk::Paned = builder
+            .get_object("LoadMapPage")
+            .expect("Couldn't find LoadMapPage in ui file.");
+        stack.add_named(&load_map_page, "LoadMapPage");
 
         stack.set_visible_child_name("SplashImage");
         window.show_all();
