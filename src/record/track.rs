@@ -127,7 +127,7 @@ fn run(rec_info_weak: RecordInfoRef) {
     ));
     champlain::view::add_layer(champlain_view, champlain::markerlayer::to_layer(layer));
 
-    let point_colour = champlain::clutter_colour::new(100, 200, 255, 100);
+    let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
     let point = champlain::point::new_full(12.0, point_colour);
     champlain::markerlayer::add_marker(layer, champlain::clutter_actor::to_champlain_marker(point));
@@ -209,6 +209,8 @@ fn run(rec_info_weak: RecordInfoRef) {
                     champlain::view::center_on(champlain_view, lat, lon);
                     first_connect = false;
                 }
+
+                champlain::markerlayer::show_all_markers(layer);
 
                 if rec_info.save.lock().unwrap().get() {
                     let coord = champlain::coordinate::new_full(lon, lat);
