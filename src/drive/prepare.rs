@@ -15,9 +15,45 @@
  */
 
 use crate::display::*;
+use crate::drive::drive;
 use gtk;
 use gtk::prelude::*;
+use std::cell::RefCell;
+use std::path::PathBuf;
 use std::process;
+use std::sync::Arc;
+
+pub struct TrackSelection {
+    pub track_file: RefCell<std::path::PathBuf>,
+}
+
+pub type TrackSelectionRef = Arc<TrackSelection>;
+
+impl TrackSelection {
+    fn new() -> TrackSelectionRef {
+        TrackSelectionRef::new(Self {
+            track_file: RefCell::new(PathBuf::new()),
+        })
+    }
+}
+
+fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
+    let builder = display.builder.clone();
+
+    let file_picker_button = builder
+        .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
+        .expect("Can't find LoadMapFileLoadButton in ui file.");
+
+    if let Some(filepath) = file_picker_button.get_filename() {
+        track_sel_info.track_file.replace(filepath);
+
+        let forward_button = builder
+            .get_object::<gtk::Button>("LoadMapForwardButton")
+            .expect("Can't find LoadMapForwardButton in ui file.");
+
+        forward_button.set_sensitive(true);
+    }
+}
 
 pub fn button_press_event(display: DisplayRef) {
     let builder = display.builder.clone();
@@ -55,6 +91,38 @@ pub fn button_press_event(display: DisplayRef) {
     map_frame.add(&champlain_widget);
 
     load_map_page.pack1(&map_frame, true, true);
+
+    let track_sel_info = TrackSelection::new();
+
+    let file_picker_button = builder
+        .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
+        .expect("Can't find LoadMapFileLoadButton in ui file.");
+
+    let display_weak = DisplayRef::downgrade(&display);
+    let track_sel_info_weak = TrackSelectionRef::downgrade(&track_sel_info);
+    file_picker_button.connect_file_set(move |_| {
+        let display = upgrade_weak!(display_weak);
+        let track_sel_info = upgrade_weak!(track_sel_info_weak);
+        file_picker_clicked(display, track_sel_info);
+    });
+
+    let forward_button = builder
+        .get_object::<gtk::Button>("LoadMapForwardButton")
+        .expect("Can't find LoadMapForwardButton in ui file.");
+
+    let display_weak = DisplayRef::downgrade(&display);
+    // We use a strong reference here to make sure that rec_info isn't dropped
+    let track_sel_info_clone = track_sel_info.clone();
+    forward_button.connect_clicked(move |_| {
+        let display = upgrade_weak!(display_weak);
+        let track_sel_info = TrackSelectionRef::downgrade(&track_sel_info_clone)
+            .upgrade()
+            .unwrap();
+
+        drive::button_press_event(display, track_sel_info);
+    });
+
+    forward_button.set_sensitive(false);
 
     load_map_page.show_all();
 }

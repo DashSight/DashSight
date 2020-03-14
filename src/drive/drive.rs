@@ -13,3 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+use crate::display::*;
+use crate::drive::prepare;
+use std::cell::RefCell;
+
+struct LapTime {
+    min: u64,
+    sec: u64,
+    nsec: u64,
+}
+
+struct Course {
+    track_file: RefCell<std::path::PathBuf>,
+    times: Vec<LapTime>,
+    last: LapTime,
+    best: LapTime,
+    worst: LapTime,
+}
+
+pub fn button_press_event(_display: DisplayRef, _track_sel_info: prepare::TrackSelectionRef) {}
