@@ -21,24 +21,28 @@ use gtk::prelude::*;
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::process;
+use std::ptr::NonNull;
 use std::sync::Arc;
 
 pub struct TrackSelection {
     pub track_file: RefCell<std::path::PathBuf>,
+    map: NonNull<champlain::view::ChamplainView>,
 }
 
 pub type TrackSelectionRef = Arc<TrackSelection>;
 
 impl TrackSelection {
-    fn new() -> TrackSelectionRef {
+    fn new(champlain_view: *mut champlain::view::ChamplainView) -> TrackSelectionRef {
         TrackSelectionRef::new(Self {
             track_file: RefCell::new(PathBuf::new()),
+            map: NonNull::new(champlain_view).unwrap(),
         })
     }
 }
 
 fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
     let builder = display.builder.clone();
+    let champlain_view = track_sel_info.map.as_ptr();
 
     let file_picker_button = builder
         .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
@@ -92,7 +96,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     load_map_page.pack1(&map_frame, true, true);
 
-    let track_sel_info = TrackSelection::new();
+    let track_sel_info = TrackSelection::new(champlain_view);
 
     let file_picker_button = builder
         .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
