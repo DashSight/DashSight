@@ -16,16 +16,21 @@
 
 use crate::display::*;
 use crate::drive::drive;
+use crate::drive::read_track;
 use gtk;
 use gtk::prelude::*;
 use std::cell::RefCell;
+use std::fs::OpenOptions;
+use std::io::BufReader;
 use std::path::PathBuf;
 use std::process;
 use std::ptr::NonNull;
 use std::sync::Arc;
+use std::vec::Vec;
 
 pub struct TrackSelection {
-    pub track_file: RefCell<std::path::PathBuf>,
+    track_file: RefCell<std::path::PathBuf>,
+    track_points: Vec<crate::drive::read_track::Coord>,
     map: NonNull<champlain::view::ChamplainView>,
 }
 
@@ -35,6 +40,7 @@ impl TrackSelection {
     fn new(champlain_view: *mut champlain::view::ChamplainView) -> TrackSelectionRef {
         TrackSelectionRef::new(Self {
             track_file: RefCell::new(PathBuf::new()),
+            track_points: Vec::new(),
             map: NonNull::new(champlain_view).unwrap(),
         })
     }
@@ -49,7 +55,17 @@ fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
         .expect("Can't find LoadMapFileLoadButton in ui file.");
 
     if let Some(filepath) = file_picker_button.get_filename() {
-        track_sel_info.track_file.replace(filepath);
+        track_sel_info.track_file.replace(filepath.clone());
+
+        let track_file = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .create(false)
+            .open(filepath);
+
+        let reader = BufReader::new(track_file.unwrap());
+
+        let track_points = read_track::get_long_and_lat(reader);
 
         let forward_button = builder
             .get_object::<gtk::Button>("LoadMapForwardButton")
