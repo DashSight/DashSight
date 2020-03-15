@@ -212,7 +212,9 @@ fn run(rec_info_weak: RecordInfoRef) {
 
                 champlain::markerlayer::show_all_markers(layer);
 
-                if rec_info.save.lock().unwrap().get() {
+                if rec_info.save.lock().unwrap().get()
+                    && !rec_info.toggle_save.lock().unwrap().get()
+                {
                     let coord = champlain::coordinate::new_full(lon, lat);
                     champlain::path_layer::add_node(
                         path_layer,
