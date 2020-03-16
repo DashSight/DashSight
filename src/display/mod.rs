@@ -53,7 +53,7 @@ impl Display {
             .get_object("MainPage")
             .expect("Couldn't find MainPage in ui file.");
         window.set_application(Some(gtk_app));
-        window.fullscreen();
+        // window.fullscreen();
 
         let stack = builder
             .get_object::<gtk::Stack>("MainStack")
