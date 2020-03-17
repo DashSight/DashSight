@@ -133,16 +133,16 @@ fn run(rec_info_weak: RecordInfoRef) {
     let mut reader = io::BufReader::new(&gpsd_connect);
     let mut writer = io::BufWriter::new(&gpsd_connect);
 
-    let layer = champlain::markerlayer::new();
+    let layer = champlain::marker_layer::new();
     champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
-        champlain::markerlayer::to_layer(layer),
+        champlain::marker_layer::to_layer(layer),
     ));
-    champlain::view::add_layer(champlain_view, champlain::markerlayer::to_layer(layer));
+    champlain::view::add_layer(champlain_view, champlain::marker_layer::to_layer(layer));
 
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
     let point = champlain::point::new_full(12.0, point_colour);
-    champlain::markerlayer::add_marker(layer, champlain::clutter_actor::to_champlain_marker(point));
+    champlain::marker_layer::add_marker(layer, champlain::clutter_actor::to_champlain_marker(point));
 
     let path_layer = champlain::path_layer::new();
     champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
@@ -216,13 +216,13 @@ fn run(rec_info_weak: RecordInfoRef) {
                 );
 
                 if first_connect {
-                    champlain::markerlayer::animate_in_all_markers(layer);
+                    champlain::marker_layer::animate_in_all_markers(layer);
                     champlain::view::set_zoom_level(champlain_view, 15);
                     champlain::view::center_on(champlain_view, lat, lon);
                     first_connect = false;
                 }
 
-                champlain::markerlayer::show_all_markers(layer);
+                champlain::marker_layer::show_all_markers(layer);
 
                 if rec_info.save.lock().unwrap().get()
                     && !rec_info.toggle_save.lock().unwrap().get()
