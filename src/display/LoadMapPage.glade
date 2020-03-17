@@ -43,6 +43,7 @@
             <property name="can_focus">False</property>
             <property name="title" translatable="yes">Load Map</property>
             <property name="width_chars">10</property>
+            <property name="action">open</property>
           </object>
           <packing>
             <property name="expand">True</property>

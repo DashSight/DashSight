@@ -19,6 +19,7 @@ use crate::record::print;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
 use gtk::prelude::*;
+use gtk::ResponseType;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::fs::File;
@@ -63,13 +64,24 @@ impl RecordInfo {
 fn file_picker_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
     let builder = display.builder.clone();
 
-    let file_picker_button = builder
-        .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
-        .expect("Can't find RecordFileSaveButton in ui file.");
+    let window: gtk::ApplicationWindow = builder
+        .get_object("MainPage")
+        .expect("Couldn't find MainPage in ui file.");
 
-    if let Some(filepath) = file_picker_button.get_filename() {
-        rec_info.new_file.lock().unwrap().set(true);
-        rec_info.track_file.replace(filepath);
+    let file_chooser = gtk::FileChooserNative::new(
+        Some("Save media as"),
+        Some(&window),
+        gtk::FileChooserAction::Save,
+        Some("Save"),
+        Some("Close"),
+    );
+
+    let response = file_chooser.run();
+    if ResponseType::from(response) == ResponseType::Accept {
+        if let Some(filepath) = file_chooser.get_filename() {
+            rec_info.new_file.lock().unwrap().set(true);
+            rec_info.track_file.replace(filepath);
+        }
     }
 }
 
@@ -292,12 +304,12 @@ pub fn button_press_event(display: DisplayRef) {
     let rec_info = RecordInfo::new(champlain_view);
 
     let file_picker_button = builder
-        .get_object::<gtk::FileChooserButton>("RecordFileSaveButton")
+        .get_object::<gtk::Button>("RecordFileSaveButton")
         .expect("Can't find RecordFileSaveButton in ui file.");
 
     let display_weak = DisplayRef::downgrade(&display);
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
-    file_picker_button.connect_file_set(move |_| {
+    file_picker_button.connect_clicked(move |_| {
         let display = upgrade_weak!(display_weak);
         let rec_info = upgrade_weak!(rec_info_weak);
         file_picker_clicked(display, rec_info);
