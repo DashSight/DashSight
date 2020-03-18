@@ -30,7 +30,7 @@ use std::vec::Vec;
 
 pub struct TrackSelection {
     track_file: RefCell<std::path::PathBuf>,
-    track_points: Vec<crate::drive::read_track::Coord>,
+    track_points: RefCell<Vec<crate::drive::read_track::Coord>>,
     map: NonNull<champlain::view::ChamplainView>,
 }
 
@@ -40,7 +40,7 @@ impl TrackSelection {
     fn new(champlain_view: *mut champlain::view::ChamplainView) -> TrackSelectionRef {
         TrackSelectionRef::new(Self {
             track_file: RefCell::new(PathBuf::new()),
-            track_points: Vec::new(),
+            track_points: RefCell::new(Vec::new()),
             map: NonNull::new(champlain_view).unwrap(),
         })
     }
@@ -64,8 +64,23 @@ fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
             .open(filepath);
 
         let reader = BufReader::new(track_file.unwrap());
-
         let track_points = read_track::get_long_and_lat(reader);
+
+        let path_layer = champlain::path_layer::new();
+        champlain::view::set_zoom_level(champlain_view, 15);
+        champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
+
+        for coord in track_points.iter() {
+            let c_point = champlain::coordinate::new_full(coord.lat, coord.lon);
+            champlain::path_layer::add_node(
+                path_layer,
+                champlain::coordinate::to_location(c_point),
+            );
+        }
+
+        champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+
+        track_sel_info.track_points.replace(track_points);
 
         let forward_button = builder
             .get_object::<gtk::Button>("LoadMapForwardButton")

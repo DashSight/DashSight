@@ -17,8 +17,8 @@
 use std::io::BufRead;
 
 pub struct Coord {
-    lat: f64,
-    lon: f64,
+    pub lat: f64,
+    pub lon: f64,
 }
 
 pub fn get_long_and_lat(
@@ -43,13 +43,28 @@ pub fn get_long_and_lat(
     reader_iterator.next();
     reader_iterator.next();
 
-    // for line in reader_iterator {
-    //     if let Some(trkpt_num) = line.trim().find("trkpt") {
-    //         line.trim().chars().skip(trkpt_num) {
-    //             let split_line = trkpt_line.split('"');
-    //         }
-    //     }
-    // }
+    for line in reader_iterator {
+        let trim_line = line.trim();
+        if let Some(trkpt_num) = trim_line.find("<trkpt") {
+            if let Some(trkpt_line) = trim_line.get((trkpt_num + 5)..) {
+                let split_line: Vec<&str> = trkpt_line.split('"').collect();
+
+                let mut lat: f64 = split_line[1].parse().unwrap();
+                let mut lon: f64 = split_line[3].parse().unwrap();
+
+                let round_margin = 100000.0;
+
+                lat = (lat * round_margin).round() / round_margin;
+                lon = (lon * round_margin).round() / round_margin;
+
+                // Let's assume a lat/lon of 0 is just invalid
+                if lat != 0.0 && lon != 0.0 {
+                    let c = Coord { lat: lat, lon: lon };
+                    coord_vec.push(c);
+                }
+            }
+        }
+    }
 
     coord_vec
 }

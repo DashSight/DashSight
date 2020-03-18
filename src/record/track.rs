@@ -142,7 +142,10 @@ fn run(rec_info_weak: RecordInfoRef) {
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
     let point = champlain::point::new_full(12.0, point_colour);
-    champlain::marker_layer::add_marker(layer, champlain::clutter_actor::to_champlain_marker(point));
+    champlain::marker_layer::add_marker(
+        layer,
+        champlain::clutter_actor::to_champlain_marker(point),
+    );
 
     let path_layer = champlain::path_layer::new();
     champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
