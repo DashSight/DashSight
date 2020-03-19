@@ -16,6 +16,8 @@
 
 use crate::display::*;
 use crate::drive::prepare;
+use gtk;
+use gtk::prelude::*;
 use std::cell::RefCell;
 
 struct LapTime {
@@ -32,4 +34,18 @@ struct Course {
     worst: LapTime,
 }
 
-pub fn button_press_event(_display: DisplayRef, _track_sel_info: prepare::TrackSelectionRef) {}
+pub fn button_press_event(display: DisplayRef, _track_sel_info: prepare::TrackSelectionRef) {
+    let builder = display.builder.clone();
+
+    let stack = builder
+        .get_object::<gtk::Stack>("MainStack")
+        .expect("Can't find MainStack in ui file.");
+
+    stack.set_visible_child_name("DrivePage");
+
+    let drive_page = builder
+        .get_object::<gtk::Grid>("DriveGrid")
+        .expect("Can't find DriveGrid in ui file.");
+
+    drive_page.show_all();
+}

@@ -48,6 +48,10 @@ impl Display {
         builder
             .add_from_string(glade_src)
             .expect("Couldn't add LoadMapPage.glade from string");
+        let glade_src = include_str!("Drive.glade");
+        builder
+            .add_from_string(glade_src)
+            .expect("Couldn't add Drive.glade from string");
 
         let window: gtk::ApplicationWindow = builder
             .get_object("MainPage")
@@ -76,6 +80,12 @@ impl Display {
             .get_object("LoadMapPage")
             .expect("Couldn't find LoadMapPage in ui file.");
         stack.add_named(&load_map_page, "LoadMapPage");
+
+        /* Setup the drive page */
+        let drive_page: gtk::Grid = builder
+            .get_object("DriveGrid")
+            .expect("Couldn't find DriveGrid in ui file.");
+        stack.add_named(&drive_page, "DrivePage");
 
         stack.set_visible_child_name("SplashImage");
         window.show_all();
