@@ -31,24 +31,24 @@ use std::vec::Vec;
 pub struct TrackSelection {
     track_file: RefCell<std::path::PathBuf>,
     track_points: RefCell<Vec<crate::drive::read_track::Coord>>,
-    map: NonNull<champlain::view::ChamplainView>,
+    pub map_widget: gtk::Widget,
 }
 
 pub type TrackSelectionRef = Arc<TrackSelection>;
 
 impl TrackSelection {
-    fn new(champlain_view: *mut champlain::view::ChamplainView) -> TrackSelectionRef {
+    fn new(champlain_widget: gtk::Widget) -> TrackSelectionRef {
         TrackSelectionRef::new(Self {
             track_file: RefCell::new(PathBuf::new()),
             track_points: RefCell::new(Vec::new()),
-            map: NonNull::new(champlain_view).unwrap(),
+            map_widget: champlain_widget,
         })
     }
 }
 
 fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
     let builder = display.builder.clone();
-    let champlain_view = track_sel_info.map.as_ptr();
+    let champlain_view = champlain::gtk_embed::get_view(track_sel_info.map_widget.clone()).unwrap();
 
     let file_picker_button = builder
         .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
@@ -127,7 +127,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     load_map_page.pack1(&map_frame, true, true);
 
-    let track_sel_info = TrackSelection::new(champlain_view);
+    let track_sel_info = TrackSelection::new(champlain_widget.clone());
 
     let file_picker_button = builder
         .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
@@ -153,6 +153,8 @@ pub fn button_press_event(display: DisplayRef) {
         let track_sel_info = TrackSelectionRef::downgrade(&track_sel_info_clone)
             .upgrade()
             .unwrap();
+
+        map_frame.remove(&champlain_widget);
 
         drive::button_press_event(display, track_sel_info);
     });

@@ -19,6 +19,7 @@ use crate::drive::prepare;
 use gtk;
 use gtk::prelude::*;
 use std::cell::RefCell;
+use std::process;
 
 struct LapTime {
     min: u64,
@@ -34,7 +35,7 @@ struct Course {
     worst: LapTime,
 }
 
-pub fn button_press_event(display: DisplayRef, _track_sel_info: prepare::TrackSelectionRef) {
+pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSelectionRef) {
     let builder = display.builder.clone();
 
     let stack = builder
@@ -46,6 +47,22 @@ pub fn button_press_event(display: DisplayRef, _track_sel_info: prepare::TrackSe
     let drive_page = builder
         .get_object::<gtk::Grid>("DriveGrid")
         .expect("Can't find DriveGrid in ui file.");
+
+    let champlain_widget = champlain::gtk_embed::new();
+    let champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
+        .expect("Unable to get ChamplainView");
+    let champlain_actor = champlain::view::to_clutter_actor(champlain_view);
+
+    champlain::view::set_kinetic_mode(champlain_view, true);
+    champlain::view::set_zoom_on_double_click(champlain_view, true);
+    champlain::view::set_zoom_level(champlain_view, 5);
+    champlain::clutter_actor::set_reactive(champlain_actor, true);
+
+    let map_frame = builder
+        .get_object::<gtk::Frame>("DriveMapFrame")
+        .expect("Can't find DriveMapFrame in ui file.");
+
+    map_frame.add(&track_sel_info.map_widget);
 
     drive_page.show_all();
 }
