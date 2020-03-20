@@ -24,6 +24,7 @@ use std::io;
 use std::net::TcpStream;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::thread;
 
 struct LapTime {
     min: u64,
@@ -40,6 +41,9 @@ struct Course {
     track_points: *mut Vec<crate::drive::read_track::Coord>,
     map_widget: gtk::Widget,
 }
+
+unsafe impl Send for Course {}
+unsafe impl Sync for Course {}
 
 type CourseRef = Arc<Course>;
 
@@ -88,8 +92,7 @@ fn run(course_info_weak: CourseRef) {
             }
             Err(err) => {
                 println!("Failed to connect to GPSD: {:?}", err);
-                std::thread::sleep(std::time::Duration::from_secs(5));
-                continue;
+                return;
             }
         }
     }
@@ -194,7 +197,15 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         track_sel_info.track_points.as_ptr(),
     );
 
-    run(course_info);
+    let course_info_clone = course_info.clone();
+
+    // let _handler = thread::spawn(move || {
+    glib::source::idle_add(move || {
+        let course_info = CourseRef::downgrade(&course_info_clone).upgrade().unwrap();
+
+        run(course_info);
+        glib::source::Continue(true)
+    });
 
     drive_page.show_all();
 }
