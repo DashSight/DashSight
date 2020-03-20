@@ -22,15 +22,12 @@ use gtk::prelude::*;
 use std::cell::RefCell;
 use std::fs::OpenOptions;
 use std::io::BufReader;
-use std::path::PathBuf;
 use std::process;
-use std::ptr::NonNull;
 use std::sync::Arc;
 use std::vec::Vec;
 
 pub struct TrackSelection {
-    track_file: RefCell<std::path::PathBuf>,
-    track_points: RefCell<Vec<crate::drive::read_track::Coord>>,
+    pub track_points: RefCell<Vec<crate::drive::read_track::Coord>>,
     pub map_widget: gtk::Widget,
 }
 
@@ -39,7 +36,6 @@ pub type TrackSelectionRef = Arc<TrackSelection>;
 impl TrackSelection {
     fn new(champlain_widget: gtk::Widget) -> TrackSelectionRef {
         TrackSelectionRef::new(Self {
-            track_file: RefCell::new(PathBuf::new()),
             track_points: RefCell::new(Vec::new()),
             map_widget: champlain_widget,
         })
@@ -55,8 +51,6 @@ fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
         .expect("Can't find LoadMapFileLoadButton in ui file.");
 
     if let Some(filepath) = file_picker_button.get_filename() {
-        track_sel_info.track_file.replace(filepath.clone());
-
         let track_file = OpenOptions::new()
             .read(true)
             .write(false)
@@ -146,7 +140,7 @@ pub fn button_press_event(display: DisplayRef) {
         .expect("Can't find LoadMapForwardButton in ui file.");
 
     let display_weak = DisplayRef::downgrade(&display);
-    // We use a strong reference here to make sure that rec_info isn't dropped
+    // We use a strong reference here to make sure that track_sel_info isn't dropped
     let track_sel_info_clone = track_sel_info.clone();
     forward_button.connect_clicked(move |_| {
         let display = upgrade_weak!(display_weak);
