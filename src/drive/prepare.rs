@@ -23,7 +23,7 @@ use std::cell::RefCell;
 use std::fs::OpenOptions;
 use std::io::BufReader;
 use std::process;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::vec::Vec;
 
 pub struct TrackSelection {
@@ -31,7 +31,7 @@ pub struct TrackSelection {
     pub map_widget: gtk::Widget,
 }
 
-pub type TrackSelectionRef = Arc<TrackSelection>;
+pub type TrackSelectionRef = Rc<TrackSelection>;
 
 impl TrackSelection {
     fn new(champlain_widget: gtk::Widget) -> TrackSelectionRef {
