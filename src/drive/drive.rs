@@ -22,9 +22,11 @@ use gtk::prelude::*;
 use std::cell::Cell;
 use std::io;
 use std::net::TcpStream;
+use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use std::time::Duration;
 
 struct LapTime {
     min: u64,
@@ -37,22 +39,12 @@ struct Course {
     last: LapTime,
     best: LapTime,
     worst: LapTime,
-    close: Mutex<Cell<bool>>,
-    track_points: *mut Vec<crate::drive::read_track::Coord>,
-    map_widget: gtk::Widget,
+    // track_points: *mut Vec<crate::drive::read_track::Coord>,
 }
 
-unsafe impl Send for Course {}
-unsafe impl Sync for Course {}
-
-type CourseRef = Arc<Course>;
-
 impl Course {
-    fn new(
-        champlain_widget: gtk::Widget,
-        track_points: *mut Vec<crate::drive::read_track::Coord>,
-    ) -> CourseRef {
-        CourseRef::new(Self {
+    fn new(_track_points: *mut Vec<crate::drive::read_track::Coord>) -> Course {
+        Course {
             times: Vec::new(),
             last: LapTime {
                 min: 0,
@@ -69,19 +61,51 @@ impl Course {
                 sec: 0,
                 nsec: 0,
             },
+            // track_points: track_points
+        }
+    }
+}
+
+struct Threading {
+    close: Mutex<Cell<bool>>,
+    on_track: Mutex<Cell<bool>>,
+    tx: std::sync::mpsc::Sender<(f64, f64)>,
+}
+
+type ThreadingRef = Arc<Threading>;
+
+impl Threading {
+    fn new(tx: std::sync::mpsc::Sender<(f64, f64)>) -> ThreadingRef {
+        ThreadingRef::new(Self {
             close: Mutex::new(Cell::new(false)),
-            track_points: track_points,
-            map_widget: champlain_widget,
+            on_track: Mutex::new(Cell::new(false)),
+            tx: tx,
         })
     }
 }
 
-fn run(course_info_weak: CourseRef) {
-    let driving_lap: bool = false;
-    let gpsd_connect;
+unsafe impl Send for Threading {}
+unsafe impl Sync for Threading {}
 
-    let course_info = course_info_weak.clone();
-    let champlain_view = champlain::gtk_embed::get_view(course_info.map_widget.clone()).unwrap();
+struct MapWrapper {
+    path_layer: *mut champlain::path_layer::ChamplainPathLayer,
+    point: *mut champlain::clutter::ClutterActor,
+}
+
+impl MapWrapper {
+    fn new(
+        path_layer: *mut champlain::path_layer::ChamplainPathLayer,
+        champlain_point: *mut champlain::clutter::ClutterActor,
+    ) -> MapWrapper {
+        MapWrapper {
+            path_layer: path_layer,
+            point: champlain_point,
+        }
+    }
+}
+
+fn gpsd_thread(_course_info: Course, thread_info_weak: ThreadingRef) {
+    let gpsd_connect;
 
     loop {
         let stream = TcpStream::connect("127.0.0.1:2947");
@@ -92,13 +116,106 @@ fn run(course_info_weak: CourseRef) {
             }
             Err(err) => {
                 println!("Failed to connect to GPSD: {:?}", err);
-                return;
+                std::thread::sleep(std::time::Duration::from_secs(5));
+                continue;
             }
         }
     }
 
     let mut reader = io::BufReader::new(&gpsd_connect);
     let mut writer = io::BufWriter::new(&gpsd_connect);
+
+    let mut gpsd_message;
+
+    handshake(&mut reader, &mut writer).unwrap();
+
+    while !thread_info_weak.close.lock().unwrap().get() {
+        let msg = get_data(&mut reader);
+        match msg {
+            Ok(msg) => {
+                gpsd_message = msg;
+            }
+            Err(err) => {
+                println!("Failed to get a message from GPSD: {:?}", err);
+                std::thread::sleep(std::time::Duration::from_millis(10));
+                continue;
+            }
+        }
+
+        match gpsd_message {
+            ResponseData::Device(_) => {}
+            ResponseData::Tpv(t) => {
+                let lat = t.lat.unwrap_or(0.0);
+                let lon = t.lon.unwrap_or(0.0);
+
+                thread_info_weak.tx.send((lat, lon)).unwrap();
+            }
+            ResponseData::Sky(_) => {}
+            ResponseData::Pps(_) => {}
+            ResponseData::Gst(_) => {}
+        }
+    }
+}
+
+fn idle_thread(
+    rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+    map_wrapper: &MapWrapper,
+    thread_info: ThreadingRef,
+) -> glib::source::Continue {
+    let timeout = Duration::new(0, 100);
+    let rec = rx.recv_timeout(timeout);
+    match rec {
+        Ok((lat, lon)) => {
+            champlain::location::set_location(
+                champlain::clutter_actor::to_location(map_wrapper.point),
+                lat,
+                lon,
+            );
+
+            if thread_info.on_track.lock().unwrap().get() {
+                let coord = champlain::coordinate::new_full(lon, lat);
+                champlain::path_layer::add_node(
+                    map_wrapper.path_layer,
+                    champlain::coordinate::to_location(coord),
+                );
+            }
+            glib::source::Continue(true)
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
+        _ => glib::source::Continue(false),
+    }
+}
+
+pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSelectionRef) {
+    let builder = display.builder.clone();
+
+    let stack = builder
+        .get_object::<gtk::Stack>("MainStack")
+        .expect("Can't find MainStack in ui file.");
+    stack.set_visible_child_name("DrivePage");
+
+    let drive_page = builder
+        .get_object::<gtk::Grid>("DriveGrid")
+        .expect("Can't find DriveGrid in ui file.");
+
+    let map_frame = builder
+        .get_object::<gtk::Frame>("DriveMapFrame")
+        .expect("Can't find DriveMapFrame in ui file.");
+    map_frame.add(&track_sel_info.map_widget);
+
+    let champlain_view = champlain::gtk_embed::get_view(track_sel_info.map_widget.clone())
+        .expect("Unable to get ChamplainView");
+
+    let course_info = Course::new(track_sel_info.track_points.as_ptr());
+
+    let (tx, rx) = mpsc::channel::<(f64, f64)>();
+    let thread_info = Threading::new(tx);
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let _handler = thread::spawn(move || {
+        let thread_info = upgrade_weak!(thread_info_weak);
+        gpsd_thread(course_info, thread_info);
+    });
 
     let layer = champlain::marker_layer::new();
     champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
@@ -118,93 +235,17 @@ fn run(course_info_weak: CourseRef) {
     champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
     champlain::path_layer::set_visible(path_layer, true);
 
-    let mut gpsd_message;
+    champlain::marker_layer::show_all_markers(layer);
 
-    handshake(&mut reader, &mut writer).unwrap();
+    let map_wrapper = MapWrapper::new(path_layer, point);
 
-    while !course_info.close.lock().unwrap().get() {
-        let msg = get_data(&mut reader);
-        match msg {
-            Ok(msg) => {
-                gpsd_message = msg;
-            }
-            Err(err) => {
-                println!("Failed to get a message from GPSD: {:?}", err);
-                std::thread::sleep(std::time::Duration::from_millis(10));
-                continue;
-            }
-        }
+    let thread_info_clone = thread_info.clone();
+    gtk::idle_add(move || {
+        let thread_info = ThreadingRef::downgrade(&thread_info_clone)
+            .upgrade()
+            .unwrap();
 
-        match gpsd_message {
-            ResponseData::Device(_) => {}
-            ResponseData::Tpv(t) => {
-                let lat = t.lat.unwrap_or(0.0);
-                let lon = t.lon.unwrap_or(0.0);
-
-                champlain::location::set_location(
-                    champlain::clutter_actor::to_location(point),
-                    lat,
-                    lon,
-                );
-
-                champlain::marker_layer::show_all_markers(layer);
-
-                if driving_lap {
-                    let coord = champlain::coordinate::new_full(lon, lat);
-                    champlain::path_layer::add_node(
-                        path_layer,
-                        champlain::coordinate::to_location(coord),
-                    );
-                }
-            }
-            ResponseData::Sky(_) => {}
-            ResponseData::Pps(_) => {}
-            ResponseData::Gst(_) => {}
-        }
-    }
-}
-
-pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSelectionRef) {
-    let builder = display.builder.clone();
-
-    let stack = builder
-        .get_object::<gtk::Stack>("MainStack")
-        .expect("Can't find MainStack in ui file.");
-
-    stack.set_visible_child_name("DrivePage");
-
-    let drive_page = builder
-        .get_object::<gtk::Grid>("DriveGrid")
-        .expect("Can't find DriveGrid in ui file.");
-
-    let champlain_view = champlain::gtk_embed::get_view(track_sel_info.map_widget.clone())
-        .expect("Unable to get ChamplainView");
-    let champlain_actor = champlain::view::to_clutter_actor(champlain_view);
-
-    champlain::view::set_kinetic_mode(champlain_view, true);
-    champlain::view::set_zoom_on_double_click(champlain_view, true);
-    champlain::view::set_zoom_level(champlain_view, 5);
-    champlain::clutter_actor::set_reactive(champlain_actor, true);
-
-    let map_frame = builder
-        .get_object::<gtk::Frame>("DriveMapFrame")
-        .expect("Can't find DriveMapFrame in ui file.");
-
-    map_frame.add(&track_sel_info.map_widget);
-
-    let course_info = Course::new(
-        track_sel_info.map_widget.clone(),
-        track_sel_info.track_points.as_ptr(),
-    );
-
-    let course_info_clone = course_info.clone();
-
-    // let _handler = thread::spawn(move || {
-    glib::source::idle_add(move || {
-        let course_info = CourseRef::downgrade(&course_info_clone).upgrade().unwrap();
-
-        run(course_info);
-        glib::source::Continue(true)
+        idle_thread(&rx, &map_wrapper, thread_info)
     });
 
     drive_page.show_all();
