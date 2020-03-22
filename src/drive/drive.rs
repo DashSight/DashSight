@@ -16,9 +16,9 @@
 
 use crate::display::*;
 use crate::drive::obdii;
+use crate::drive::obdii::OBDIICommandType;
 use crate::drive::prepare;
 use crate::drive::read_track::Coord;
-use crate::drive::obdii::OBDIICommands;
 use crate::utils::lat_lon_comp;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
@@ -69,7 +69,7 @@ pub struct Threading {
     pub no_track: Mutex<Cell<bool>>,
     pub location_tx: std::sync::mpsc::Sender<(f64, f64)>,
     pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
-    pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIICommands>,
+    pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
 }
 
 pub type ThreadingRef = Arc<Threading>;
@@ -78,7 +78,7 @@ impl Threading {
     fn new(
         location_tx: std::sync::mpsc::Sender<(f64, f64)>,
         times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
-        obdii_tx: std::sync::mpsc::Sender<obdii::OBDIICommands>,
+        obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
     ) -> ThreadingRef {
         ThreadingRef::new(Self {
             lap_start: RefCell::new(SystemTime::now()),
@@ -276,14 +276,22 @@ fn time_update_idle_thread(
 }
 
 fn obdii_update_idle_thread(
-    obdii_rx: &std::sync::mpsc::Receiver<obdii::OBDIICommands>,
+    obdii_rx: &std::sync::mpsc::Receiver<obdii::OBDIIData>,
     builder: gtk::Builder,
-    thread_info: ThreadingRef,
+    _thread_info: ThreadingRef,
 ) -> glib::source::Continue {
     let timeout = Duration::new(0, 100);
     let rec = obdii_rx.recv_timeout(timeout);
     match rec {
-        Ok(com) => {
+        Ok(data) => {
+            if data.command == OBDIICommandType::Throttle {
+                let bar = builder
+                    .get_object::<gtk::ProgressBar>("ThrottleBar")
+                    .expect("Can't find ThrottleBar in ui file.");
+                unsafe {
+                    bar.set_fraction(data.val.float / 100.0);
+                }
+            }
             glib::source::Continue(true)
         }
         Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
@@ -361,7 +369,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
-    let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIICommands>();
+    let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
     let thread_info = Threading::new(location_tx, times_tx, obdii_tx);
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);

@@ -17,9 +17,22 @@
 extern crate cpython;
 use crate::drive::drive::*;
 use cpython::{PyDict, PyResult, Python};
-use std::sync::mpsc;
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum OBDIICommandType {
+    Rpm,
+    Throttle,
+    EngineLoad,
+    TimingAdv,
+    Maf,
+    CoolantTemp,
+    IntakeTemp,
+    ShortFuelT1,
+    LongFuelT1,
+    FuelStatus,
+}
 
 #[derive(PartialEq)]
 enum PythonReturns {
@@ -28,8 +41,14 @@ enum PythonReturns {
     PyStr,
 }
 
+struct OBDIICommands {
+    command: OBDIICommandType,
+    com_string: String,
+    ret: PythonReturns,
+}
+
 #[derive(Clone, Copy)]
-enum OBDIIFuelStatus {
+pub enum OBDIIFuelStatus {
     OpenLoopTemp,
     ClosedLoopO2Sense,
     OpenLoopLoad,
@@ -37,16 +56,15 @@ enum OBDIIFuelStatus {
     ClosedLoopFault,
 }
 
-union PythonValues {
-    float: f64,
-    long: u32,
-    fuel_status: OBDIIFuelStatus,
+pub union PythonValues {
+    pub float: f64,
+    pub long: u32,
+    pub fuel_status: OBDIIFuelStatus,
 }
 
-pub struct OBDIICommands {
-    command: String,
-    ret: PythonReturns,
-    val: PythonValues,
+pub struct OBDIIData {
+    pub command: OBDIICommandType,
+    pub val: PythonValues,
 }
 
 pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
@@ -55,94 +73,105 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
 
     let commands: [OBDIICommands; 10] = [
         OBDIICommands {
-            command: "RPM".to_string(),
+            command: OBDIICommandType::Rpm,
+            com_string: "RPM".to_string(),
             ret: PythonReturns::Float,
-            val: PythonValues{ float: 0.0 },
         },
         OBDIICommands {
-            command: "THROTTLE_POS".to_string(),
+            command: OBDIICommandType::Throttle,
+            com_string: "THROTTLE_POS".to_string(),
             ret: PythonReturns::Float,
-            val: PythonValues{ float: 0.0 },
         },
         OBDIICommands {
-            command: "ENGINE_LOAD".to_string(),
+            command: OBDIICommandType::EngineLoad,
+            com_string: "ENGINE_LOAD".to_string(),
             ret: PythonReturns::Float,
-            val: PythonValues{ float: 0.0 },
         },
         OBDIICommands {
-            command: "TIMING_ADVANCE".to_string(),
+            command: OBDIICommandType::TimingAdv,
+            com_string: "TIMING_ADVANCE".to_string(),
             ret: PythonReturns::Float,
-            val: PythonValues{ float: 0.0 },
         },
         OBDIICommands {
-            command: "MAF".to_string(),
+            command: OBDIICommandType::Maf,
+            com_string: "MAF".to_string(),
             ret: PythonReturns::Float,
-            val: PythonValues{ float: 0.0 },
         },
         OBDIICommands {
-            command: "COOLANT_TEMP".to_string(),
+            command: OBDIICommandType::CoolantTemp,
+            com_string: "COOLANT_TEMP".to_string(),
             ret: PythonReturns::Long,
-            val: PythonValues{ long: 0 },
         },
         OBDIICommands {
-            command: "INTAKE_TEMP".to_string(),
+            command: OBDIICommandType::IntakeTemp,
+            com_string: "INTAKE_TEMP".to_string(),
             ret: PythonReturns::Long,
-            val: PythonValues{ long: 0 },
         },
         OBDIICommands {
-            command: "SHORT_FUEL_TRIM_1".to_string(),
+            command: OBDIICommandType::ShortFuelT1,
+            com_string: "SHORT_FUEL_TRIM_1".to_string(),
             ret: PythonReturns::Long,
-            val: PythonValues{ long: 0 },
         },
         OBDIICommands {
-            command: "LONG_FUEL_TRIM_1".to_string(),
+            command: OBDIICommandType::LongFuelT1,
+            com_string: "LONG_FUEL_TRIM_1".to_string(),
             ret: PythonReturns::Long,
-            val: PythonValues{ long: 0 },
         },
         OBDIICommands {
-            command: "FUEL_STATUS".to_string(),
+            command: OBDIICommandType::FuelStatus,
+            com_string: "FUEL_STATUS".to_string(),
             ret: PythonReturns::PyStr,
-            val: PythonValues{ fuel_status: OBDIIFuelStatus::OpenLoopTemp },
         },
     ];
 
     loop {
-	    let pyobd_res = py.import("obdii_connect.py");
+        let pyobd_res = py.import("obdii_connect.py");
 
-	    match pyobd_res {
-	    	Ok(_) => {
-	    		break;
-	    	}
-	    	Err(_) => {
-	    		std::thread::sleep(std::time::Duration::from_secs(5));
-	    		continue;
-	    	}
-	    }
-	}
+        match pyobd_res {
+            Ok(_) => {
+                break;
+            }
+            Err(_) => {
+                thread::sleep(Duration::from_secs(5));
+                continue;
+            }
+        }
+    }
 
     while !thread_info.close.lock().unwrap().get() {
         for command in commands.iter() {
             let locals = PyDict::new(py);
-            locals.set_item(py, "s", &command.command)?;
+            locals.set_item(py, "s", &command.com_string)?;
             let py_ret = py.eval("c_get_data(s)", None, Some(&locals))?;
 
-            let mut com = command.clone();
+            let data: OBDIIData;
 
             if command.ret == PythonReturns::Float {
                 let ret: f64 = py_ret.extract(py)?;
 
-                com.val.float = ret;
+                data = OBDIIData {
+                    command: command.command,
+                    val: PythonValues { float: ret },
+                };
             } else if command.ret == PythonReturns::Long {
                 let ret: u32 = py_ret.extract(py)?;
 
-                com.val.long = ret;
-            } else if command.ret == PythonReturns::PyStr {
+                data = OBDIIData {
+                    command: command.command,
+                    val: PythonValues { long: ret },
+                };
+            } else {
                 let _ret: String = py_ret.extract(py)?;
 
-                // com.val.fuel_status = ret;
+                data = OBDIIData {
+                    command: command.command,
+                    val: PythonValues {
+                        fuel_status: OBDIIFuelStatus::OpenLoopTemp,
+                    },
+                };
             }
 
-            thread_info.obdii_tx.send(com).unwrap();
+            thread_info.obdii_tx.send(data).unwrap();
         }
     }
 
