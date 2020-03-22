@@ -19,7 +19,7 @@ use crate::drive::drive;
 use crate::drive::read_track;
 use gtk;
 use gtk::prelude::*;
-use std::cell::RefCell;
+use std::cell::Cell;
 use std::fs::OpenOptions;
 use std::io::BufReader;
 use std::process;
@@ -27,7 +27,7 @@ use std::rc::Rc;
 use std::vec::Vec;
 
 pub struct TrackSelection {
-    pub track_points: RefCell<Vec<crate::drive::read_track::Coord>>,
+    pub track_points: Cell<Vec<crate::drive::read_track::Coord>>,
     pub map_widget: gtk::Widget,
 }
 
@@ -36,7 +36,7 @@ pub type TrackSelectionRef = Rc<TrackSelection>;
 impl TrackSelection {
     fn new(champlain_widget: gtk::Widget) -> TrackSelectionRef {
         TrackSelectionRef::new(Self {
-            track_points: RefCell::new(Vec::new()),
+            track_points: Cell::new(Vec::new()),
             map_widget: champlain_widget,
         })
     }

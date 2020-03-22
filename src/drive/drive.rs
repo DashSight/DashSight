@@ -16,6 +16,7 @@
 
 use crate::display::*;
 use crate::drive::prepare;
+use crate::drive::read_track::Coord;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
 use gtk::prelude::*;
@@ -39,11 +40,19 @@ struct Course {
     last: LapTime,
     best: LapTime,
     worst: LapTime,
+    start: Coord,
+    finish: Coord,
     // track_points: *mut Vec<crate::drive::read_track::Coord>,
 }
 
 impl Course {
-    fn new(_track_points: *mut Vec<crate::drive::read_track::Coord>) -> Course {
+    fn new(
+        _track_points: &Vec<crate::drive::read_track::Coord>,
+        start_lat: f64,
+        start_lon: f64,
+        finish_lat: f64,
+        finish_lon: f64,
+    ) -> Course {
         Course {
             times: Vec::new(),
             last: LapTime {
@@ -60,6 +69,14 @@ impl Course {
                 min: 0,
                 sec: 0,
                 nsec: 0,
+            },
+            start: Coord {
+                lat: start_lat,
+                lon: start_lon,
+            },
+            finish: Coord {
+                lat: finish_lat,
+                lon: finish_lon,
             },
             // track_points: track_points
         }
@@ -206,7 +223,15 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let champlain_view = champlain::gtk_embed::get_view(track_sel_info.map_widget.clone())
         .expect("Unable to get ChamplainView");
 
-    let course_info = Course::new(track_sel_info.track_points.as_ptr());
+    let track_points = track_sel_info.track_points.take();
+
+    let course_info = Course::new(
+        &track_points,
+        (&track_points).first().unwrap().lat,
+        (&track_points).first().unwrap().lon,
+        (&track_points).last().unwrap().lat,
+        (&track_points).last().unwrap().lon,
+    );
 
     let (tx, rx) = mpsc::channel::<(f64, f64)>();
     let thread_info = Threading::new(tx);
