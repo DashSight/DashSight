@@ -26,3 +26,15 @@ macro_rules! upgrade_weak {
         upgrade_weak!($x, ())
     };
 }
+
+pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
+    let round_margin = 10000.0;
+
+    let lat_1_round = (lat_1 * round_margin).round() / round_margin;
+    let lon_1_round = (lon_1 * round_margin).round() / round_margin;
+
+    let lat_2_round = (lat_2 * round_margin).round() / round_margin;
+    let lon_2_round = (lon_2 * round_margin).round() / round_margin;
+
+    lat_1_round == lat_2_round && lon_1_round == lon_2_round
+}

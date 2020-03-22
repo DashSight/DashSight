@@ -17,6 +17,7 @@
 use crate::display::*;
 use crate::drive::prepare;
 use crate::drive::read_track::Coord;
+use crate::utils::lat_lon_comp;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
 use gtk::prelude::*;
@@ -152,16 +153,14 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                 thread_info.location_tx.send((lat, lon)).unwrap();
 
                 if !thread_info.on_track.lock().unwrap().get()
-                    && lat == course_info.start.lat
-                    && lon == course_info.start.lon
+                    && lat_lon_comp(lat, lon, course_info.start.lat, course_info.start.lon)
                 {
                     thread_info.lap_start.replace(SystemTime::now());
                     thread_info.on_track.lock().unwrap().set(true);
                 }
 
                 if thread_info.on_track.lock().unwrap().get()
-                    && lat == course_info.finish.lat
-                    && lon == course_info.finish.lon
+                    && lat_lon_comp(lat, lon, course_info.finish.lat, course_info.finish.lon)
                 {
                     thread_info.on_track.lock().unwrap().set(false);
 
