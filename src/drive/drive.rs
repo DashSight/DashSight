@@ -245,7 +245,7 @@ fn time_update_idle_thread(
                     .expect("Can't find CurrentTime in ui file.");
 
                 let time = format!(
-                    "{:02}:{:02}:{:02}",
+                    "{:02}:{:02}:{:03}",
                     elapsed.as_secs() / 60,
                     elapsed.as_secs() % 60,
                     elapsed.subsec_millis()
