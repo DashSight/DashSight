@@ -30,18 +30,11 @@ use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, SystemTime};
 
-struct LapTime {
-    min: u64,
-    sec: u64,
-    msec: u32,
-    nsec: u32,
-}
-
 struct Course {
-    times: Vec<LapTime>,
-    last: LapTime,
-    best: LapTime,
-    worst: LapTime,
+    times: Vec<Duration>,
+    last: Duration,
+    best: Duration,
+    worst: Duration,
     start: Coord,
     finish: Coord,
 }
@@ -50,24 +43,9 @@ impl Course {
     fn new(start_lat: f64, start_lon: f64, finish_lat: f64, finish_lon: f64) -> Course {
         Course {
             times: Vec::new(),
-            last: LapTime {
-                min: 0,
-                sec: 0,
-                msec: 0,
-                nsec: 0,
-            },
-            best: LapTime {
-                min: 0,
-                sec: 0,
-                msec: 0,
-                nsec: 0,
-            },
-            worst: LapTime {
-                min: 0,
-                sec: 0,
-                msec: 0,
-                nsec: 0,
-            },
+            last: Duration::new(0, 0),
+            best: Duration::new(0, 0),
+            worst: Duration::new(0, 0),
             start: Coord {
                 lat: start_lat,
                 lon: start_lon,
@@ -85,19 +63,24 @@ struct Threading {
     close: Mutex<Cell<bool>>,
     on_track: Mutex<Cell<bool>>,
     no_track: Mutex<Cell<bool>>,
-    tx: std::sync::mpsc::Sender<(f64, f64)>,
+    location_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
 }
 
 type ThreadingRef = Arc<Threading>;
 
 impl Threading {
-    fn new(tx: std::sync::mpsc::Sender<(f64, f64)>) -> ThreadingRef {
+    fn new(
+        location_tx: std::sync::mpsc::Sender<(f64, f64)>,
+        times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
+    ) -> ThreadingRef {
         ThreadingRef::new(Self {
             lap_start: RefCell::new(SystemTime::now()),
             close: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
             no_track: Mutex::new(Cell::new(false)),
-            tx: tx,
+            location_tx: location_tx,
+            times_tx: times_tx,
         })
     }
 }
@@ -166,7 +149,7 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                 let lat = t.lat.unwrap_or(0.0);
                 let lon = t.lon.unwrap_or(0.0);
 
-                thread_info.tx.send((lat, lon)).unwrap();
+                thread_info.location_tx.send((lat, lon)).unwrap();
 
                 if !thread_info.on_track.lock().unwrap().get()
                     && lat == course_info.start.lat
@@ -184,12 +167,21 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
 
                     match thread_info.lap_start.borrow().elapsed() {
                         Ok(elapsed) => {
-                            course_info.times.push(LapTime {
-                                min: elapsed.as_secs() / 60,
-                                sec: elapsed.as_secs() % 60,
-                                msec: elapsed.subsec_millis(),
-                                nsec: elapsed.subsec_nanos(),
-                            });
+                            course_info.times.push(elapsed);
+                            course_info.last = elapsed;
+                            course_info.times.sort_unstable();
+                            match course_info.times.first() {
+                                Some(worst) => course_info.worst = worst.clone(),
+                                _ => {}
+                            }
+                            match course_info.times.last() {
+                                Some(best) => course_info.best = best.clone(),
+                                _ => {}
+                            }
+                            thread_info
+                                .times_tx
+                                .send((course_info.last, course_info.best, course_info.worst))
+                                .unwrap();
                         }
                         Err(e) => {
                             println!("Error: {:?}", e);
@@ -205,12 +197,12 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
 }
 
 fn map_update_idle_thread(
-    rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+    location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
     map_wrapper: &MapWrapper,
     thread_info: ThreadingRef,
 ) -> glib::source::Continue {
     let timeout = Duration::new(0, 100);
-    let rec = rx.recv_timeout(timeout);
+    let rec = location_rx.recv_timeout(timeout);
     match rec {
         Ok((lat, lon)) => {
             champlain::location::set_location(
@@ -242,6 +234,7 @@ fn map_update_idle_thread(
 }
 
 fn time_update_idle_thread(
+    times_rx: &std::sync::mpsc::Receiver<(Duration, Duration, Duration)>,
     builder: gtk::Builder,
     thread_info: ThreadingRef,
 ) -> glib::source::Continue {
@@ -267,7 +260,48 @@ fn time_update_idle_thread(
         }
     }
 
-    glib::source::Continue(true)
+    let timeout = Duration::new(0, 100);
+    let rec = times_rx.recv_timeout(timeout);
+    match rec {
+        Ok((last, best, worst)) => {
+            let last_time = builder
+                .get_object::<gtk::Label>("LastTime")
+                .expect("Can't find LastTime in ui file.");
+            let time = format!(
+                "{:02}:{:02}:{:02}",
+                last.as_secs() / 60,
+                last.as_secs() % 60,
+                last.subsec_millis()
+            );
+            last_time.set_label(&time);
+
+            let best_time = builder
+                .get_object::<gtk::Label>("BestTime")
+                .expect("Can't find BestTime in ui file.");
+            let time = format!(
+                "{:02}:{:02}:{:02}",
+                best.as_secs() / 60,
+                best.as_secs() % 60,
+                best.subsec_millis()
+            );
+            best_time.set_label(&time);
+
+            let worst_time = builder
+                .get_object::<gtk::Label>("WorstTime")
+                .expect("Can't find WorstTime in ui file.");
+            let time = format!(
+                "{:02}:{:02}:{:02}",
+                worst.as_secs() / 60,
+                worst.as_secs() % 60,
+                worst.subsec_millis()
+            );
+            worst_time.set_label(&time);
+
+            glib::source::Continue(true)
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
+        _ => glib::source::Continue(false),
+    }
 }
 
 pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSelectionRef) {
@@ -292,8 +326,9 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let track_points = track_sel_info.track_points.take();
 
-    let (tx, rx) = mpsc::channel::<(f64, f64)>();
-    let thread_info = Threading::new(tx);
+    let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
+    let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
+    let thread_info = Threading::new(location_tx, times_tx);
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let _handler = thread::spawn(move || {
@@ -317,7 +352,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
         let builder = display.builder.clone();
 
-        time_update_idle_thread(builder, thread_info)
+        time_update_idle_thread(&times_rx, builder, thread_info)
     });
 
     let layer = champlain::marker_layer::new();
@@ -348,7 +383,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             .upgrade()
             .unwrap();
 
-        map_update_idle_thread(&rx, &map_wrapper, thread_info)
+        map_update_idle_thread(&location_rx, &map_wrapper, thread_info)
     });
 
     drive_page.show_all();
