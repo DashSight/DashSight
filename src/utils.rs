@@ -28,7 +28,7 @@ macro_rules! upgrade_weak {
 }
 
 pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
-    let round_margin = 10000.0;
+    let round_margin = 5000.0;
 
     let lat_1_round = (lat_1 * round_margin).round() / round_margin;
     let lon_1_round = (lon_1 * round_margin).round() / round_margin;
