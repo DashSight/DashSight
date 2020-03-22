@@ -231,6 +231,35 @@ fn map_update_idle_thread(
     }
 }
 
+fn time_update_idle_thread(
+    builder: gtk::Builder,
+    thread_info: ThreadingRef,
+) -> glib::source::Continue {
+    if thread_info.on_track.lock().unwrap().get() {
+        match thread_info.lap_start.borrow().elapsed() {
+            Ok(elapsed) => {
+                let current_time = builder
+                    .get_object::<gtk::Label>("CurrentTime")
+                    .expect("Can't find CurrentTime in ui file.");
+
+                let time = format!(
+                    "{:02}:{:02}:{:02}",
+                    elapsed.as_secs() / 60,
+                    elapsed.as_secs() % 60,
+                    elapsed.subsec_millis()
+                );
+
+                current_time.set_label(&time);
+            }
+            Err(e) => {
+                println!("Error: {:?}", e);
+            }
+        }
+    }
+
+    glib::source::Continue(true)
+}
+
 pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSelectionRef) {
     let builder = display.builder.clone();
 
@@ -268,6 +297,17 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let _handler = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
         gpsd_thread(course_info, thread_info);
+    });
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let display_weak = DisplayRef::downgrade(&display);
+    gtk::idle_add(move || {
+        let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
+        let display = upgrade_weak!(display_weak, glib::source::Continue(false));
+
+        let builder = display.builder.clone();
+
+        time_update_idle_thread(builder, thread_info)
     });
 
     let layer = champlain::marker_layer::new();
