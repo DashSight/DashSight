@@ -211,7 +211,7 @@ fn map_update_idle_thread(
             );
 
             if thread_info.on_track.lock().unwrap().get() {
-                let point_colour = champlain::clutter_colour::new(255, 200, 100, 255);
+                let point_colour = champlain::clutter_colour::new(255, 120, 0, 255);
                 champlain::point::set_colour(
                     champlain::clutter_actor::to_point(map_wrapper.point),
                     point_colour,
