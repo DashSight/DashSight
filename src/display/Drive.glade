@@ -35,10 +35,10 @@
       <object class="GtkLabel" id="CurrentTime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:00</property>
+        <property name="label" translatable="yes">00:00:000</property>
         <property name="track_visited_links">False</property>
         <attributes>
-          <attribute name="font-desc" value="55"/>
+          <attribute name="font-desc" value="Droid Sans Mono 55"/>
         </attributes>
       </object>
       <packing>
@@ -52,10 +52,10 @@
       <object class="GtkLabel" id="BestTime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:00</property>
+        <property name="label" translatable="yes">00:00:000</property>
         <property name="track_visited_links">False</property>
         <attributes>
-          <attribute name="font-desc" value="35"/>
+          <attribute name="font-desc" value="Droid Sans Mono 35"/>
           <attribute name="foreground" value="#0b7dac5e165c"/>
         </attributes>
       </object>
@@ -69,10 +69,10 @@
       <object class="GtkLabel" id="WorstTime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:00</property>
+        <property name="label" translatable="yes">00:00:000</property>
         <property name="track_visited_links">False</property>
         <attributes>
-          <attribute name="font-desc" value="35"/>
+          <attribute name="font-desc" value="Droid Sans Mono 35"/>
           <attribute name="foreground" value="#a4a400000000"/>
         </attributes>
       </object>
@@ -86,9 +86,9 @@
       <object class="GtkLabel" id="LastTime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:00</property>
+        <property name="label" translatable="yes">00:00:000</property>
         <attributes>
-          <attribute name="font-desc" value="40"/>
+          <attribute name="font-desc" value="Droid Sans Mono 40"/>
           <attribute name="foreground" value="#c4c4a0a00000"/>
         </attributes>
       </object>
