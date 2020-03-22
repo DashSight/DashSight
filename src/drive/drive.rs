@@ -63,6 +63,7 @@ struct Threading {
     lap_start: RefCell<std::time::SystemTime>,
     close: Mutex<Cell<bool>>,
     on_track: Mutex<Cell<bool>>,
+    change_colour: Mutex<Cell<bool>>,
     no_track: Mutex<Cell<bool>>,
     location_tx: std::sync::mpsc::Sender<(f64, f64)>,
     times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
@@ -79,6 +80,7 @@ impl Threading {
             lap_start: RefCell::new(SystemTime::now()),
             close: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
+            change_colour: Mutex::new(Cell::new(false)),
             no_track: Mutex::new(Cell::new(false)),
             location_tx: location_tx,
             times_tx: times_tx,
@@ -157,12 +159,14 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                 {
                     thread_info.lap_start.replace(SystemTime::now());
                     thread_info.on_track.lock().unwrap().set(true);
+                    thread_info.change_colour.lock().unwrap().set(true);
                 }
 
                 if thread_info.on_track.lock().unwrap().get()
                     && lat_lon_comp(lat, lon, course_info.finish.lat, course_info.finish.lon)
                 {
                     thread_info.on_track.lock().unwrap().set(false);
+                    thread_info.change_colour.lock().unwrap().set(true);
 
                     match thread_info.lap_start.borrow().elapsed() {
                         Ok(elapsed) => {
@@ -210,12 +214,21 @@ fn map_update_idle_thread(
                 lon,
             );
 
-            if thread_info.on_track.lock().unwrap().get() {
-                let point_colour = champlain::clutter_colour::new(255, 120, 0, 255);
-                champlain::point::set_colour(
-                    champlain::clutter_actor::to_point(map_wrapper.point),
-                    point_colour,
-                );
+            if thread_info.change_colour.lock().unwrap().get() {
+                if thread_info.on_track.lock().unwrap().get() {
+                    let point_colour = champlain::clutter_colour::new(255, 120, 0, 255);
+                    champlain::point::set_colour(
+                        champlain::clutter_actor::to_point(map_wrapper.point),
+                        point_colour,
+                    );
+                } else {
+                    let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
+                    champlain::point::set_colour(
+                        champlain::clutter_actor::to_point(map_wrapper.point),
+                        point_colour,
+                    );
+                }
+                thread_info.change_colour.lock().unwrap().set(false);
             }
 
             if thread_info.no_track.lock().unwrap().get() {
