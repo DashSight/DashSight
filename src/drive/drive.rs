@@ -358,7 +358,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let display_weak = DisplayRef::downgrade(&display);
-    gtk::idle_add(move || {
+    gtk::timeout_add(10, move || {
         let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
         let display = upgrade_weak!(display_weak, glib::source::Continue(false));
 
@@ -390,7 +390,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let map_wrapper = MapWrapper::new(path_layer, point);
 
     let thread_info_clone = thread_info.clone();
-    gtk::idle_add(move || {
+    gtk::timeout_add(10, move || {
         let thread_info = ThreadingRef::downgrade(&thread_info_clone)
             .upgrade()
             .unwrap();
