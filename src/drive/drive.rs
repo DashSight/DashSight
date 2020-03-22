@@ -33,7 +33,8 @@ use std::time::{Duration, SystemTime};
 struct LapTime {
     min: u64,
     sec: u64,
-    nsec: u64,
+    msec: u32,
+    nsec: u32,
 }
 
 struct Course {
@@ -43,32 +44,28 @@ struct Course {
     worst: LapTime,
     start: Coord,
     finish: Coord,
-    // track_points: *mut Vec<crate::drive::read_track::Coord>,
 }
 
 impl Course {
-    fn new(
-        _track_points: &Vec<crate::drive::read_track::Coord>,
-        start_lat: f64,
-        start_lon: f64,
-        finish_lat: f64,
-        finish_lon: f64,
-    ) -> Course {
+    fn new(start_lat: f64, start_lon: f64, finish_lat: f64, finish_lon: f64) -> Course {
         Course {
             times: Vec::new(),
             last: LapTime {
                 min: 0,
                 sec: 0,
+                msec: 0,
                 nsec: 0,
             },
             best: LapTime {
                 min: 0,
                 sec: 0,
+                msec: 0,
                 nsec: 0,
             },
             worst: LapTime {
                 min: 0,
                 sec: 0,
+                msec: 0,
                 nsec: 0,
             },
             start: Coord {
@@ -79,7 +76,6 @@ impl Course {
                 lat: finish_lat,
                 lon: finish_lon,
             },
-            // track_points: track_points
         }
     }
 }
@@ -126,7 +122,7 @@ impl MapWrapper {
     }
 }
 
-fn gpsd_thread(course_info: Course, thread_info_weak: ThreadingRef) {
+fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
     let gpsd_connect;
 
     loop {
@@ -151,7 +147,7 @@ fn gpsd_thread(course_info: Course, thread_info_weak: ThreadingRef) {
 
     handshake(&mut reader, &mut writer).unwrap();
 
-    while !thread_info_weak.close.lock().unwrap().get() {
+    while !thread_info.close.lock().unwrap().get() {
         let msg = get_data(&mut reader);
         match msg {
             Ok(msg) => {
@@ -170,21 +166,35 @@ fn gpsd_thread(course_info: Course, thread_info_weak: ThreadingRef) {
                 let lat = t.lat.unwrap_or(0.0);
                 let lon = t.lon.unwrap_or(0.0);
 
-                thread_info_weak.tx.send((lat, lon)).unwrap();
+                thread_info.tx.send((lat, lon)).unwrap();
 
-                if !thread_info_weak.on_track.lock().unwrap().get()
+                if !thread_info.on_track.lock().unwrap().get()
                     && lat == course_info.start.lat
                     && lon == course_info.start.lon
                 {
-                    thread_info_weak.lap_start.replace(SystemTime::now());
-                    thread_info_weak.on_track.lock().unwrap().set(true);
+                    thread_info.lap_start.replace(SystemTime::now());
+                    thread_info.on_track.lock().unwrap().set(true);
                 }
 
-                if thread_info_weak.on_track.lock().unwrap().get()
+                if thread_info.on_track.lock().unwrap().get()
                     && lat == course_info.finish.lat
                     && lon == course_info.finish.lon
                 {
-                    thread_info_weak.on_track.lock().unwrap().set(false);
+                    thread_info.on_track.lock().unwrap().set(false);
+
+                    match thread_info.lap_start.borrow().elapsed() {
+                        Ok(elapsed) => {
+                            course_info.times.push(LapTime {
+                                min: elapsed.as_secs() / 60,
+                                sec: elapsed.as_secs() % 60,
+                                msec: elapsed.subsec_millis(),
+                                nsec: elapsed.subsec_nanos(),
+                            });
+                        }
+                        Err(e) => {
+                            println!("Error: {:?}", e);
+                        }
+                    }
                 }
             }
             ResponseData::Sky(_) => {}
@@ -282,21 +292,21 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let track_points = track_sel_info.track_points.take();
 
-    let course_info = Course::new(
-        &track_points,
-        (&track_points).first().unwrap().lat,
-        (&track_points).first().unwrap().lon,
-        (&track_points).last().unwrap().lat,
-        (&track_points).last().unwrap().lon,
-    );
-
     let (tx, rx) = mpsc::channel::<(f64, f64)>();
     let thread_info = Threading::new(tx);
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let _handler = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
-        gpsd_thread(course_info, thread_info);
+
+        let mut course_info = Course::new(
+            (&track_points).first().unwrap().lat,
+            (&track_points).first().unwrap().lon,
+            (&track_points).last().unwrap().lat,
+            (&track_points).last().unwrap().lon,
+        );
+
+        gpsd_thread(&mut course_info, thread_info);
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
