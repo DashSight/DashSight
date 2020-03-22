@@ -21,13 +21,14 @@ use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
 use gtk::prelude::*;
 use std::cell::Cell;
+use std::cell::RefCell;
 use std::io;
 use std::net::TcpStream;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 struct LapTime {
     min: u64,
@@ -84,8 +85,10 @@ impl Course {
 }
 
 struct Threading {
+    lap_start: RefCell<std::time::SystemTime>,
     close: Mutex<Cell<bool>>,
     on_track: Mutex<Cell<bool>>,
+    no_track: Mutex<Cell<bool>>,
     tx: std::sync::mpsc::Sender<(f64, f64)>,
 }
 
@@ -94,8 +97,10 @@ type ThreadingRef = Arc<Threading>;
 impl Threading {
     fn new(tx: std::sync::mpsc::Sender<(f64, f64)>) -> ThreadingRef {
         ThreadingRef::new(Self {
+            lap_start: RefCell::new(SystemTime::now()),
             close: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
+            no_track: Mutex::new(Cell::new(false)),
             tx: tx,
         })
     }
@@ -121,7 +126,7 @@ impl MapWrapper {
     }
 }
 
-fn gpsd_thread(_course_info: Course, thread_info_weak: ThreadingRef) {
+fn gpsd_thread(course_info: Course, thread_info_weak: ThreadingRef) {
     let gpsd_connect;
 
     loop {
@@ -166,6 +171,21 @@ fn gpsd_thread(_course_info: Course, thread_info_weak: ThreadingRef) {
                 let lon = t.lon.unwrap_or(0.0);
 
                 thread_info_weak.tx.send((lat, lon)).unwrap();
+
+                if !thread_info_weak.on_track.lock().unwrap().get()
+                    && lat == course_info.start.lat
+                    && lon == course_info.start.lon
+                {
+                    thread_info_weak.lap_start.replace(SystemTime::now());
+                    thread_info_weak.on_track.lock().unwrap().set(true);
+                }
+
+                if thread_info_weak.on_track.lock().unwrap().get()
+                    && lat == course_info.finish.lat
+                    && lon == course_info.finish.lon
+                {
+                    thread_info_weak.on_track.lock().unwrap().set(false);
+                }
             }
             ResponseData::Sky(_) => {}
             ResponseData::Pps(_) => {}
@@ -174,7 +194,7 @@ fn gpsd_thread(_course_info: Course, thread_info_weak: ThreadingRef) {
     }
 }
 
-fn idle_thread(
+fn map_update_idle_thread(
     rx: &std::sync::mpsc::Receiver<(f64, f64)>,
     map_wrapper: &MapWrapper,
     thread_info: ThreadingRef,
@@ -190,6 +210,14 @@ fn idle_thread(
             );
 
             if thread_info.on_track.lock().unwrap().get() {
+                let point_colour = champlain::clutter_colour::new(255, 200, 100, 255);
+                champlain::point::set_colour(
+                    champlain::clutter_actor::to_point(map_wrapper.point),
+                    point_colour,
+                );
+            }
+
+            if thread_info.no_track.lock().unwrap().get() {
                 let coord = champlain::coordinate::new_full(lon, lat);
                 champlain::path_layer::add_node(
                     map_wrapper.path_layer,
@@ -270,7 +298,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             .upgrade()
             .unwrap();
 
-        idle_thread(&rx, &map_wrapper, thread_info)
+        map_update_idle_thread(&rx, &map_wrapper, thread_info)
     });
 
     drive_page.show_all();
