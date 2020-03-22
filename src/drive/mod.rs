@@ -15,5 +15,6 @@
  */
 
 pub mod drive;
+pub mod obdii;
 pub mod prepare;
 pub mod read_track;

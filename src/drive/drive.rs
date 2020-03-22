@@ -15,8 +15,10 @@
  */
 
 use crate::display::*;
+use crate::drive::obdii;
 use crate::drive::prepare;
 use crate::drive::read_track::Coord;
+use crate::drive::obdii::OBDIICommands;
 use crate::utils::lat_lon_comp;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use gtk;
@@ -59,22 +61,24 @@ impl Course {
     }
 }
 
-struct Threading {
-    lap_start: RefCell<std::time::SystemTime>,
-    close: Mutex<Cell<bool>>,
-    on_track: Mutex<Cell<bool>>,
-    change_colour: Mutex<Cell<bool>>,
-    no_track: Mutex<Cell<bool>>,
-    location_tx: std::sync::mpsc::Sender<(f64, f64)>,
-    times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
+pub struct Threading {
+    pub lap_start: RefCell<std::time::SystemTime>,
+    pub close: Mutex<Cell<bool>>,
+    pub on_track: Mutex<Cell<bool>>,
+    pub change_colour: Mutex<Cell<bool>>,
+    pub no_track: Mutex<Cell<bool>>,
+    pub location_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
+    pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIICommands>,
 }
 
-type ThreadingRef = Arc<Threading>;
+pub type ThreadingRef = Arc<Threading>;
 
 impl Threading {
     fn new(
         location_tx: std::sync::mpsc::Sender<(f64, f64)>,
         times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
+        obdii_tx: std::sync::mpsc::Sender<obdii::OBDIICommands>,
     ) -> ThreadingRef {
         ThreadingRef::new(Self {
             lap_start: RefCell::new(SystemTime::now()),
@@ -84,6 +88,7 @@ impl Threading {
             no_track: Mutex::new(Cell::new(false)),
             location_tx: location_tx,
             times_tx: times_tx,
+            obdii_tx: obdii_tx,
         })
     }
 }
@@ -199,52 +204,6 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
     }
 }
 
-fn map_update_idle_thread(
-    location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
-    map_wrapper: &MapWrapper,
-    thread_info: ThreadingRef,
-) -> glib::source::Continue {
-    let timeout = Duration::new(0, 100);
-    let rec = location_rx.recv_timeout(timeout);
-    match rec {
-        Ok((lat, lon)) => {
-            champlain::location::set_location(
-                champlain::clutter_actor::to_location(map_wrapper.point),
-                lat,
-                lon,
-            );
-
-            if thread_info.change_colour.lock().unwrap().get() {
-                if thread_info.on_track.lock().unwrap().get() {
-                    let point_colour = champlain::clutter_colour::new(255, 120, 0, 255);
-                    champlain::point::set_colour(
-                        champlain::clutter_actor::to_point(map_wrapper.point),
-                        point_colour,
-                    );
-                } else {
-                    let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
-                    champlain::point::set_colour(
-                        champlain::clutter_actor::to_point(map_wrapper.point),
-                        point_colour,
-                    );
-                }
-                thread_info.change_colour.lock().unwrap().set(false);
-            }
-
-            if thread_info.no_track.lock().unwrap().get() {
-                let coord = champlain::coordinate::new_full(lon, lat);
-                champlain::path_layer::add_node(
-                    map_wrapper.path_layer,
-                    champlain::coordinate::to_location(coord),
-                );
-            }
-            glib::source::Continue(true)
-        }
-        Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
-        _ => glib::source::Continue(false),
-    }
-}
-
 fn time_update_idle_thread(
     times_rx: &std::sync::mpsc::Receiver<(Duration, Duration, Duration)>,
     builder: gtk::Builder,
@@ -316,6 +275,68 @@ fn time_update_idle_thread(
     }
 }
 
+fn obdii_update_idle_thread(
+    obdii_rx: &std::sync::mpsc::Receiver<obdii::OBDIICommands>,
+    builder: gtk::Builder,
+    thread_info: ThreadingRef,
+) -> glib::source::Continue {
+    let timeout = Duration::new(0, 100);
+    let rec = obdii_rx.recv_timeout(timeout);
+    match rec {
+        Ok(com) => {
+            glib::source::Continue(true)
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
+        _ => glib::source::Continue(false),
+    }
+}
+
+fn map_update_idle_thread(
+    location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+    map_wrapper: &MapWrapper,
+    thread_info: ThreadingRef,
+) -> glib::source::Continue {
+    let timeout = Duration::new(0, 100);
+    let rec = location_rx.recv_timeout(timeout);
+    match rec {
+        Ok((lat, lon)) => {
+            champlain::location::set_location(
+                champlain::clutter_actor::to_location(map_wrapper.point),
+                lat,
+                lon,
+            );
+
+            if thread_info.change_colour.lock().unwrap().get() {
+                if thread_info.on_track.lock().unwrap().get() {
+                    let point_colour = champlain::clutter_colour::new(255, 120, 0, 255);
+                    champlain::point::set_colour(
+                        champlain::clutter_actor::to_point(map_wrapper.point),
+                        point_colour,
+                    );
+                } else {
+                    let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
+                    champlain::point::set_colour(
+                        champlain::clutter_actor::to_point(map_wrapper.point),
+                        point_colour,
+                    );
+                }
+                thread_info.change_colour.lock().unwrap().set(false);
+            }
+
+            if thread_info.no_track.lock().unwrap().get() {
+                let coord = champlain::coordinate::new_full(lon, lat);
+                champlain::path_layer::add_node(
+                    map_wrapper.path_layer,
+                    champlain::coordinate::to_location(coord),
+                );
+            }
+            glib::source::Continue(true)
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
+        _ => glib::source::Continue(false),
+    }
+}
+
 pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSelectionRef) {
     let builder = display.builder.clone();
 
@@ -340,10 +361,11 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
-    let thread_info = Threading::new(location_tx, times_tx);
+    let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIICommands>();
+    let thread_info = Threading::new(location_tx, times_tx, obdii_tx);
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
-    let _handler = thread::spawn(move || {
+    let _handler_gpsd = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
 
         let mut course_info = Course::new(
@@ -357,6 +379,13 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let _handler_obdii = thread::spawn(move || {
+        let thread_info = upgrade_weak!(thread_info_weak);
+
+        obdii::obdii_thread(thread_info).unwrap();
+    });
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let display_weak = DisplayRef::downgrade(&display);
     gtk::timeout_add(10, move || {
         let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
@@ -365,6 +394,17 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         let builder = display.builder.clone();
 
         time_update_idle_thread(&times_rx, builder, thread_info)
+    });
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let display_weak = DisplayRef::downgrade(&display);
+    gtk::timeout_add(10, move || {
+        let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
+        let display = upgrade_weak!(display_weak, glib::source::Continue(false));
+
+        let builder = display.builder.clone();
+
+        obdii_update_idle_thread(&obdii_rx, builder, thread_info)
     });
 
     let layer = champlain::marker_layer::new();
