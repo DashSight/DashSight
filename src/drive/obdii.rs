@@ -195,10 +195,24 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
                         }
                     }
 
+                    let mut fuel_status = OBDIIFuelStatus::OpenLoopTemp;
+
+                    if ret.eq("Open loop due to insufficient engine temperature") {
+                        fuel_status = OBDIIFuelStatus::OpenLoopTemp;
+                    } else if ret.eq("Closed loop, using oxygen sensor feedback to determine fuel mix") {
+                        fuel_status = OBDIIFuelStatus::ClosedLoopO2Sense;
+                    } else if ret.eq("Open loop due to engine load OR fuel cut due to deceleration") {
+                        fuel_status = OBDIIFuelStatus::OpenLoopLoad;
+                    } else if ret.eq("Open loop due to system failure") {
+                        fuel_status = OBDIIFuelStatus::OpenLoopFailure;
+                    } else if ret.eq("Closed loop, using at least one oxygen sensor but there is a fault in the feedback system") {
+                        fuel_status = OBDIIFuelStatus::ClosedLoopFault;
+                    }
+
                     data = OBDIIData {
                         command: command.command,
                         val: PythonValues {
-                            fuel_status: OBDIIFuelStatus::OpenLoopTemp,
+                            fuel_status: fuel_status,
                         },
                     };
                 }
