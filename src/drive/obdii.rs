@@ -16,7 +16,7 @@
 
 extern crate cpython;
 use crate::drive::drive::*;
-use cpython::{PyDict, PyResult, Python};
+use cpython::{PyResult, Python};
 use std::thread;
 use std::time::Duration;
 
@@ -124,15 +124,18 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
         },
     ];
 
-    loop {
-        let pyobd_res = py.import("obdii_connect.py");
+    let pyobd_res;
 
-        match pyobd_res {
-            Ok(_) => {
+    loop {
+        let res = py.import("obdii_connect");
+
+        match res {
+            Ok(r) => {
+                pyobd_res = r;
                 break;
             }
             Err(_) => {
-                thread::sleep(Duration::from_secs(5));
+                thread::sleep(Duration::from_secs(10));
                 continue;
             }
         }
@@ -140,9 +143,7 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
 
     while !thread_info.close.lock().unwrap().get() {
         for command in commands.iter() {
-            let locals = PyDict::new(py);
-            locals.set_item(py, "s", &command.com_string)?;
-            let py_ret = py.eval("c_get_data(s)", None, Some(&locals))?;
+            let py_ret = pyobd_res.call(py, "c_get_data", (&command.com_string,), None)?;
 
             let data: OBDIIData;
 
