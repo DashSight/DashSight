@@ -124,55 +124,87 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
         },
     ];
 
-    let pyobd_res;
+    while !thread_info.close.lock().unwrap().get() {
+        let pyobd_res;
 
-    loop {
-        let res = py.import("obdii_connect");
+        loop {
+            let res = py.import("obdii_connect");
 
-        match res {
-            Ok(r) => {
-                pyobd_res = r;
-                break;
-            }
-            Err(_) => {
-                thread::sleep(Duration::from_secs(10));
-                continue;
+            match res {
+                Ok(r) => {
+                    pyobd_res = r;
+                    break;
+                }
+                Err(_) => {
+                    thread::sleep(Duration::from_secs(10));
+                    continue;
+                }
             }
         }
-    }
 
-    while !thread_info.close.lock().unwrap().get() {
-        for command in commands.iter() {
-            let py_ret = pyobd_res.call(py, "c_get_data", (&command.com_string,), None)?;
+        while !thread_info.close.lock().unwrap().get() {
+            for command in commands.iter() {
+                let py_ret = pyobd_res.call(py, "c_get_data", (&command.com_string,), None)?;
 
-            let data: OBDIIData;
+                let data: OBDIIData;
 
-            if command.ret == PythonReturns::Float {
-                let ret: f64 = py_ret.extract(py)?;
+                if command.ret == PythonReturns::Float {
+                    let ret_res = py_ret.extract(py);
 
-                data = OBDIIData {
-                    command: command.command,
-                    val: PythonValues { float: ret },
-                };
-            } else if command.ret == PythonReturns::Long {
-                let ret: u32 = py_ret.extract(py)?;
+                    let ret: f64;
+                    match ret_res {
+                        Ok(r) => {
+                            ret = r;
+                        }
+                        Err(_) => {
+                            continue;
+                        }
+                    }
 
-                data = OBDIIData {
-                    command: command.command,
-                    val: PythonValues { long: ret },
-                };
-            } else {
-                let _ret: String = py_ret.extract(py)?;
+                    data = OBDIIData {
+                        command: command.command,
+                        val: PythonValues { float: ret },
+                    };
+                } else if command.ret == PythonReturns::Long {
+                    let ret_res = py_ret.extract(py);
 
-                data = OBDIIData {
-                    command: command.command,
-                    val: PythonValues {
-                        fuel_status: OBDIIFuelStatus::OpenLoopTemp,
-                    },
-                };
+                    let ret: u32;
+                    match ret_res {
+                        Ok(r) => {
+                            ret = r;
+                        }
+                        Err(_) => {
+                            continue;
+                        }
+                    }
+
+                    data = OBDIIData {
+                        command: command.command,
+                        val: PythonValues { long: ret },
+                    };
+                } else {
+                    let ret_res = py_ret.extract(py);
+
+                    let ret: String;
+                    match ret_res {
+                        Ok(r) => {
+                            ret = r;
+                        }
+                        Err(_) => {
+                            continue;
+                        }
+                    }
+
+                    data = OBDIIData {
+                        command: command.command,
+                        val: PythonValues {
+                            fuel_status: OBDIIFuelStatus::OpenLoopTemp,
+                        },
+                    };
+                }
+
+                thread_info.obdii_tx.send(data).unwrap();
             }
-
-            thread_info.obdii_tx.send(data).unwrap();
         }
     }
 
