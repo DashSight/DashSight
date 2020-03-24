@@ -284,13 +284,76 @@ fn obdii_update_idle_thread(
     let rec = obdii_rx.recv_timeout(timeout);
     match rec {
         Ok(data) => {
-            if data.command == OBDIICommandType::Throttle {
+            if data.command == OBDIICommandType::Rpm {
+            } else if data.command == OBDIICommandType::Throttle {
                 let bar = builder
                     .get_object::<gtk::ProgressBar>("ThrottleBar")
                     .expect("Can't find ThrottleBar in ui file.");
                 unsafe {
                     bar.set_fraction(data.val.float / 100.0);
                 }
+            } else if data.command == OBDIICommandType::EngineLoad {
+                let bar = builder
+                    .get_object::<gtk::ProgressBar>("LoadBar")
+                    .expect("Can't find LoadBar in ui file.");
+                unsafe {
+                    bar.set_fraction(data.val.float / 100.0);
+                }
+            } else if data.command == OBDIICommandType::TimingAdv {
+                let label = builder
+                    .get_object::<gtk::Label>("TimingAdvValue")
+                    .expect("Can't find TimingAdvValue in ui file.");
+                let text;
+                unsafe {
+                    text = format!("{:02}", data.val.long);
+                }
+                label.set_text(&text);
+            } else if data.command == OBDIICommandType::Maf {
+                let label = builder
+                    .get_object::<gtk::Label>("MAFValue")
+                    .expect("Can't find MAFValue in ui file.");
+                let text;
+                unsafe {
+                    text = format!("{:02}", data.val.long);
+                }
+                label.set_text(&text);
+            } else if data.command == OBDIICommandType::CoolantTemp {
+                let label = builder
+                    .get_object::<gtk::Label>("CoolantTempValue")
+                    .expect("Can't find CoolantTempValue in ui file.");
+                let text;
+                unsafe {
+                    text = format!("{:02}", data.val.long);
+                }
+                label.set_text(&text);
+            } else if data.command == OBDIICommandType::IntakeTemp {
+                let label = builder
+                    .get_object::<gtk::Label>("IntakeTempValue")
+                    .expect("Can't find IntakeTempValue in ui file.");
+                let text;
+                unsafe {
+                    text = format!("{:02}", data.val.long);
+                }
+                label.set_text(&text);
+            } else if data.command == OBDIICommandType::ShortFuelT1 {
+                let label = builder
+                    .get_object::<gtk::Label>("ShortFuelB1Value")
+                    .expect("Can't find ShortFuelB1Value in ui file.");
+                let text;
+                unsafe {
+                    text = format!("{:02}", data.val.long);
+                }
+                label.set_text(&text);
+            } else if data.command == OBDIICommandType::LongFuelT1 {
+                let label = builder
+                    .get_object::<gtk::Label>("LongFuelB1Value")
+                    .expect("Can't find LongFuelB1Value in ui file.");
+                let text;
+                unsafe {
+                    text = format!("{:02}", data.val.long);
+                }
+                label.set_text(&text);
+            } else if data.command == OBDIICommandType::FuelStatus {
             }
             glib::source::Continue(true)
         }
