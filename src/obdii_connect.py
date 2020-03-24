@@ -39,6 +39,9 @@ class LapTimerOBD(object):
 
         ret = self.connection.query(obd.commands[cmd])
 
+        if ret is None or ret.value is None:
+            return ""
+
         try:
             # Try to get the magnitude
             ret = ret.value.magnitude
