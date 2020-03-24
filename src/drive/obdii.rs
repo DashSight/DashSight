@@ -137,7 +137,11 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
                 }
                 Err(_) => {
                     thread::sleep(Duration::from_secs(10));
-                    continue;
+                    if thread_info.close.lock().unwrap().get() {
+                        return Ok(());
+                    } else {
+                        continue;
+                    }
                 }
             }
         }
