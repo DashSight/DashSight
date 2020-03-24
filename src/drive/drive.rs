@@ -178,11 +178,11 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                             course_info.times.push(elapsed);
                             course_info.last = elapsed;
                             course_info.times.sort_unstable();
-                            match course_info.times.first() {
+                            match course_info.times.last() {
                                 Some(worst) => course_info.worst = worst.clone(),
                                 _ => {}
                             }
-                            match course_info.times.last() {
+                            match course_info.times.first() {
                                 Some(best) => course_info.best = best.clone(),
                                 _ => {}
                             }
