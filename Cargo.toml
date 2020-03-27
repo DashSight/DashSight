@@ -9,7 +9,6 @@ edition = "2018"
 glib = "0.9.3"
 champlain = { git = "https://github.com/alistair23/champlain.git" }
 gio = "0.8.0"
-gdk = "0.12.0"
 chrono = "0.4"
 cpython = "0.3.0"
 gpsd_proto = "0.5.1"
