@@ -140,7 +140,7 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
 
     handshake(&mut reader, &mut writer).unwrap();
 
-    let mut kalman_filter = crate::utils::Kalman::new(3.0);
+    let mut kalman_filter = crate::utils::Kalman::new(15.0);
 
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);

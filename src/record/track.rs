@@ -157,7 +157,7 @@ fn run(rec_info_weak: RecordInfoRef) {
 
     handshake(&mut reader, &mut writer).unwrap();
 
-    let mut kalman_filter = crate::utils::Kalman::new(3.0);
+    let mut kalman_filter = crate::utils::Kalman::new(15.0);
 
     while !rec_info.close.lock().unwrap().get() {
         if rec_info.new_file.lock().unwrap().get() {
