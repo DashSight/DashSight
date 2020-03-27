@@ -18,7 +18,7 @@ use crate::drive;
 use crate::record;
 use gio::prelude::*;
 use gtk::prelude::*;
-use std::process;
+use std::process::{exit, Command};
 use std::rc::Rc;
 
 pub struct Display {
@@ -133,7 +133,16 @@ impl Display {
         close_button.connect_clicked(move |_| {
             // Just do something here to make sure this isn't dropped
             let _display_weak = DisplayRef::downgrade(&display_clone).upgrade().unwrap();
-            process::exit(0);
+
+            // Try to shutdown the device
+            let _child = Command::new("sh")
+                .arg("-c")
+                .arg("shutdown now")
+                .spawn()
+                .expect("failed to shutdown");
+
+            // If we didn't shutdown, just exit
+            exit(0);
         });
     }
 }
