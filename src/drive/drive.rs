@@ -305,7 +305,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find TimingAdvValue in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:02}", data.val.long);
+                    text = format!("{:3.2}", data.val.float);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::Maf {
@@ -314,7 +314,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find MAFValue in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:02}", data.val.long);
+                    text = format!("{:3.2}", data.val.float);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::CoolantTemp {
@@ -323,7 +323,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find CoolantTempValue in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:02}", data.val.long);
+                    text = format!("{:3}", data.val.long);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::IntakeTemp {
@@ -332,7 +332,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find IntakeTempValue in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:02}", data.val.long);
+                    text = format!("{:3}", data.val.long);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::ShortFuelT1 {
@@ -341,7 +341,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find ShortFuelB1Value in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:02}", data.val.long);
+                    text = format!("{:3}", data.val.long);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::LongFuelT1 {
@@ -350,7 +350,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find LongFuelB1Value in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:02}", data.val.long);
+                    text = format!("{:3}", data.val.long);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::FuelStatus {
