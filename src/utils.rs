@@ -65,7 +65,8 @@ pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, f
                             lat,
                             t.lon.unwrap(),
                             t.alt.unwrap(),
-                            (t.epx.unwrap() + t.epy.unwrap() + t.epv.unwrap()) / 3.0,
+                            (t.epx.unwrap_or(2.0) + t.epy.unwrap_or(2.0) + t.epv.unwrap_or(2.0))
+                                / 3.0,
                             t.time.unwrap(),
                         ));
                     }
