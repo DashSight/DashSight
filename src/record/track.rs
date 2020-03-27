@@ -16,6 +16,7 @@
 
 use crate::display::*;
 use crate::record::print;
+use chrono::DateTime;
 use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
@@ -33,7 +34,6 @@ use std::ptr::NonNull;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
-use std::time::SystemTime;
 
 struct RecordInfo {
     track_file: RefCell<std::path::PathBuf>,
@@ -157,7 +157,6 @@ fn run(rec_info_weak: RecordInfoRef) {
 
     handshake(&mut reader, &mut writer).unwrap();
 
-    let now = SystemTime::now();
     let mut kalman_filter = crate::utils::Kalman::new(3.0);
 
     while !rec_info.close.lock().unwrap().get() {
@@ -205,7 +204,9 @@ fn run(rec_info_weak: RecordInfoRef) {
                     unfilt_lat,
                     unfilt_lon,
                     errors,
-                    now.elapsed().unwrap().as_millis(),
+                    DateTime::parse_from_rfc3339(&time)
+                        .unwrap()
+                        .timestamp_millis(),
                 );
                 champlain::location::set_location(
                     champlain::clutter_actor::to_location(point),

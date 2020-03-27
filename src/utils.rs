@@ -85,7 +85,7 @@ pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, f
 pub struct Kalman {
     last_lat: f64,
     last_lon: f64,
-    last_time: u128,
+    last_time: i64,
     variance: Option<f64>,
     q: f64,
 }
@@ -101,7 +101,7 @@ impl Kalman {
         }
     }
 
-    pub fn process(&mut self, lat: f64, lon: f64, accuracy: f32, time: u128) -> (f64, f64) {
+    pub fn process(&mut self, lat: f64, lon: f64, accuracy: f32, time: i64) -> (f64, f64) {
         match self.variance {
             None => {
                 self.last_time = time;
