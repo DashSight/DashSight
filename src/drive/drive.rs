@@ -143,7 +143,7 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((lat, lon, _alt, _time)) => {
+            Ok((lat, lon, _errors, _alt, _time)) => {
                 thread_info.location_tx.send((lat, lon)).unwrap();
 
                 if !thread_info.on_track.lock().unwrap().get()

@@ -158,7 +158,7 @@ fn run(rec_info_weak: RecordInfoRef) {
     handshake(&mut reader, &mut writer).unwrap();
 
     let now = SystemTime::now();
-    let mut kalman_filter = crate::utils::Kalman::new(1.0);
+    let mut kalman_filter = crate::utils::Kalman::new(3.0);
 
     while !rec_info.close.lock().unwrap().get() {
         if rec_info.new_file.lock().unwrap().get() {
@@ -200,10 +200,11 @@ fn run(rec_info_weak: RecordInfoRef) {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((unfilt_lat, unfilt_lon, alt, time)) => {
+            Ok((unfilt_lat, unfilt_lon, errors, alt, time)) => {
                 let (lat, lon) = kalman_filter.process(
                     unfilt_lat,
                     unfilt_lon,
+                    errors,
                     now.elapsed().unwrap().as_millis(),
                 );
                 champlain::location::set_location(

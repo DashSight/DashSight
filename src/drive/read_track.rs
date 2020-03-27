@@ -49,13 +49,8 @@ pub fn get_long_and_lat(
             if let Some(trkpt_line) = trim_line.get((trkpt_num + 5)..) {
                 let split_line: Vec<&str> = trkpt_line.split('"').collect();
 
-                let mut lat: f64 = split_line[1].parse().unwrap();
-                let mut lon: f64 = split_line[3].parse().unwrap();
-
-                let round_margin = 100000.0;
-
-                lat = (lat * round_margin).round() / round_margin;
-                lon = (lon * round_margin).round() / round_margin;
+                let lat: f64 = split_line[1].parse().unwrap();
+                let lon: f64 = split_line[3].parse().unwrap();
 
                 // Let's assume a lat/lon of 0 is just invalid
                 if lat != 0.0 && lon != 0.0 {

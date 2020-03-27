@@ -42,7 +42,7 @@ pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
     lat_1_round == lat_2_round && lon_1_round == lon_2_round
 }
 
-pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, String), ()> {
+pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, f32, String), ()> {
     loop {
         let msg = get_data(reader);
         let gpsd_message;
@@ -61,7 +61,13 @@ pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, S
             ResponseData::Tpv(t) => {
                 match t.lat {
                     Some(lat) => {
-                        return Ok((lat, t.lon.unwrap(), t.alt.unwrap(), t.time.unwrap()));
+                        return Ok((
+                            lat,
+                            t.lon.unwrap(),
+                            t.alt.unwrap(),
+                            (t.epx.unwrap() + t.epy.unwrap() + t.epv.unwrap()) / 3.0,
+                            t.time.unwrap(),
+                        ));
                     }
                     _ => {
                         return Err(());
@@ -79,30 +85,28 @@ pub struct Kalman {
     last_lat: f64,
     last_lon: f64,
     last_time: u128,
-    accuracy: f64,
     variance: Option<f64>,
     q: f64,
 }
 
 impl Kalman {
-    pub fn new(accuracy: f64) -> Kalman {
+    pub fn new(q: f64) -> Kalman {
         Kalman {
             last_lat: 0.0,
             last_lon: 0.0,
             last_time: 0,
-            accuracy: accuracy,
             variance: None,
-            q: 3.0,
+            q: q,
         }
     }
 
-    pub fn process(&mut self, lat: f64, lon: f64, time: u128) -> (f64, f64) {
+    pub fn process(&mut self, lat: f64, lon: f64, accuracy: f32, time: u128) -> (f64, f64) {
         match self.variance {
             None => {
                 self.last_time = time;
                 self.last_lat = lat;
                 self.last_lon = lon;
-                self.variance = Some(self.accuracy * self.accuracy);
+                self.variance = Some(accuracy as f64 * accuracy as f64);
             }
             Some(mut variance) => {
                 let time_diff = time - self.last_time;
@@ -112,7 +116,7 @@ impl Kalman {
                     self.last_time = time;
                 }
 
-                let k: f64 = variance / (variance + self.accuracy * self.accuracy);
+                let k: f64 = variance / (variance + accuracy as f64 * accuracy as f64);
 
                 self.variance = Some((1.0 - k) * variance);
 
