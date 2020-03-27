@@ -61,7 +61,7 @@ pub fn gpx_point_info(
     time: String,
 ) -> Result<(), std::io::Error> {
     write!(fd, "      <trkpt lat=\"{}\" lon=\"{}\">\n", lat, lon)?;
-    write!(fd, "        <ele>{}git f</ele>\n", alt)?;
+    write!(fd, "        <ele>{}</ele>\n", alt)?;
     write!(fd, "        <time>{}</time>\n", time)?;
     write!(fd, "      </trkpt>\n")?;
     Ok(())
