@@ -20,6 +20,7 @@ use crate::drive::obdii::OBDIICommandType;
 use crate::drive::prepare;
 use crate::drive::read_track::Coord;
 use crate::utils::lat_lon_comp;
+use chrono::DateTime;
 use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
@@ -139,11 +140,21 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
 
     handshake(&mut reader, &mut writer).unwrap();
 
+    let mut kalman_filter = crate::utils::Kalman::new(3.0);
+
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((lat, lon, _errors, _alt, _time)) => {
+            Ok((unfilt_lat, unfilt_lon, errors, _alt, time)) => {
+                let (lat, lon) = kalman_filter.process(
+                    unfilt_lat,
+                    unfilt_lon,
+                    errors,
+                    DateTime::parse_from_rfc3339(&time)
+                        .unwrap()
+                        .timestamp_millis(),
+                );
                 thread_info.location_tx.send((lat, lon)).unwrap();
 
                 if !thread_info.on_track.lock().unwrap().get()
