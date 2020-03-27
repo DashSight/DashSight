@@ -125,6 +125,9 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
             }
             Err(err) => {
                 println!("Failed to connect to GPSD: {:?}", err);
+                if thread_info.close.lock().unwrap().get() {
+                    return;
+                }
                 std::thread::sleep(std::time::Duration::from_secs(5));
                 continue;
             }
@@ -450,6 +453,10 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
         let builder = display.builder.clone();
 
+        if thread_info.close.lock().unwrap().get() {
+            return glib::source::Continue(false);
+        }
+
         time_update_idle_thread(&times_rx, builder, thread_info)
     });
 
@@ -514,6 +521,10 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         let thread_info = ThreadingRef::downgrade(&thread_info_clone)
             .upgrade()
             .unwrap();
+
+        if thread_info.close.lock().unwrap().get() {
+            return glib::source::Continue(false);
+        }
 
         map_update_idle_thread(&location_rx, &map_wrapper, thread_info)
     });
