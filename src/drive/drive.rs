@@ -464,6 +464,29 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         obdii_update_idle_thread(&obdii_rx, builder, thread_info)
     });
 
+    let close_button = builder
+        .get_object::<gtk::Button>("DriveOptionsPopOverClose")
+        .expect("Can't find DriveOptionsPopOverClose in ui file.");
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    close_button.connect_clicked(move |_| {
+        let thread_info = upgrade_weak!(thread_info_weak);
+        thread_info.close.lock().unwrap().set(true);
+
+        stack.set_visible_child_name("SplashImage");
+    });
+
+    let save_button = builder
+        .get_object::<gtk::Button>("DriveOptionsPopOverSave")
+        .expect("Can't find DriveOptionsPopOverClose in ui file.");
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    save_button.connect_clicked(move |_| {
+        let _thread_info = upgrade_weak!(thread_info_weak);
+
+        // Serialse all data
+    });
+
     let layer = champlain::marker_layer::new();
     champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
         champlain::marker_layer::to_layer(layer),
