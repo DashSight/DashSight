@@ -16,7 +16,7 @@
 
 use crate::display::*;
 use crate::record::print;
-use gpsd_proto::{get_data, handshake, ResponseData};
+use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
 use gtk::ResponseType;
@@ -151,7 +151,6 @@ fn run(rec_info_weak: RecordInfoRef) {
     champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
     champlain::path_layer::set_visible(path_layer, true);
 
-    let mut gpsd_message;
     let mut track_file: Result<File, std::io::Error> =
         Err(Error::new(std::io::ErrorKind::NotFound, "No file yet"));
 
@@ -194,24 +193,10 @@ fn run(rec_info_weak: RecordInfoRef) {
             rec_info.toggle_save.lock().unwrap().set(false);
         }
 
-        let msg = get_data(&mut reader);
+        let msg = crate::utils::get_gps_lat_lon(&mut reader);
+
         match msg {
-            Ok(msg) => {
-                gpsd_message = msg;
-            }
-            Err(err) => {
-                println!("Failed to get a message from GPSD: {:?}", err);
-                std::thread::sleep(std::time::Duration::from_millis(10));
-                continue;
-            }
-        }
-
-        match gpsd_message {
-            ResponseData::Device(_) => {}
-            ResponseData::Tpv(t) => {
-                let lat = t.lat.unwrap_or(0.0);
-                let lon = t.lon.unwrap_or(0.0);
-
+            Ok((lat, lon, alt, time)) => {
                 champlain::location::set_location(
                     champlain::clutter_actor::to_location(point),
                     lat,
@@ -238,22 +223,17 @@ fn run(rec_info_weak: RecordInfoRef) {
 
                     match track_file.as_mut() {
                         Ok(mut fd) => {
-                            print::gpx_point_info(
-                                &mut fd,
-                                lat,
-                                lon,
-                                t.alt.unwrap_or(0.0),
-                                t.time.unwrap_or("".to_string()),
-                            )
-                            .unwrap();
+                            print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
                         }
                         _ => {}
                     }
                 }
             }
-            ResponseData::Sky(_) => {}
-            ResponseData::Pps(_) => {}
-            ResponseData::Gst(_) => {}
+            Err(err) => {
+                println!("Failed to get a message from GPSD: {:?}", err);
+                std::thread::sleep(std::time::Duration::from_millis(10));
+                continue;
+            }
         }
     }
 

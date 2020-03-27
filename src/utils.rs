@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+use gpsd_proto::{get_data, ResponseData};
+use std::io;
+
 #[macro_export]
 macro_rules! upgrade_weak {
     ($x:expr, $r:expr) => {{
@@ -37,4 +40,37 @@ pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
     let lon_2_round = (lon_2 * round_margin).round() / round_margin;
 
     lat_1_round == lat_2_round && lon_1_round == lon_2_round
+}
+
+pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, String), ()> {
+    let msg = get_data(reader);
+    let gpsd_message;
+
+    match msg {
+        Ok(msg) => {
+            gpsd_message = msg;
+        }
+        Err(_err) => {
+            return Err(());
+        }
+    }
+
+    loop {
+        match gpsd_message {
+            ResponseData::Device(_) => {}
+            ResponseData::Tpv(t) => {
+                match t.lat {
+                    Some(lat) => {
+                        return Ok((lat, t.lon.unwrap(), t.alt.unwrap(), t.time.unwrap()));
+                    }
+                    _ => {
+                        return Err(());
+                    }
+                };
+            }
+            ResponseData::Sky(_) => {}
+            ResponseData::Pps(_) => {}
+            ResponseData::Gst(_) => {}
+        }
+    }
 }

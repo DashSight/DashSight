@@ -20,7 +20,7 @@ use crate::drive::obdii::OBDIICommandType;
 use crate::drive::prepare;
 use crate::drive::read_track::Coord;
 use crate::utils::lat_lon_comp;
-use gpsd_proto::{get_data, handshake, ResponseData};
+use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
 use std::cell::Cell;
@@ -134,29 +134,13 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
     let mut reader = io::BufReader::new(&gpsd_connect);
     let mut writer = io::BufWriter::new(&gpsd_connect);
 
-    let mut gpsd_message;
-
     handshake(&mut reader, &mut writer).unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
-        let msg = get_data(&mut reader);
+        let msg = crate::utils::get_gps_lat_lon(&mut reader);
+
         match msg {
-            Ok(msg) => {
-                gpsd_message = msg;
-            }
-            Err(err) => {
-                println!("Failed to get a message from GPSD: {:?}", err);
-                std::thread::sleep(std::time::Duration::from_millis(10));
-                continue;
-            }
-        }
-
-        match gpsd_message {
-            ResponseData::Device(_) => {}
-            ResponseData::Tpv(t) => {
-                let lat = t.lat.unwrap_or(0.0);
-                let lon = t.lon.unwrap_or(0.0);
-
+            Ok((lat, lon, _alt, _time)) => {
                 thread_info.location_tx.send((lat, lon)).unwrap();
 
                 if !thread_info.on_track.lock().unwrap().get()
@@ -197,9 +181,11 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                     }
                 }
             }
-            ResponseData::Sky(_) => {}
-            ResponseData::Pps(_) => {}
-            ResponseData::Gst(_) => {}
+            Err(err) => {
+                println!("Failed to get a message from GPSD: {:?}", err);
+                std::thread::sleep(std::time::Duration::from_millis(10));
+                continue;
+            }
         }
     }
 }
