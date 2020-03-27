@@ -43,19 +43,19 @@ pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
 }
 
 pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, String), ()> {
-    let msg = get_data(reader);
-    let gpsd_message;
-
-    match msg {
-        Ok(msg) => {
-            gpsd_message = msg;
-        }
-        Err(_err) => {
-            return Err(());
-        }
-    }
-
     loop {
+        let msg = get_data(reader);
+        let gpsd_message;
+
+        match msg {
+            Ok(msg) => {
+                gpsd_message = msg;
+            }
+            Err(_err) => {
+                return Err(());
+            }
+        }
+
         match gpsd_message {
             ResponseData::Device(_) => {}
             ResponseData::Tpv(t) => {
