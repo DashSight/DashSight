@@ -33,6 +33,7 @@ use std::ptr::NonNull;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use std::time::SystemTime;
 
 struct RecordInfo {
     track_file: RefCell<std::path::PathBuf>,
@@ -156,6 +157,9 @@ fn run(rec_info_weak: RecordInfoRef) {
 
     handshake(&mut reader, &mut writer).unwrap();
 
+    let now = SystemTime::now();
+    let mut kalman_filter = crate::utils::Kalman::new(1.0);
+
     while !rec_info.close.lock().unwrap().get() {
         if rec_info.new_file.lock().unwrap().get() {
             track_file = OpenOptions::new()
@@ -196,7 +200,12 @@ fn run(rec_info_weak: RecordInfoRef) {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((lat, lon, alt, time)) => {
+            Ok((unfilt_lat, unfilt_lon, alt, time)) => {
+                let (lat, lon) = kalman_filter.process(
+                    unfilt_lat,
+                    unfilt_lon,
+                    now.elapsed().unwrap().as_millis(),
+                );
                 champlain::location::set_location(
                     champlain::clutter_actor::to_location(point),
                     lat,

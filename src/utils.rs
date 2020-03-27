@@ -74,3 +74,53 @@ pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, S
         }
     }
 }
+
+pub struct Kalman {
+    last_lat: f64,
+    last_lon: f64,
+    last_time: u128,
+    accuracy: f64,
+    variance: Option<f64>,
+    q: f64,
+}
+
+impl Kalman {
+    pub fn new(accuracy: f64) -> Kalman {
+        Kalman {
+            last_lat: 0.0,
+            last_lon: 0.0,
+            last_time: 0,
+            accuracy: accuracy,
+            variance: None,
+            q: 3.0,
+        }
+    }
+
+    pub fn process(&mut self, lat: f64, lon: f64, time: u128) -> (f64, f64) {
+        match self.variance {
+            None => {
+                self.last_time = time;
+                self.last_lat = lat;
+                self.last_lon = lon;
+                self.variance = Some(self.accuracy * self.accuracy);
+            }
+            Some(mut variance) => {
+                let time_diff = time - self.last_time;
+
+                if time_diff > 0 {
+                    variance = variance + (time_diff as f64 * self.q * self.q / 1000.0);
+                    self.last_time = time;
+                }
+
+                let k: f64 = variance / (variance + self.accuracy * self.accuracy);
+
+                self.variance = Some((1.0 - k) * variance);
+
+                self.last_lat = self.last_lat + (k * (lat - self.last_lat));
+                self.last_lon = self.last_lon + (k * (lon - self.last_lon));
+            }
+        }
+
+        (self.last_lat, self.last_lon)
+    }
+}
