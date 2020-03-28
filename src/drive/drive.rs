@@ -25,8 +25,10 @@ use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_json;
 use std::cell::Cell;
 use std::cell::RefCell;
+use std::fs::OpenOptions;
 use std::io;
 use std::net::TcpStream;
 use std::sync::mpsc;
@@ -70,6 +72,7 @@ pub struct Threading {
     pub on_track: Mutex<Cell<bool>>,
     pub change_colour: Mutex<Cell<bool>>,
     pub no_track: Mutex<Cell<bool>>,
+    serialise: Mutex<Cell<bool>>,
     pub location_tx: std::sync::mpsc::Sender<(f64, f64)>,
     pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
@@ -89,6 +92,7 @@ impl Threading {
             on_track: Mutex::new(Cell::new(false)),
             change_colour: Mutex::new(Cell::new(false)),
             no_track: Mutex::new(Cell::new(false)),
+            serialise: Mutex::new(Cell::new(false)),
             location_tx: location_tx,
             times_tx: times_tx,
             obdii_tx: obdii_tx,
@@ -201,6 +205,24 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                 println!("Failed to get a message from GPSD: {:?}", err);
                 std::thread::sleep(std::time::Duration::from_millis(10));
                 continue;
+            }
+        }
+
+        if thread_info.serialise.lock().unwrap().get() {
+            let serialized = serde_json::to_string(&course_info).unwrap();
+
+            // TODO: Allow this to be specified
+            let serialise_file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .create(true)
+                .open("course_info_serialse.json");
+
+            match serialise_file {
+                Ok(fd) => {
+                    serde_json::to_writer(fd, &serialized).unwrap();
+                }
+                _ => {}
             }
         }
     }
@@ -502,9 +524,9 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     save_button.connect_clicked(move |_| {
-        let _thread_info = upgrade_weak!(thread_info_weak);
+        let thread_info = upgrade_weak!(thread_info_weak);
 
-        // Serialse all data
+        thread_info.serialise.lock().unwrap().set(true);
     });
 
     let layer = champlain::marker_layer::new();
