@@ -153,18 +153,10 @@ fn location_idle_thread(
             }
 
             if rec_info.save.lock().unwrap().get() {
-                champlain::view::remove_layer(
-                    map_wrapper.champlain_view,
-                    champlain::path_layer::to_layer(map_wrapper.path_layer),
-                );
-                let coord = champlain::coordinate::new_full(lon, lat);
+                let coord = champlain::coordinate::new_full(lat, lon);
                 champlain::path_layer::add_node(
                     map_wrapper.path_layer,
                     champlain::coordinate::to_location(coord),
-                );
-                champlain::view::add_layer(
-                    map_wrapper.champlain_view,
-                    champlain::path_layer::to_layer(map_wrapper.path_layer),
                 );
             }
             glib::source::Continue(true)
