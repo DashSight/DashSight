@@ -147,7 +147,7 @@ fn location_idle_thread(
             );
 
             if *first_connect {
-                champlain::view::set_zoom_level(map_wrapper.champlain_view, 20);
+                champlain::view::set_zoom_level(map_wrapper.champlain_view, 17);
                 champlain::view::center_on(map_wrapper.champlain_view, lat, lon);
                 *first_connect = false;
             }
