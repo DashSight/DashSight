@@ -24,6 +24,7 @@ use chrono::DateTime;
 use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::io;
@@ -33,7 +34,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, SystemTime};
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
 struct Course {

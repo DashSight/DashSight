@@ -153,10 +153,18 @@ fn location_idle_thread(
             }
 
             if rec_info.save.lock().unwrap().get() {
+                champlain::view::remove_layer(
+                    map_wrapper.champlain_view,
+                    champlain::path_layer::to_layer(map_wrapper.path_layer),
+                );
                 let coord = champlain::coordinate::new_full(lon, lat);
                 champlain::path_layer::add_node(
                     map_wrapper.path_layer,
                     champlain::coordinate::to_location(coord),
+                );
+                champlain::view::add_layer(
+                    map_wrapper.champlain_view,
+                    champlain::path_layer::to_layer(map_wrapper.path_layer),
                 );
             }
             glib::source::Continue(true)
@@ -322,7 +330,6 @@ pub fn button_press_event(display: DisplayRef) {
 
     let path_layer = champlain::path_layer::new();
     champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
-    champlain::path_layer::set_visible(path_layer, true);
 
     let map_frame = builder
         .get_object::<gtk::Frame>("RecordPageMapFrame")
