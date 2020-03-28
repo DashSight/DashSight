@@ -30,10 +30,11 @@ use std::io::Error;
 use std::net::TcpStream;
 use std::path::PathBuf;
 use std::process;
-use std::ptr::NonNull;
+use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use std::time::Duration;
 
 struct RecordInfo {
     track_file: RefCell<std::path::PathBuf>,
@@ -41,7 +42,7 @@ struct RecordInfo {
     save: Mutex<Cell<bool>>,
     toggle_save: Mutex<Cell<bool>>,
     close: Mutex<Cell<bool>>,
-    map: NonNull<champlain::view::ChamplainView>,
+    location_tx: std::sync::mpsc::Sender<(f64, f64)>,
 }
 
 unsafe impl Send for RecordInfo {}
@@ -50,15 +51,35 @@ unsafe impl Sync for RecordInfo {}
 type RecordInfoRef = Arc<RecordInfo>;
 
 impl RecordInfo {
-    fn new(champlain_view: *mut champlain::view::ChamplainView) -> RecordInfoRef {
+    fn new(location_tx: std::sync::mpsc::Sender<(f64, f64)>) -> RecordInfoRef {
         RecordInfoRef::new(Self {
             track_file: RefCell::new(PathBuf::new()),
             new_file: Mutex::new(Cell::new(false)),
             save: Mutex::new(Cell::new(false)),
             toggle_save: Mutex::new(Cell::new(false)),
             close: Mutex::new(Cell::new(false)),
-            map: NonNull::new(champlain_view).unwrap(),
+            location_tx: location_tx,
         })
+    }
+}
+
+struct MapWrapper {
+    champlain_view: *mut champlain::view::ChamplainView,
+    path_layer: *mut champlain::path_layer::ChamplainPathLayer,
+    point: *mut champlain::clutter::ClutterActor,
+}
+
+impl MapWrapper {
+    fn new(
+        champlain_view: *mut champlain::view::ChamplainView,
+        path_layer: *mut champlain::path_layer::ChamplainPathLayer,
+        champlain_point: *mut champlain::clutter::ClutterActor,
+    ) -> MapWrapper {
+        MapWrapper {
+            champlain_view: champlain_view,
+            path_layer: path_layer,
+            point: champlain_point,
+        }
     }
 }
 
@@ -109,12 +130,46 @@ fn record_button_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
     }
 }
 
+fn location_idle_thread(
+    location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+    map_wrapper: &MapWrapper,
+    first_connect: &mut bool,
+    rec_info: RecordInfoRef,
+) -> glib::source::Continue {
+    let timeout = Duration::new(0, 100);
+    let rec = location_rx.recv_timeout(timeout);
+    match rec {
+        Ok((lat, lon)) => {
+            champlain::location::set_location(
+                champlain::clutter_actor::to_location(map_wrapper.point),
+                lat,
+                lon,
+            );
+
+            if *first_connect {
+                champlain::view::set_zoom_level(map_wrapper.champlain_view, 20);
+                champlain::view::center_on(map_wrapper.champlain_view, lat, lon);
+                *first_connect = false;
+            }
+
+            if rec_info.save.lock().unwrap().get() && !rec_info.toggle_save.lock().unwrap().get() {
+                let coord = champlain::coordinate::new_full(lon, lat);
+                champlain::path_layer::add_node(
+                    map_wrapper.path_layer,
+                    champlain::coordinate::to_location(coord),
+                );
+            }
+            glib::source::Continue(true)
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
+        _ => glib::source::Continue(false),
+    }
+}
+
 fn run(rec_info_weak: RecordInfoRef) {
     let gpsd_connect;
-    let mut first_connect = true;
 
     let rec_info = rec_info_weak.clone();
-    let champlain_view = rec_info.map.as_ptr();
 
     loop {
         let stream = TcpStream::connect("127.0.0.1:2947");
@@ -133,24 +188,6 @@ fn run(rec_info_weak: RecordInfoRef) {
 
     let mut reader = io::BufReader::new(&gpsd_connect);
     let mut writer = io::BufWriter::new(&gpsd_connect);
-
-    let layer = champlain::marker_layer::new();
-    champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
-        champlain::marker_layer::to_layer(layer),
-    ));
-    champlain::view::add_layer(champlain_view, champlain::marker_layer::to_layer(layer));
-
-    let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
-
-    let point = champlain::point::new_full(12.0, point_colour);
-    champlain::marker_layer::add_marker(
-        layer,
-        champlain::clutter_actor::to_champlain_marker(point),
-    );
-
-    let path_layer = champlain::path_layer::new();
-    champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
-    champlain::path_layer::set_visible(path_layer, true);
 
     let mut track_file: Result<File, std::io::Error> =
         Err(Error::new(std::io::ErrorKind::NotFound, "No file yet"));
@@ -208,30 +245,12 @@ fn run(rec_info_weak: RecordInfoRef) {
                         .unwrap()
                         .timestamp_millis(),
                 );
-                champlain::location::set_location(
-                    champlain::clutter_actor::to_location(point),
-                    lat,
-                    lon,
-                );
 
-                if first_connect {
-                    champlain::marker_layer::animate_in_all_markers(layer);
-                    champlain::view::set_zoom_level(champlain_view, 15);
-                    champlain::view::center_on(champlain_view, lat, lon);
-                    first_connect = false;
-                }
-
-                champlain::marker_layer::show_all_markers(layer);
+                rec_info.location_tx.send((lat, lon)).unwrap();
 
                 if rec_info.save.lock().unwrap().get()
                     && !rec_info.toggle_save.lock().unwrap().get()
                 {
-                    let coord = champlain::coordinate::new_full(lon, lat);
-                    champlain::path_layer::add_node(
-                        path_layer,
-                        champlain::coordinate::to_location(coord),
-                    );
-
                     match track_file.as_mut() {
                         Ok(mut fd) => {
                             print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
@@ -287,6 +306,24 @@ pub fn button_press_event(display: DisplayRef) {
     champlain::view::set_zoom_level(champlain_view, 5);
     champlain::clutter_actor::set_reactive(champlain_actor, true);
 
+    let layer = champlain::marker_layer::new();
+    champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
+        champlain::marker_layer::to_layer(layer),
+    ));
+    champlain::view::add_layer(champlain_view, champlain::marker_layer::to_layer(layer));
+
+    let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
+
+    let point = champlain::point::new_full(12.0, point_colour);
+    champlain::marker_layer::add_marker(
+        layer,
+        champlain::clutter_actor::to_champlain_marker(point),
+    );
+
+    let path_layer = champlain::path_layer::new();
+    champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+    champlain::path_layer::set_visible(path_layer, true);
+
     let map_frame = builder
         .get_object::<gtk::Frame>("RecordPageMapFrame")
         .expect("Can't find RecordPageMapFrame in ui file.");
@@ -295,7 +332,21 @@ pub fn button_press_event(display: DisplayRef) {
 
     record_page.pack1(&map_frame, true, true);
 
-    let rec_info = RecordInfo::new(champlain_view);
+    let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
+    let rec_info = RecordInfo::new(location_tx);
+    let map_wrapper = MapWrapper::new(champlain_view, path_layer, point);
+    let mut first_connect = true;
+
+    let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
+    gtk::timeout_add(10, move || {
+        let rec_info = upgrade_weak!(rec_info_weak, glib::source::Continue(false));
+
+        if rec_info.close.lock().unwrap().get() {
+            return glib::source::Continue(false);
+        }
+
+        location_idle_thread(&location_rx, &map_wrapper, &mut first_connect, rec_info)
+    });
 
     let file_picker_button = builder
         .get_object::<gtk::Button>("RecordFileSaveButton")
