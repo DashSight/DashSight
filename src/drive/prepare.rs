@@ -61,7 +61,7 @@ fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
         let track_points = read_track::get_long_and_lat(reader);
 
         let path_layer = champlain::path_layer::new();
-        champlain::view::set_zoom_level(champlain_view, 15);
+        champlain::view::set_zoom_level(champlain_view, 20);
         champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
 
         for coord in track_points.iter() {
