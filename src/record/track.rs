@@ -152,7 +152,7 @@ fn location_idle_thread(
                 *first_connect = false;
             }
 
-            if rec_info.save.lock().unwrap().get() && !rec_info.toggle_save.lock().unwrap().get() {
+            if rec_info.save.lock().unwrap().get() {
                 let coord = champlain::coordinate::new_full(lon, lat);
                 champlain::path_layer::add_node(
                     map_wrapper.path_layer,
