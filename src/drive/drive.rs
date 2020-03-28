@@ -33,7 +33,9 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, SystemTime};
+use serde::{Serialize, Deserialize};
 
+#[derive(Serialize, Deserialize)]
 struct Course {
     times: Vec<Duration>,
     last: Duration,

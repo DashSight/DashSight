@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+use serde::{Serialize, Deserialize};
 use std::io::BufRead;
 
+#[derive(Serialize, Deserialize)]
 pub struct Coord {
     pub lat: f64,
     pub lon: f64,
