@@ -262,6 +262,8 @@ fn run(rec_info_weak: RecordInfoRef) {
                 } else {
                     rec_info.location_tx.send((lat, lon)).unwrap();
 
+                    average_lat_lon = None;
+
                     if rec_info.save.lock().unwrap().get()
                         && !rec_info.toggle_save.lock().unwrap().get()
                     {
