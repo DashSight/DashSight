@@ -118,6 +118,7 @@ fn record_button_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
 
     if rec_info.track_file.borrow().exists() {
         if rec_info.track_file.borrow().exists() {
+            record_button.set_active(true);
             if rec_info.save.lock().unwrap().get() {
                 record_button.set_label("gtk-media-stop");
             } else {
@@ -363,6 +364,8 @@ pub fn button_press_event(display: DisplayRef) {
     let record_button = builder
         .get_object::<gtk::ToggleButton>("RecordButton")
         .expect("Can't find RecordButton in ui file.");
+
+    record_button.set_active(false);
 
     let display_weak = DisplayRef::downgrade(&display);
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
