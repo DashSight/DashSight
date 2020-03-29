@@ -42,7 +42,9 @@ pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
     lat_1_round == lat_2_round && lon_1_round == lon_2_round
 }
 
-pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, f32, String), ()> {
+pub fn get_gps_lat_lon(
+    reader: &mut dyn io::BufRead,
+) -> Result<(f64, f64, f32, f32, String, f32), ()> {
     loop {
         let msg = get_data(reader);
         let gpsd_message;
@@ -68,6 +70,7 @@ pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, f
                             (t.epx.unwrap_or(3.0) + t.epy.unwrap_or(3.0) + t.epv.unwrap_or(3.0))
                                 / 3.0,
                             t.time.unwrap(),
+                            t.speed.unwrap(),
                         ));
                     }
                     _ => {
@@ -101,7 +104,9 @@ impl Kalman {
         }
     }
 
-    pub fn process(&mut self, lat: f64, lon: f64, accuracy: f32, time: i64) -> (f64, f64) {
+    pub fn process(&mut self, lat: f64, lon: f64, accuracy: f32, time: i64, q: f32) -> (f64, f64) {
+        self.q = q as f64;
+
         match self.variance {
             None => {
                 self.last_time = time;

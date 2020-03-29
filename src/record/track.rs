@@ -236,7 +236,7 @@ fn run(rec_info_weak: RecordInfoRef) {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((unfilt_lat, unfilt_lon, errors, alt, time)) => {
+            Ok((unfilt_lat, unfilt_lon, errors, alt, time, speed)) => {
                 let (lat, lon) = kalman_filter.process(
                     unfilt_lat,
                     unfilt_lon,
@@ -244,6 +244,7 @@ fn run(rec_info_weak: RecordInfoRef) {
                     DateTime::parse_from_rfc3339(&time)
                         .unwrap()
                         .timestamp_millis(),
+                    (speed + 2.0).round(),
                 );
 
                 rec_info.location_tx.send((lat, lon)).unwrap();

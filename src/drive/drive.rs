@@ -152,7 +152,7 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((unfilt_lat, unfilt_lon, errors, _alt, time)) => {
+            Ok((unfilt_lat, unfilt_lon, errors, _alt, time, speed)) => {
                 let (lat, lon) = kalman_filter.process(
                     unfilt_lat,
                     unfilt_lon,
@@ -160,6 +160,7 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                     DateTime::parse_from_rfc3339(&time)
                         .unwrap()
                         .timestamp_millis(),
+                    (speed + 2.0).round(),
                 );
                 thread_info.location_tx.send((lat, lon)).unwrap();
 
