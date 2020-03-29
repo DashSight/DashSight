@@ -169,6 +169,7 @@ fn location_idle_thread(
 
 fn run(rec_info_weak: RecordInfoRef) {
     let gpsd_connect;
+    let mut average_lat_lon: Option<(f64, f64)> = None;
 
     let rec_info = rec_info_weak.clone();
 
@@ -248,16 +249,28 @@ fn run(rec_info_weak: RecordInfoRef) {
                     (speed + 2.0).round(),
                 );
 
-                rec_info.location_tx.send((lat, lon)).unwrap();
-
-                if rec_info.save.lock().unwrap().get()
-                    && !rec_info.toggle_save.lock().unwrap().get()
-                {
-                    match track_file.as_mut() {
-                        Ok(mut fd) => {
-                            print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
+                if speed < 1.0 {
+                    match average_lat_lon {
+                        Some(mut avg) => {
+                            avg.0 = (avg.0 + lat) / 2.0;
+                            avg.1 = (avg.1 + lat) / 2.0;
                         }
-                        _ => {}
+                        None => {
+                            average_lat_lon = Some((lat, lon));
+                        }
+                    }
+                } else {
+                    rec_info.location_tx.send((lat, lon)).unwrap();
+
+                    if rec_info.save.lock().unwrap().get()
+                        && !rec_info.toggle_save.lock().unwrap().get()
+                    {
+                        match track_file.as_mut() {
+                            Ok(mut fd) => {
+                                print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
+                            }
+                            _ => {}
+                        }
                     }
                 }
             }
