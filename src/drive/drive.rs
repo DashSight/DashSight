@@ -223,7 +223,9 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                 Ok(fd) => {
                     serde_json::to_writer(fd, &serialized).unwrap();
                 }
-                _ => {}
+                Err(e) => {
+                    println!("Unable to open file: {:?}", e);
+                }
             }
         }
     }
