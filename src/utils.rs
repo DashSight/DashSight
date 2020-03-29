@@ -126,6 +126,11 @@ impl Kalman {
             }
         }
 
-        (self.last_lat, self.last_lon)
+        let round = 100000.0;
+
+        let ret_lat = (self.last_lat * round).round() / round;
+        let ret_lon = (self.last_lon * round).round() / round;
+
+        (ret_lat, ret_lon)
     }
 }
