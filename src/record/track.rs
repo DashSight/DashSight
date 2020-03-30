@@ -91,7 +91,7 @@ fn file_picker_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
         .expect("Couldn't find MainPage in ui file.");
 
     let file_chooser = gtk::FileChooserNative::new(
-        Some("Save media as"),
+        Some("Save track as"),
         Some(&window),
         gtk::FileChooserAction::Save,
         Some("Save"),
@@ -117,15 +117,13 @@ fn record_button_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
     rec_info.save.lock().unwrap().set(!val);
 
     if rec_info.track_file.borrow().exists() {
-        if rec_info.track_file.borrow().exists() {
-            record_button.set_active(true);
-            if rec_info.save.lock().unwrap().get() {
-                record_button.set_label("gtk-media-stop");
-            } else {
-                record_button.set_label("gtk-media-record");
-            }
-            rec_info.toggle_save.lock().unwrap().set(true);
+        record_button.set_active(true);
+        if rec_info.save.lock().unwrap().get() {
+            record_button.set_label("gtk-media-stop");
+        } else {
+            record_button.set_label("gtk-media-record");
         }
+        rec_info.toggle_save.lock().unwrap().set(true);
     } else {
         record_button.set_active(false);
     }
