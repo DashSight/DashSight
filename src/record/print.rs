@@ -34,7 +34,7 @@ pub fn gpx_stop(fd: &mut File) -> Result<(), std::io::Error> {
 
 pub fn gpx_metadata(fd: &mut File) -> Result<(), std::io::Error> {
     fd.write_all(b"  <metadata>\n")?;
-    fd.write_all(b"    <link href=\"https://github.com/alistair23/DashSight\">\n")?;
+    fd.write_all(b"    <link href=\"https://github.com/DashSight/DashSight\">\n")?;
     fd.write_all(b"      <text>DashSight</text>\n")?;
     fd.write_all(b"    </link>\n")?;
     fd.write_all(b"  </metadata>\n")?;
