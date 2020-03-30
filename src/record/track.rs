@@ -259,6 +259,11 @@ fn run(rec_info_weak: RecordInfoRef) {
                             average_lat_lon = Some((lat, lon));
                         }
                     }
+
+                    rec_info
+                        .location_tx
+                        .send((average_lat_lon.unwrap().0, average_lat_lon.unwrap().1))
+                        .unwrap();
                 } else {
                     rec_info.location_tx.send((lat, lon)).unwrap();
 
