@@ -24,6 +24,7 @@ use chrono::DateTime;
 use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
+use gtk::ResponseType;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::cell::Cell;
@@ -31,6 +32,7 @@ use std::cell::RefCell;
 use std::fs::OpenOptions;
 use std::io;
 use std::net::TcpStream;
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -73,6 +75,7 @@ pub struct Threading {
     pub change_colour: Mutex<Cell<bool>>,
     pub no_track: Mutex<Cell<bool>>,
     serialise: Mutex<Cell<bool>>,
+    time_file: RefCell<std::path::PathBuf>,
     pub location_tx: std::sync::mpsc::Sender<(f64, f64)>,
     pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
@@ -93,6 +96,7 @@ impl Threading {
             change_colour: Mutex::new(Cell::new(false)),
             no_track: Mutex::new(Cell::new(false)),
             serialise: Mutex::new(Cell::new(false)),
+            time_file: RefCell::new(PathBuf::new()),
             location_tx: location_tx,
             times_tx: times_tx,
             obdii_tx: obdii_tx,
@@ -231,17 +235,16 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
         }
 
         if thread_info.serialise.lock().unwrap().get() {
-            let serialized = serde_json::to_string(&course_info).unwrap();
-
-            // TODO: Allow this to be specified
-            let serialise_file = OpenOptions::new()
+            let mut track_file = OpenOptions::new()
                 .read(true)
                 .write(true)
                 .create(true)
-                .open("course_info_serialse.json");
+                .open(thread_info.time_file.borrow().clone());
 
-            match serialise_file {
+            match track_file.as_mut() {
                 Ok(fd) => {
+                    let serialized = serde_json::to_string(&course_info).unwrap();
+
                     serde_json::to_writer(fd, &serialized).unwrap();
                 }
                 Err(e) => {
@@ -483,6 +486,10 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
     let thread_info = Threading::new(location_tx, times_tx, obdii_tx);
 
+    let window: gtk::ApplicationWindow = builder
+        .get_object("MainPage")
+        .expect("Couldn't find MainPage in ui file.");
+
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let _handler_gpsd = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
@@ -550,7 +557,21 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     save_button.connect_clicked(move |_| {
         let thread_info = upgrade_weak!(thread_info_weak);
 
-        thread_info.serialise.lock().unwrap().set(true);
+        let file_chooser = gtk::FileChooserNative::new(
+            Some("Save times as"),
+            Some(&window),
+            gtk::FileChooserAction::Save,
+            Some("Save"),
+            Some("Close"),
+        );
+
+        let response = file_chooser.run();
+        if ResponseType::from(response) == ResponseType::Accept {
+            if let Some(filepath) = file_chooser.get_filename() {
+                thread_info.time_file.replace(filepath);
+                thread_info.serialise.lock().unwrap().set(true);
+            }
+        }
     });
 
     let layer = champlain::marker_layer::new();
