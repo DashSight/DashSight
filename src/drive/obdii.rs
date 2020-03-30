@@ -16,7 +16,11 @@
 
 extern crate cpython;
 use crate::drive::drive::*;
+use chrono::prelude::*;
 use cpython::{PyResult, Python};
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::PathBuf;
 use std::thread;
 use std::time::Duration;
 
@@ -67,7 +71,7 @@ pub struct OBDIIData {
     pub val: PythonValues,
 }
 
-pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
+pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyResult<()> {
     let gli = Python::acquire_gil();
     let py = gli.python();
 
@@ -124,6 +128,24 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
         },
     ];
 
+    file_name.push("-obdii.cvs");
+
+    let mut track_file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(&file_name);
+
+    let fd = track_file.as_mut().unwrap();
+
+    write!(fd, "Time").unwrap();
+
+    for command in commands.iter() {
+        write!(fd, ",{}", command.com_string).unwrap();
+    }
+
+    write!(fd, "\n").unwrap();
+
     while !thread_info.close.lock().unwrap().get() {
         let pyobd_res;
 
@@ -147,6 +169,8 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
         }
 
         while !thread_info.close.lock().unwrap().get() {
+            write!(fd, "{}", Utc::now()).unwrap();
+
             for command in commands.iter() {
                 let py_ret = pyobd_res.call(py, "c_get_data", (&command.com_string,), None)?;
 
@@ -165,6 +189,8 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
                         }
                     }
 
+                    write!(fd, ",{}", ret).unwrap();
+
                     data = OBDIIData {
                         command: command.command,
                         val: PythonValues { float: ret },
@@ -182,6 +208,8 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
                         }
                     }
 
+                    write!(fd, ",{}", ret).unwrap();
+
                     data = OBDIIData {
                         command: command.command,
                         val: PythonValues { long: ret },
@@ -198,6 +226,8 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
                             continue;
                         }
                     }
+
+                    write!(fd, ",{}", ret).unwrap();
 
                     let mut fuel_status = OBDIIFuelStatus::OpenLoopTemp;
 
@@ -223,6 +253,8 @@ pub fn obdii_thread(thread_info: ThreadingRef) -> PyResult<()> {
 
                 thread_info.obdii_tx.send(data).unwrap();
             }
+
+            write!(fd, "\n").unwrap();
         }
     }
 

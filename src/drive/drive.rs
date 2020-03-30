@@ -504,11 +504,12 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         gpsd_thread(&mut course_info, thread_info);
     });
 
+    let mut track_name = track_sel_info.track_file.borrow().clone();
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let _handler_obdii = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
 
-        obdii::obdii_thread(thread_info).unwrap();
+        obdii::obdii_thread(thread_info, &mut track_name).unwrap();
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);

@@ -20,13 +20,16 @@ use crate::drive::read_track;
 use gtk;
 use gtk::prelude::*;
 use std::cell::Cell;
+use std::cell::RefCell;
 use std::fs::OpenOptions;
 use std::io::BufReader;
+use std::path::PathBuf;
 use std::process;
 use std::rc::Rc;
 use std::vec::Vec;
 
 pub struct TrackSelection {
+    pub track_file: RefCell<std::path::PathBuf>,
     pub track_points: Cell<Vec<crate::drive::read_track::Coord>>,
     pub map_widget: gtk::Widget,
 }
@@ -36,6 +39,7 @@ pub type TrackSelectionRef = Rc<TrackSelection>;
 impl TrackSelection {
     fn new(champlain_widget: gtk::Widget) -> TrackSelectionRef {
         TrackSelectionRef::new(Self {
+            track_file: RefCell::new(PathBuf::new()),
             track_points: Cell::new(Vec::new()),
             map_widget: champlain_widget,
         })
@@ -55,7 +59,9 @@ fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
             .read(true)
             .write(false)
             .create(false)
-            .open(filepath);
+            .open(&filepath);
+
+        track_sel_info.track_file.replace(filepath);
 
         let reader = BufReader::new(track_file.unwrap());
         let track_points = read_track::get_long_and_lat(reader);
