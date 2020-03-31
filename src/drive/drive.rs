@@ -239,6 +239,7 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
                 .read(true)
                 .write(true)
                 .create(true)
+                .truncate(true)
                 .open(thread_info.time_file.borrow().clone());
 
             match track_file.as_mut() {

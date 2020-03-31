@@ -130,13 +130,14 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
 
     file_name.push("-obdii.cvs");
 
-    let mut track_file = OpenOptions::new()
+    let mut obdii_file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
+        .truncate(true)
         .open(&file_name);
 
-    let fd = track_file.as_mut().unwrap();
+    let fd = obdii_file.as_mut().unwrap();
 
     write!(fd, "Time").unwrap();
 

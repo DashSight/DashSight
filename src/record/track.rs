@@ -202,6 +202,7 @@ fn run(rec_info_weak: RecordInfoRef) {
                 .read(true)
                 .write(true)
                 .create(true)
+                .truncate(true)
                 .open(rec_info.track_file.borrow().clone());
 
             match track_file.as_mut() {
