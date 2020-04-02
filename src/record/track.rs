@@ -107,25 +107,12 @@ fn file_picker_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
     }
 }
 
-fn record_button_clicked(display: DisplayRef, rec_info: RecordInfoRef) {
-    let builder = display.builder.clone();
-    let record_button = builder
-        .get_object::<gtk::ToggleButton>("RecordButton")
-        .expect("Can't find RecordButton in ui file.");
-
+fn record_button_clicked(rec_info: RecordInfoRef) {
     let val = rec_info.save.lock().unwrap().get();
     rec_info.save.lock().unwrap().set(!val);
 
-    if rec_info.track_file.borrow().exists() {
-        record_button.set_active(true);
-        if rec_info.save.lock().unwrap().get() {
-            record_button.set_label("gtk-media-stop");
-        } else {
-            record_button.set_label("gtk-media-record");
-        }
+    if val && rec_info.track_file.borrow().exists() {
         rec_info.toggle_save.lock().unwrap().set(true);
-    } else {
-        record_button.set_active(false);
     }
 }
 
@@ -384,14 +371,10 @@ pub fn button_press_event(display: DisplayRef) {
         .get_object::<gtk::ToggleButton>("RecordButton")
         .expect("Can't find RecordButton in ui file.");
 
-    record_button.set_active(false);
-
-    let display_weak = DisplayRef::downgrade(&display);
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
     record_button.connect_clicked(move |_| {
-        let display = upgrade_weak!(display_weak);
         let rec_info = upgrade_weak!(rec_info_weak);
-        record_button_clicked(display, rec_info);
+        record_button_clicked(rec_info);
     });
 
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
