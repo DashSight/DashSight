@@ -31,12 +31,18 @@ macro_rules! upgrade_weak {
 }
 
 pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
-    lat_1 == lat_2 && lon_1 == lon_2
+    let round_margin = 100000.0;
+
+    let lat_1_round = (lat_1 * round_margin).round() / round_margin;
+    let lon_1_round = (lon_1 * round_margin).round() / round_margin;
+
+    let lat_2_round = (lat_2 * round_margin).round() / round_margin;
+    let lon_2_round = (lon_2 * round_margin).round() / round_margin;
+
+    lat_1_round == lat_2_round && lon_1_round == lon_2_round
 }
 
-pub fn get_gps_lat_lon(
-    reader: &mut dyn io::BufRead,
-) -> Result<(f64, f64, f32, f32, String, f32), ()> {
+pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, String, f32), ()> {
     loop {
         let msg = get_data(reader);
         let gpsd_message;
@@ -59,8 +65,6 @@ pub fn get_gps_lat_lon(
                             lat,
                             t.lon.unwrap(),
                             t.alt.unwrap(),
-                            (t.epx.unwrap_or(3.0) + t.epy.unwrap_or(3.0) + t.epv.unwrap_or(3.0))
-                                / 3.0,
                             t.time.unwrap(),
                             t.speed.unwrap(),
                         ));
@@ -74,60 +78,5 @@ pub fn get_gps_lat_lon(
             ResponseData::Pps(_) => {}
             ResponseData::Gst(_) => {}
         }
-    }
-}
-
-pub struct Kalman {
-    last_lat: f64,
-    last_lon: f64,
-    last_time: i64,
-    variance: Option<f64>,
-    q: f64,
-}
-
-impl Kalman {
-    pub fn new(q: f64) -> Kalman {
-        Kalman {
-            last_lat: 0.0,
-            last_lon: 0.0,
-            last_time: 0,
-            variance: None,
-            q: q,
-        }
-    }
-
-    pub fn process(&mut self, lat: f64, lon: f64, accuracy: f32, time: i64, q: f32) -> (f64, f64) {
-        self.q = q as f64;
-
-        match self.variance {
-            None => {
-                self.last_time = time;
-                self.last_lat = lat;
-                self.last_lon = lon;
-                self.variance = Some(accuracy as f64 * accuracy as f64);
-            }
-            Some(mut variance) => {
-                let time_diff = time - self.last_time;
-
-                if time_diff > 0 {
-                    variance = variance + (time_diff as f64 * self.q * self.q / 1000.0);
-                    self.last_time = time;
-                }
-
-                let k: f64 = variance / (variance + accuracy as f64 * accuracy as f64);
-
-                self.variance = Some((1.0 - k) * variance);
-
-                self.last_lat = self.last_lat + (k * (lat - self.last_lat));
-                self.last_lon = self.last_lon + (k * (lon - self.last_lon));
-            }
-        }
-
-        let round = 100000.0;
-
-        let ret_lat = (self.last_lat * round).round() / round;
-        let ret_lon = (self.last_lon * round).round() / round;
-
-        (ret_lat, ret_lon)
     }
 }

@@ -16,7 +16,6 @@
 
 use crate::display::*;
 use crate::record::print;
-use chrono::DateTime;
 use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
@@ -154,7 +153,6 @@ fn location_idle_thread(
 
 fn run(rec_info_weak: RecordInfoRef) {
     let gpsd_connect;
-    let mut average_lat_lon: Option<(f64, f64)> = None;
 
     let rec_info = rec_info_weak.clone();
 
@@ -180,8 +178,6 @@ fn run(rec_info_weak: RecordInfoRef) {
         Err(Error::new(std::io::ErrorKind::NotFound, "No file yet"));
 
     handshake(&mut reader, &mut writer).unwrap();
-
-    let mut kalman_filter = crate::utils::Kalman::new(15.0);
 
     while !rec_info.close.lock().unwrap().get() {
         if rec_info.new_file.lock().unwrap().get() {
@@ -224,46 +220,17 @@ fn run(rec_info_weak: RecordInfoRef) {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((unfilt_lat, unfilt_lon, errors, alt, time, speed)) => {
-                let (lat, lon) = kalman_filter.process(
-                    unfilt_lat,
-                    unfilt_lon,
-                    errors,
-                    DateTime::parse_from_rfc3339(&time)
-                        .unwrap()
-                        .timestamp_millis(),
-                    (speed + 2.0).round(),
-                );
+            Ok((lat, lon, alt, time, _speed)) => {
+                rec_info.location_tx.send((lat, lon)).unwrap();
 
-                if speed < 1.0 {
-                    match average_lat_lon {
-                        Some(mut avg) => {
-                            avg.0 = (avg.0 + lat) / 2.0;
-                            avg.1 = (avg.1 + lat) / 2.0;
+                if rec_info.save.lock().unwrap().get()
+                    && !rec_info.toggle_save.lock().unwrap().get()
+                {
+                    match track_file.as_mut() {
+                        Ok(mut fd) => {
+                            print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
                         }
-                        None => {
-                            average_lat_lon = Some((lat, lon));
-                        }
-                    }
-
-                    rec_info
-                        .location_tx
-                        .send((average_lat_lon.unwrap().0, average_lat_lon.unwrap().1))
-                        .unwrap();
-                } else {
-                    rec_info.location_tx.send((lat, lon)).unwrap();
-
-                    average_lat_lon = None;
-
-                    if rec_info.save.lock().unwrap().get()
-                        && !rec_info.toggle_save.lock().unwrap().get()
-                    {
-                        match track_file.as_mut() {
-                            Ok(mut fd) => {
-                                print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
-                            }
-                            _ => {}
-                        }
+                        _ => {}
                     }
                 }
             }

@@ -20,7 +20,6 @@ use crate::drive::obdii::OBDIICommandType;
 use crate::drive::prepare;
 use crate::drive::read_track::Coord;
 use crate::utils::lat_lon_comp;
-use chrono::DateTime;
 use gpsd_proto::handshake;
 use gtk;
 use gtk::prelude::*;
@@ -126,7 +125,6 @@ impl MapWrapper {
 
 fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
     let gpsd_connect;
-    let mut average_lat_lon: Option<(f64, f64)> = None;
 
     loop {
         let stream = TcpStream::connect("127.0.0.1:2947");
@@ -151,78 +149,47 @@ fn gpsd_thread(course_info: &mut Course, thread_info: ThreadingRef) {
 
     handshake(&mut reader, &mut writer).unwrap();
 
-    let mut kalman_filter = crate::utils::Kalman::new(15.0);
-
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((unfilt_lat, unfilt_lon, errors, _alt, time, speed)) => {
-                let (lat, lon) = kalman_filter.process(
-                    unfilt_lat,
-                    unfilt_lon,
-                    errors,
-                    DateTime::parse_from_rfc3339(&time)
-                        .unwrap()
-                        .timestamp_millis(),
-                    (speed + 2.0).round(),
-                );
+            Ok((lat, lon, _alt, _time, _speed)) => {
+                thread_info.location_tx.send((lat, lon)).unwrap();
 
-                if speed < 1.0 {
-                    match average_lat_lon {
-                        Some(mut avg) => {
-                            avg.0 = (avg.0 + lat) / 2.0;
-                            avg.1 = (avg.1 + lat) / 2.0;
-                        }
-                        None => {
-                            average_lat_lon = Some((lat, lon));
-                        }
-                    }
+                if !thread_info.on_track.lock().unwrap().get()
+                    && lat_lon_comp(lat, lon, course_info.start.lat, course_info.start.lon)
+                {
+                    thread_info.lap_start.replace(SystemTime::now());
+                    thread_info.on_track.lock().unwrap().set(true);
+                    thread_info.change_colour.lock().unwrap().set(true);
+                }
 
-                    thread_info
-                        .location_tx
-                        .send((average_lat_lon.unwrap().0, average_lat_lon.unwrap().1))
-                        .unwrap();
-                } else {
-                    thread_info.location_tx.send((lat, lon)).unwrap();
+                if thread_info.on_track.lock().unwrap().get()
+                    && lat_lon_comp(lat, lon, course_info.finish.lat, course_info.finish.lon)
+                {
+                    thread_info.on_track.lock().unwrap().set(false);
+                    thread_info.change_colour.lock().unwrap().set(true);
 
-                    average_lat_lon = None;
-
-                    if !thread_info.on_track.lock().unwrap().get()
-                        && lat_lon_comp(lat, lon, course_info.start.lat, course_info.start.lon)
-                    {
-                        thread_info.lap_start.replace(SystemTime::now());
-                        thread_info.on_track.lock().unwrap().set(true);
-                        thread_info.change_colour.lock().unwrap().set(true);
-                    }
-
-                    if thread_info.on_track.lock().unwrap().get()
-                        && lat_lon_comp(lat, lon, course_info.finish.lat, course_info.finish.lon)
-                    {
-                        thread_info.on_track.lock().unwrap().set(false);
-                        thread_info.change_colour.lock().unwrap().set(true);
-
-                        match thread_info.lap_start.borrow().elapsed() {
-                            Ok(elapsed) => {
-                                course_info.times.push(elapsed);
-                                course_info.last = elapsed;
-                                course_info.times.sort_unstable();
-                                match course_info.times.last() {
-                                    Some(worst) => course_info.worst = worst.clone(),
-                                    _ => {}
-                                }
-                                match course_info.times.first() {
-                                    Some(best) => course_info.best = best.clone(),
-                                    _ => {}
-                                }
-                                thread_info
-                                    .times_tx
-                                    .send((course_info.last, course_info.best, course_info.worst))
-                                    .unwrap();
+                    match thread_info.lap_start.borrow().elapsed() {
+                        Ok(elapsed) => {
+                            course_info.times.push(elapsed);
+                            course_info.last = elapsed;
+                            course_info.times.sort_unstable();
+                            match course_info.times.last() {
+                                Some(worst) => course_info.worst = worst.clone(),
+                                _ => {}
                             }
-                            Err(e) => {
-                                println!("Error: {:?}", e);
+                            match course_info.times.first() {
+                                Some(best) => course_info.best = best.clone(),
+                                _ => {}
                             }
+                            thread_info
+                                .times_tx
+                                .send((course_info.last, course_info.best, course_info.worst))
+                                .unwrap();
+                        }
+                        Err(e) => {
+                            println!("Error: {:?}", e);
                         }
                     }
                 }
