@@ -12,8 +12,8 @@
         <property name="orientation">vertical</property>
         <property name="spacing">10</property>
         <child>
-          <object class="GtkButton" id="DriveOptionsPopOverClose">
-            <property name="label">gtk-go-back</property>
+          <object class="GtkButton" id="DriveOptionsPopOverSave">
+            <property name="label">gtk-save</property>
             <property name="height_request">100</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -28,8 +28,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="DriveOptionsPopOverSave">
-            <property name="label">gtk-save</property>
+          <object class="GtkButton" id="DriveOptionsPopOverClose">
+            <property name="label">gtk-go-back</property>
             <property name="height_request">100</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
