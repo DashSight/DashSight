@@ -70,6 +70,8 @@ fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
         champlain::view::set_zoom_level(champlain_view, 17);
         champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
 
+        champlain::path_layer::remove_all(path_layer);
+
         for coord in track_points.iter() {
             let c_point = champlain::coordinate::new_full(coord.lat, coord.lon);
             champlain::path_layer::add_node(
