@@ -6,33 +6,32 @@ Although DashSight is written using standard glib and GTK+3 APIs it is designed 
 
 ## Dependencies
 
+* Rust
+  * Rust is awesome and this is written in Rust!
 * gpsd
   * DashSight uses GPSD to communicate with the GPS device. This means it should work with almost any GPS device and is portable to most Linux systems.
 * gtk+3 and glib-2
-  * DashSight uses GTK+3 for graphic display and glib for helper functions
-* osm-gps-map
-  * DashSight uses osm-gps-map for the map rendering.
+  * DashSight uses GTK+3 for graphic display and glib for helper functions. This is done thanks to gtk-rs.org/
+* libchamplain, Clutter
+  * DashSight uses [libchamplain](https://wiki.gnome.org/Projects/libchamplain/) for the map rendering. libchamplain depends on Clutter
 * [Python-OBD](https://github.com/brendan-w/python-OBD) and Python3
-  * DashSight relies on [Python-OBD](https://github.com/brendan-w/python-OBD) for the OBD communication.
+  * DashSight relies on [Python-OBD](https://github.com/brendan-w/python-OBD) for the OBDII communication.
 
 ## Current features
 
 * Ability to record tracks in the standard GPX format
-* Ability to download high details maps of a track for offline use
 * Ability to free drive
   * DashSigh will show current and previous locations on a map
   * Will show engine revs, throttle position, engine load, fluid temperatures, timing advance and more in real time while driving.
 * Ability to load a saved map and drive on that
   * Supports the same features as free drive plus:
     * Displays a high accuracy timer that starts when you cross the track start point and stops when you cross the stop point
+  * The results can be exported for later analysis
 
 ## Future features
 
 * Ability to support a circular track, a track with the same start/stop point and multiple laps.
 * Ability to display the current speed?
-* Replace osm-gps-map with something that is maintained
-* Make the code more portable so it can run on any system
-* Rewrite the entire thing in Rust and Qt5/GTK4?
 
 ## Using DashSight
 
