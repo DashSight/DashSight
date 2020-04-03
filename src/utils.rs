@@ -30,16 +30,23 @@ macro_rules! upgrade_weak {
     };
 }
 
-pub fn lat_lon_comp(lat_1: f64, lon_1: f64, lat_2: f64, lon_2: f64) -> bool {
-    let round_margin = 100000.0;
+pub fn lat_lon_comp(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> bool {
+    let earth = 6378.137; // Radius of earth in km
+    let error = 1.0; // Error range, in metres
 
-    let lat_1_round = (lat_1 * round_margin).round() / round_margin;
-    let lon_1_round = (lon_1 * round_margin).round() / round_margin;
+    let d_lat = (lat2 * std::f64::consts::PI / 180.0) - (lat1 * std::f64::consts::PI / 180.0);
+    let d_lon = (lon2 * std::f64::consts::PI / 180.0) - (lon1 * std::f64::consts::PI / 180.0);
 
-    let lat_2_round = (lat_2 * round_margin).round() / round_margin;
-    let lon_2_round = (lon_2 * round_margin).round() / round_margin;
+    let a = ((d_lat / 2.0).sin()).powi(2)
+        + (lat1 * std::f64::consts::PI / 180.0).cos()
+            * (lat2 * std::f64::consts::PI / 180.0).cos()
+            * ((d_lon / 2.0).sin()).powi(2);
 
-    lat_1_round == lat_2_round && lon_1_round == lon_2_round
+    let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
+
+    let d = earth * c * 1000.0;
+
+    d < error
 }
 
 pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, String, f32), ()> {
