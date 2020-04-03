@@ -128,7 +128,12 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
         },
     ];
 
-    file_name.push("-obdii.cvs");
+    let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
+
+    name.push_str("-obdii.cvs");
+
+    file_name.pop();
+    file_name.push(name);
 
     let mut obdii_file = OpenOptions::new()
         .read(true)
