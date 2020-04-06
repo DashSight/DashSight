@@ -163,7 +163,8 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
                     pyobd_res = r;
                     break;
                 }
-                Err(_) => {
+                Err(e) => {
+                    println!("Unable to conect to OBDII {:?}", e);
                     thread::sleep(Duration::from_secs(10));
                     if thread_info.close.lock().unwrap().get() {
                         return Ok(());
@@ -190,7 +191,11 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
                         Ok(r) => {
                             ret = r;
                         }
-                        Err(_) => {
+                        Err(e) => {
+                            println!(
+                                "{}: Error in extracting the float: {:?}; {:?}",
+                                command.com_string, py_ret, e
+                            );
                             continue;
                         }
                     }
@@ -209,7 +214,11 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
                         Ok(r) => {
                             ret = r;
                         }
-                        Err(_) => {
+                        Err(e) => {
+                            println!(
+                                "{}: Error in extracting the long: {:?}; {:?}",
+                                command.com_string, py_ret, e
+                            );
                             continue;
                         }
                     }
@@ -228,7 +237,11 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
                         Ok(r) => {
                             ret = r;
                         }
-                        Err(_) => {
+                        Err(e) => {
+                            println!(
+                                "{}: Error in extracting the string: {:?}; {:?}",
+                                command.com_string, py_ret, e
+                            );
                             continue;
                         }
                     }
