@@ -114,12 +114,12 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
         OBDIICommands {
             command: OBDIICommandType::ShortFuelT1,
             com_string: "SHORT_FUEL_TRIM_1".to_string(),
-            ret: PythonReturns::Long,
+            ret: PythonReturns::Float,
         },
         OBDIICommands {
             command: OBDIICommandType::LongFuelT1,
             com_string: "LONG_FUEL_TRIM_1".to_string(),
-            ret: PythonReturns::Long,
+            ret: PythonReturns::Float,
         },
         OBDIICommands {
             command: OBDIICommandType::FuelStatus,

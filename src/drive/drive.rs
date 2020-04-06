@@ -360,7 +360,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find ShortFuelB1Value in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:3}", data.val.long);
+                    text = format!("{:3}", data.val.float);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::LongFuelT1 {
@@ -369,7 +369,7 @@ fn obdii_update_idle_thread(
                     .expect("Can't find LongFuelB1Value in ui file.");
                 let text;
                 unsafe {
-                    text = format!("{:3}", data.val.long);
+                    text = format!("{:3}", data.val.float);
                 }
                 label.set_text(&text);
             } else if data.command == OBDIICommandType::FuelStatus {
