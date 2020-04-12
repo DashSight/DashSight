@@ -21,8 +21,6 @@ use std::process;
 pub fn imu_thread(_thread_info: ThreadingRef) {
     let ctx;
 
-    println!("Starting IMU thread");
-
     match iio::Context::new() {
         Ok(c) => {
             ctx = c;
@@ -38,23 +36,30 @@ pub fn imu_thread(_thread_info: ThreadingRef) {
         process::exit(1);
     });
 
-    println!("Device: {}", dev.name().unwrap());
+    let x_chan = dev.find_channel("accel_x", false).unwrap_or_else(|| {
+        println!("No 'accel_x' channel on this device");
+        process::exit(1);
+    });
 
-    for chan in dev.channels() {
-        println!("  chan: {:?}", chan.id().unwrap());
-        if chan.has_attr("calibbias") {
-            println!("     -> {:>9}", chan.id().unwrap());
-        }
-    }
+    let y_chan = dev.find_channel("accel_y", false).unwrap_or_else(|| {
+        println!("No 'accel_y' channel on this device");
+        process::exit(1);
+    });
 
-    println!();
+    let z_chan = dev.find_channel("accel_z", false).unwrap_or_else(|| {
+        println!("No 'accel_z' channel on this device");
+        process::exit(1);
+    });
 
     loop {
-        for chan in dev.channels() {
-            if let Ok(val) = chan.attr_read_int("calibbias") {
-                println!(" {:>9} => {:>8} ", chan.id().unwrap(), val);
-            }
+        if let Ok(val) = x_chan.attr_read_int("calibbias") {
+            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), val);
         }
-        println!();
+        if let Ok(val) = y_chan.attr_read_int("calibbias") {
+            println!(" {:>9} => {:>8} ", y_chan.id().unwrap(), val);
+        }
+        if let Ok(val) = z_chan.attr_read_int("calibbias") {
+            println!(" {:>9} => {:>8} ", z_chan.id().unwrap(), val);
+        }
     }
 }
