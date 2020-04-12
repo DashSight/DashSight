@@ -82,9 +82,9 @@ impl Display {
         stack.add_named(&load_map_page, "LoadMapPage");
 
         /* Setup the drive page */
-        let drive_page: gtk::Grid = builder
-            .get_object("DriveGrid")
-            .expect("Couldn't find DriveGrid in ui file.");
+        let drive_page: gtk::Notebook = builder
+            .get_object("DriveNotebook")
+            .expect("Couldn't find DriveNotebook in ui file.");
         stack.add_named(&drive_page, "DrivePage");
 
         stack.set_visible_child_name("SplashImage");

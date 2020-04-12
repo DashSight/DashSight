@@ -46,356 +46,447 @@
       </object>
     </child>
   </object>
-  <object class="GtkGrid" id="DriveGrid">
+  <object class="GtkNotebook" id="DriveNotebook">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
+    <property name="can_focus">True</property>
     <child>
-      <object class="GtkFrame" id="DriveMapFrame">
+      <object class="GtkGrid" id="DriveGrid">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkFrame" id="DriveMapFrame">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label_xalign">0</property>
+            <property name="shadow_type">none</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child type="label">
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Current Track</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">4</property>
+            <property name="top_attach">2</property>
+            <property name="width">5</property>
+            <property name="height">7</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="CurrentTime">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">00:00:000</property>
+            <property name="track_visited_links">False</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 55"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
+            <property name="width">3</property>
+            <property name="height">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="BestTime">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">00:00:000</property>
+            <property name="track_visited_links">False</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 35"/>
+              <attribute name="foreground" value="#0b7dac5e165c"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">3</property>
+            <property name="top_attach">0</property>
+            <property name="width">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="WorstTime">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">00:00:000</property>
+            <property name="track_visited_links">False</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 35"/>
+              <attribute name="foreground" value="#a4a400000000"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">3</property>
+            <property name="top_attach">1</property>
+            <property name="width">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="LastTime">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">00:00:000</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 40"/>
+              <attribute name="foreground" value="#c4c4a0a00000"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">6</property>
+            <property name="top_attach">0</property>
+            <property name="width">2</property>
+            <property name="height">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkProgressBar" id="ThrottleBar">
+            <property name="name">ThrottleBar</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">center</property>
+            <property name="text" translatable="yes">Throttle</property>
+            <property name="show_text">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">2</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkProgressBar" id="LoadBar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">center</property>
+            <property name="text" translatable="yes">Engine Load</property>
+            <property name="show_text">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="top_attach">2</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="CoolantTempLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Coolant (C):</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+              <attribute name="foreground" value="#02d08ccc73f6"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="CoolantTempValue">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">--</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+              <attribute name="foreground" value="#02d08ccc73f6"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="IntakeTempLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Intake (C):</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+              <attribute name="foreground" value="#b8519ad30000"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="top_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="IntakeTempValue">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">--</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+              <attribute name="foreground" value="#b8519ad30000"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">3</property>
+            <property name="top_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="MAFLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">MAF (g/s):</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">4</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="MAFValue">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">--</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">4</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="ShortFuelB1Label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Short Fuel B1:</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="ShortFuelB1Value">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">--</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="LongFuelB1Label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Long Fuel B1:</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="top_attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="LongFuelB1Value">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">--</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">3</property>
+            <property name="top_attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="TimingAdvLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Timing Adv:</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="top_attach">4</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="TimingAdvValue">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">--</property>
+            <attributes>
+              <attribute name="font-desc" value="Droid Sans Mono 10"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">3</property>
+            <property name="top_attach">4</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkMenuButton" id="DriveOptions">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="popover">DriveOptionsPopOver</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">8</property>
+            <property name="top_attach">0</property>
+            <property name="height">2</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+      </object>
+    </child>
+    <child type="tab">
+      <object class="GtkLabel">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Main</property>
+      </object>
+      <packing>
+        <property name="tab_fill">False</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkFrame" id="UnusedOBDIIFrame">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label_xalign">0</property>
         <property name="shadow_type">none</property>
         <child>
-          <placeholder/>
+          <object class="GtkAlignment">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="left_padding">12</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
         </child>
         <child type="label">
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Current Track</property>
+            <property name="label" translatable="yes">UnusedOBDIIFrame</property>
           </object>
         </child>
       </object>
       <packing>
-        <property name="left_attach">4</property>
-        <property name="top_attach">2</property>
-        <property name="width">5</property>
-        <property name="height">7</property>
+        <property name="position">1</property>
       </packing>
     </child>
-    <child>
-      <object class="GtkLabel" id="CurrentTime">
+    <child type="tab">
+      <object class="GtkLabel">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:000</property>
-        <property name="track_visited_links">False</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 55"/>
-        </attributes>
+        <property name="label" translatable="yes">OBDII</property>
       </object>
       <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
-        <property name="width">3</property>
-        <property name="height">2</property>
+        <property name="position">1</property>
+        <property name="tab_fill">False</property>
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="BestTime">
+      <object class="GtkFrame" id="UnusedIMUFrame">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:000</property>
-        <property name="track_visited_links">False</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 35"/>
-          <attribute name="foreground" value="#0b7dac5e165c"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">0</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="WorstTime">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:000</property>
-        <property name="track_visited_links">False</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 35"/>
-          <attribute name="foreground" value="#a4a400000000"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">1</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="LastTime">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">00:00:000</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 40"/>
-          <attribute name="foreground" value="#c4c4a0a00000"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">6</property>
-        <property name="top_attach">0</property>
-        <property name="width">2</property>
-        <property name="height">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkProgressBar" id="ThrottleBar">
-        <property name="name">ThrottleBar</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">center</property>
-        <property name="text" translatable="yes">Throttle</property>
-        <property name="show_text">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">2</property>
-        <property name="width">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkProgressBar" id="LoadBar">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">center</property>
-        <property name="text" translatable="yes">Engine Load</property>
-        <property name="show_text">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">2</property>
-        <property name="width">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="CoolantTempLabel">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Coolant (C):</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-          <attribute name="foreground" value="#02d08ccc73f6"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="CoolantTempValue">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">--</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-          <attribute name="foreground" value="#02d08ccc73f6"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="IntakeTempLabel">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Intake (C):</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-          <attribute name="foreground" value="#b8519ad30000"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="IntakeTempValue">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">--</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-          <attribute name="foreground" value="#b8519ad30000"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="MAFLabel">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">MAF (g/s):</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="MAFValue">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">--</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="ShortFuelB1Label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Short Fuel B1:</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">5</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="ShortFuelB1Value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">--</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">5</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="LongFuelB1Label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Long Fuel B1:</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">5</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="LongFuelB1Value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">--</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">5</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="TimingAdvLabel">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Timing Adv:</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="TimingAdvValue">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">--</property>
-        <attributes>
-          <attribute name="font-desc" value="Droid Sans Mono 10"/>
-        </attributes>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkMenuButton" id="DriveOptions">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="popover">DriveOptionsPopOver</property>
+        <property name="label_xalign">0</property>
+        <property name="shadow_type">none</property>
         <child>
-          <placeholder/>
+          <object class="GtkAlignment">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="left_padding">12</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+        </child>
+        <child type="label">
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">UnusedIMUFrame</property>
+          </object>
         </child>
       </object>
       <packing>
-        <property name="left_attach">8</property>
-        <property name="top_attach">0</property>
-        <property name="height">2</property>
+        <property name="position">2</property>
       </packing>
     </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
+    <child type="tab">
+      <object class="GtkLabel">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">IMU</property>
+      </object>
+      <packing>
+        <property name="position">2</property>
+        <property name="tab_fill">False</property>
+      </packing>
     </child>
   </object>
 </interface>
