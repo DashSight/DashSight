@@ -39,4 +39,22 @@ pub fn imu_thread(_thread_info: ThreadingRef) {
     });
 
     println!("Device: {}", dev.name().unwrap());
+
+    for chan in dev.channels() {
+        println!("  chan: {:?}", chan.id().unwrap());
+        if chan.has_attr("calibbias") {
+            println!("     -> {:>9}", chan.id().unwrap());
+        }
+    }
+
+    println!();
+
+    loop {
+        for chan in dev.channels() {
+            if let Ok(val) = chan.attr_read_int("calibbias") {
+                println!(" {:>9} => {:>8} ", chan.id().unwrap(), val);
+            }
+        }
+        println!();
+    }
 }
