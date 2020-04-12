@@ -15,6 +15,7 @@
  */
 
 use crate::display::*;
+use crate::drive::imu;
 use crate::drive::obdii;
 use crate::drive::obdii::OBDIICommandType;
 use crate::drive::prepare;
@@ -478,6 +479,13 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         let thread_info = upgrade_weak!(thread_info_weak);
 
         obdii::obdii_thread(thread_info, &mut track_name).unwrap();
+    });
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let _handler_imu = thread::spawn(move || {
+        let thread_info = upgrade_weak!(thread_info_weak);
+
+        imu::imu_thread(thread_info);
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
