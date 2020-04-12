@@ -277,5 +277,7 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
         }
     }
 
+    fd.flush().unwrap();
+
     Ok(())
 }
