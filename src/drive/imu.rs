@@ -55,7 +55,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     let mut x_calib = 0.0;
     let mut y_calib = 0.0;
     let mut z_calib = 0.0;
-    let mut scale = 0.038300;
+    let mut x_scale = 1.0;
+    let mut y_scale = 1.0;
+    let mut z_scale = 1.0;
 
     if let Ok(val) = x_chan.attr_read_int("calibbias") {
         x_calib = val as f64;
@@ -67,15 +69,14 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         z_calib = val as f64;
     }
 
-    match dev.find_channel("accel_scale", false) {
-        Some(accel_scale_change) => {
-            if let Ok(val) = accel_scale_change.attr_read_float("") {
-                scale = val;
-            }
-        }
-        None => {
-            println!("No 'accel_scale' channel on this device");
-        }
+    if let Ok(val) = x_chan.attr_read_float("scale") {
+        x_scale = val;
+    }
+    if let Ok(val) = y_chan.attr_read_float("scale") {
+        y_scale = val;
+    }
+    if let Ok(val) = z_chan.attr_read_float("scale") {
+        z_scale = val;
     }
 
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
@@ -98,19 +99,19 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     while !thread_info.close.lock().unwrap().get() {
         if let Ok(val) = x_chan.attr_read_int("raw") {
-            let g = (val as f64 - x_calib) * scale;
+            let g = (val as f64 - x_calib) * x_scale;
 
             write!(fd, "{},", g).unwrap();
             println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
         }
         if let Ok(val) = y_chan.attr_read_int("raw") {
-            let g = (val as f64 - y_calib) * scale;
+            let g = (val as f64 - y_calib) * y_scale;
 
             write!(fd, "{},", g).unwrap();
             println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
         }
         if let Ok(val) = z_chan.attr_read_int("raw") {
-            let g = (val as f64 - z_calib) * scale;
+            let g = (val as f64 - z_calib) * z_scale;
 
             write!(fd, "{},", g).unwrap();
             println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
