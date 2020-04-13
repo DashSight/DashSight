@@ -101,21 +101,26 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         if let Ok(val) = x_chan.attr_read_int("raw") {
             let g = (val as f64 - x_calib) * x_scale;
 
-            write!(fd, "{},", g).unwrap();
+            write!(fd, "{}", g).unwrap();
             println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
         }
+        write!(fd, ",").unwrap();
+
         if let Ok(val) = y_chan.attr_read_int("raw") {
             let g = (val as f64 - y_calib) * y_scale;
 
-            write!(fd, "{},", g).unwrap();
-            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
+            write!(fd, "{}", g).unwrap();
+            println!(" {:>9} => {:>8} ", y_chan.id().unwrap(), g);
         }
+        write!(fd, ",").unwrap();
+
         if let Ok(val) = z_chan.attr_read_int("raw") {
             let g = (val as f64 - z_calib) * z_scale;
 
-            write!(fd, "{},", g).unwrap();
-            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
+            write!(fd, "{}", g).unwrap();
+            println!(" {:>9} => {:>8} ", z_chan.id().unwrap(), g);
         }
+        write!(fd, "\n").unwrap();
     }
 
     fd.flush().unwrap();
