@@ -52,18 +52,30 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         process::exit(1);
     });
 
-    let mut x_calib = 0;
-    let mut y_calib = 0;
-    let mut z_calib = 0;
+    let mut x_calib = 0.0;
+    let mut y_calib = 0.0;
+    let mut z_calib = 0.0;
+    let mut scale = 0.038300;
 
     if let Ok(val) = x_chan.attr_read_int("calibbias") {
-        x_calib = val;
+        x_calib = val as f64;
     }
     if let Ok(val) = y_chan.attr_read_int("calibbias") {
-        y_calib = val;
+        y_calib = val as f64;
     }
     if let Ok(val) = z_chan.attr_read_int("calibbias") {
-        z_calib = val;
+        z_calib = val as f64;
+    }
+
+    match dev.find_channel("accel_scale", false) {
+        Some(accel_scale_change) => {
+            if let Ok(val) = accel_scale_change.attr_read_float("") {
+                scale = val;
+            }
+        }
+        None => {
+            println!("No 'accel_scale' channel on this device");
+        }
     }
 
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
@@ -85,20 +97,23 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     write!(fd, "x,y,z\n").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
-        if let Ok(mut val) = x_chan.attr_read_int("raw") {
-            val = val - x_calib;
-            write!(fd, "{},", val).unwrap();
-            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), val);
+        if let Ok(val) = x_chan.attr_read_int("raw") {
+            let g = (val as f64 - x_calib) * scale;
+
+            write!(fd, "{},", g).unwrap();
+            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
         }
-        if let Ok(mut val) = y_chan.attr_read_int("raw") {
-            val = val - y_calib;
-            write!(fd, "{},", val).unwrap();
-            println!(" {:>9} => {:>8} ", y_chan.id().unwrap(), val);
+        if let Ok(val) = y_chan.attr_read_int("raw") {
+            let g = (val as f64 - y_calib) * scale;
+
+            write!(fd, "{},", g).unwrap();
+            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
         }
-        if let Ok(mut val) = z_chan.attr_read_int("raw") {
-            val = val - z_calib;
-            write!(fd, "{}\n", val).unwrap();
-            println!(" {:>9} => {:>8} ", z_chan.id().unwrap(), val);
+        if let Ok(val) = z_chan.attr_read_int("raw") {
+            let g = (val as f64 - z_calib) * scale;
+
+            write!(fd, "{},", g).unwrap();
+            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
         }
     }
 
