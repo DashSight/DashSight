@@ -34,8 +34,10 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
     }
 
-    let dev = ctx.get_device(0).unwrap_or_else(|err| {
-        println!("Error opening first device: {}", err);
+    let imu_name = "lsm9ds1-imu_accel";
+
+    let dev = ctx.find_device(imu_name).unwrap_or_else(|| {
+        println!("Error opening device: {}", imu_name);
         process::exit(1);
     });
 
