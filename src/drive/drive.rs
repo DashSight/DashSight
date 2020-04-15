@@ -515,6 +515,45 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         obdii_update_idle_thread(&obdii_rx, builder, thread_info)
     });
 
+    let imu_area: gtk::DrawingArea = builder
+        .get_object("AccelDrawingArea")
+        .expect("Couldn't find AccelDrawingArea in ui file.");
+
+    imu_area.connect_draw(move |me, ctx| {
+        let width = me.get_allocated_width() as f64;
+        let height = me.get_allocated_width() as f64;
+
+        ctx.set_source_rgba(0.0, 0.0, 0.0, 0.9);
+        ctx.set_line_width(0.2);
+
+        // draw circles
+        ctx.arc(0.5 * width, 0.5 * height, 0.1 * width, 0.0, 3.1415 * 2.);
+        ctx.stroke();
+        ctx.arc(0.5 * width, 0.5 * height, 0.2 * width, 0.0, 3.1415 * 2.);
+        ctx.stroke();
+        ctx.arc(0.5 * width, 0.5 * height, 0.3 * width, 0.0, 3.1415 * 2.);
+        ctx.stroke();
+        ctx.arc(0.5 * width, 0.5 * height, 0.4 * width, 0.0, 3.1415 * 2.);
+        ctx.stroke();
+
+        // draw border
+        ctx.set_source_rgba(0.3, 0.3, 0.3, 1.0);
+        ctx.rectangle(0.0, 0.0, 1.0 * width, 1.0 * height);
+        ctx.stroke();
+
+        ctx.set_line_width(0.5);
+
+        // cross
+        ctx.move_to(0.5 * width, 0.0);
+        ctx.line_to(0.5 * width, height);
+        ctx.stroke();
+        ctx.move_to(0.0, 0.5 * height);
+        ctx.line_to(width, 0.5 * height);
+        ctx.stroke();
+
+        Inhibit(false)
+    });
+
     let close_button = builder
         .get_object::<gtk::Button>("DriveOptionsPopOverClose")
         .expect("Can't find DriveOptionsPopOverClose in ui file.");
