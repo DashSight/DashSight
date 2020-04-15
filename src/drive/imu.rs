@@ -81,6 +81,16 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         z_scale = val;
     }
 
+    x_chan
+        .attr_write_float("sampling_frequency", 238.0)
+        .unwrap();
+    y_chan
+        .attr_write_float("sampling_frequency", 238.0)
+        .unwrap();
+    z_chan
+        .attr_write_float("sampling_frequency", 238.0)
+        .unwrap();
+
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
 
     name.push_str("-imu.cvs");
