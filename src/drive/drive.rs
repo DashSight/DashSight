@@ -527,13 +527,13 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         ctx.set_line_width(0.2);
 
         // draw circles
-        ctx.arc(0.5 * width, 0.5 * height, 0.1 * width, 0.0, 3.1415 * 2.);
+        ctx.arc(0.5 * width, 0.5 * height, 0.1 * height, 0.0, 3.1415 * 2.);
         ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.2 * width, 0.0, 3.1415 * 2.);
+        ctx.arc(0.5 * width, 0.5 * height, 0.2 * height, 0.0, 3.1415 * 2.);
         ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.3 * width, 0.0, 3.1415 * 2.);
+        ctx.arc(0.5 * width, 0.5 * height, 0.3 * height, 0.0, 3.1415 * 2.);
         ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.4 * width, 0.0, 3.1415 * 2.);
+        ctx.arc(0.5 * width, 0.5 * height, 0.4 * height, 0.0, 3.1415 * 2.);
         ctx.stroke();
 
         // draw border
