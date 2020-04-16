@@ -79,6 +79,7 @@ pub struct Threading {
     pub location_tx: std::sync::mpsc::Sender<(f64, f64)>,
     pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
+    pub imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
 }
 
 pub type ThreadingRef = Arc<Threading>;
@@ -88,6 +89,7 @@ impl Threading {
         location_tx: std::sync::mpsc::Sender<(f64, f64)>,
         times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
         obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
+        imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
     ) -> ThreadingRef {
         ThreadingRef::new(Self {
             lap_start: RefCell::new(SystemTime::now()),
@@ -100,6 +102,7 @@ impl Threading {
             location_tx: location_tx,
             times_tx: times_tx,
             obdii_tx: obdii_tx,
+            imu_tx,
         })
     }
 }
@@ -428,6 +431,64 @@ fn map_update_idle_thread(
     }
 }
 
+fn draw_imu(
+    imu_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+    me: &gtk::DrawingArea,
+    ctx: &cairo::Context,
+) -> glib::signal::Inhibit {
+    let width = me.get_allocated_width() as f64;
+    let height = me.get_allocated_width() as f64 * 0.7;
+
+    ctx.set_source_rgba(0.0, 0.0, 0.0, 0.9);
+    ctx.set_line_width(0.2);
+
+    // draw circles
+    ctx.arc(0.5 * width, 0.5 * height, 0.1 * height, 0.0, 3.1415 * 2.);
+    ctx.stroke();
+    ctx.arc(0.5 * width, 0.5 * height, 0.2 * height, 0.0, 3.1415 * 2.);
+    ctx.stroke();
+    ctx.arc(0.5 * width, 0.5 * height, 0.3 * height, 0.0, 3.1415 * 2.);
+    ctx.stroke();
+    ctx.arc(0.5 * width, 0.5 * height, 0.4 * height, 0.0, 3.1415 * 2.);
+    ctx.stroke();
+
+    // draw border
+    ctx.set_source_rgba(0.3, 0.3, 0.3, 1.0);
+    ctx.rectangle(0.0, 0.0, 1.0 * width, 1.0 * height);
+    ctx.stroke();
+
+    ctx.set_line_width(0.5);
+
+    // cross
+    ctx.move_to(0.5 * width, 0.0);
+    ctx.line_to(0.5 * width, height);
+    ctx.stroke();
+    ctx.move_to(0.0, 0.5 * height);
+    ctx.line_to(width, 0.5 * height);
+    ctx.stroke();
+
+    let timeout = Duration::new(0, 100);
+    let rec = imu_rx.recv_timeout(timeout);
+    match rec {
+        Ok((x_accel, y_accel)) => {
+            ctx.set_source_rgba(0.0, 148.0 / 255.0, 1.0, 1.0);
+
+            ctx.arc(
+                (0.5 * width) + x_accel,
+                (0.5 * height) + y_accel,
+                5.0,
+                0.0,
+                3.1415 * 2.,
+            );
+            ctx.fill();
+
+            Inhibit(false)
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => Inhibit(false),
+        _ => Inhibit(true),
+    }
+}
+
 pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSelectionRef) {
     let builder = display.builder.clone();
 
@@ -453,7 +514,8 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
-    let thread_info = Threading::new(location_tx, times_tx, obdii_tx);
+    let (imu_tx, imu_rx) = mpsc::channel::<(f64, f64)>();
+    let thread_info = Threading::new(location_tx, times_tx, obdii_tx, imu_tx);
 
     let window: gtk::ApplicationWindow = builder
         .get_object("MainPage")
@@ -519,40 +581,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         .get_object("AccelDrawingArea")
         .expect("Couldn't find AccelDrawingArea in ui file.");
 
-    imu_area.connect_draw(move |me, ctx| {
-        let width = me.get_allocated_width() as f64;
-        let height = me.get_allocated_width() as f64 * 0.7;
-
-        ctx.set_source_rgba(0.0, 0.0, 0.0, 0.9);
-        ctx.set_line_width(0.2);
-
-        // draw circles
-        ctx.arc(0.5 * width, 0.5 * height, 0.1 * height, 0.0, 3.1415 * 2.);
-        ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.2 * height, 0.0, 3.1415 * 2.);
-        ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.3 * height, 0.0, 3.1415 * 2.);
-        ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.4 * height, 0.0, 3.1415 * 2.);
-        ctx.stroke();
-
-        // draw border
-        ctx.set_source_rgba(0.3, 0.3, 0.3, 1.0);
-        ctx.rectangle(0.0, 0.0, 1.0 * width, 1.0 * height);
-        ctx.stroke();
-
-        ctx.set_line_width(0.5);
-
-        // cross
-        ctx.move_to(0.5 * width, 0.0);
-        ctx.line_to(0.5 * width, height);
-        ctx.stroke();
-        ctx.move_to(0.0, 0.5 * height);
-        ctx.line_to(width, 0.5 * height);
-        ctx.stroke();
-
-        Inhibit(false)
-    });
+    imu_area.connect_draw(move |me, ctx| draw_imu(&imu_rx, me, ctx));
 
     let close_button = builder
         .get_object::<gtk::Button>("DriveOptionsPopOverClose")

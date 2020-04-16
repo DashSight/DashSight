@@ -6,6 +6,7 @@ authors = ["Alistair Francis <alistair@alistair23.me>"]
 edition = "2018"
 
 [dependencies]
+cairo-rs = "0.8.0"
 champlain = { git = "https://github.com/alistair23/champlain.git" }
 chrono = "0.4"
 cpython = "0.3.0"

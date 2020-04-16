@@ -110,29 +110,33 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     write!(fd, "x,y,z\n").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
-        if let Ok(val) = x_chan.attr_read_int("raw") {
-            let g = (val as f64 - x_calib) * x_scale;
+        let mut gx = 0.0;
+        let mut gy = 0.0;
 
-            write!(fd, "{}", g).unwrap();
-            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), g);
+        if let Ok(val) = x_chan.attr_read_int("raw") {
+            gx = (val as f64 - x_calib) * x_scale;
+
+            write!(fd, "{}", gx).unwrap();
+            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), gx);
         }
         write!(fd, ",").unwrap();
 
         if let Ok(val) = y_chan.attr_read_int("raw") {
-            let g = (val as f64 - y_calib) * y_scale;
+            gy = (val as f64 - y_calib) * y_scale;
 
-            write!(fd, "{}", g).unwrap();
-            println!(" {:>9} => {:>8} ", y_chan.id().unwrap(), g);
+            write!(fd, "{}", gy).unwrap();
+            println!(" {:>9} => {:>8} ", y_chan.id().unwrap(), gy);
         }
         write!(fd, ",").unwrap();
 
         if let Ok(val) = z_chan.attr_read_int("raw") {
-            let g = (val as f64 - z_calib) * z_scale;
+            let gz = (val as f64 - z_calib) * z_scale;
 
-            write!(fd, "{}", g).unwrap();
-            println!(" {:>9} => {:>8} ", z_chan.id().unwrap(), g);
+            write!(fd, "{}", gz).unwrap();
+            println!(" {:>9} => {:>8} ", z_chan.id().unwrap(), gz);
         }
         write!(fd, "\n").unwrap();
+        thread_info.imu_tx.send((gx, gy)).unwrap();
     }
 
     fd.flush().unwrap();
