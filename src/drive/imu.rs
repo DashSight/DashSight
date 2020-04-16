@@ -136,6 +136,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             println!(" {:>9} => {:>8} ", z_chan.id().unwrap(), gz);
         }
         write!(fd, "\n").unwrap();
+
+        // TODO: Convert this to x and y values based on orientation
         thread_info.imu_tx.send((gx, gy)).unwrap();
     }
 
