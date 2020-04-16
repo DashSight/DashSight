@@ -583,6 +583,12 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     imu_area.connect_draw(move |me, ctx| draw_imu(&imu_rx, me, ctx));
 
+    gtk::timeout_add(10, move || {
+        imu_area.queue_draw();
+
+        glib::source::Continue(true)
+    });
+
     let close_button = builder
         .get_object::<gtk::Button>("DriveOptionsPopOverClose")
         .expect("Can't find DriveOptionsPopOverClose in ui file.");
