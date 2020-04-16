@@ -521,7 +521,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     imu_area.connect_draw(move |me, ctx| {
         let width = me.get_allocated_width() as f64;
-        let height = me.get_allocated_width() as f64;
+        let height = me.get_allocated_width() as f64 * 0.7;
 
         ctx.set_source_rgba(0.0, 0.0, 0.0, 0.9);
         ctx.set_line_width(0.2);
