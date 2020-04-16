@@ -22,8 +22,8 @@ use std::path::PathBuf;
 use std::process;
 
 pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
+    // Create the IIO context
     let ctx;
-
     match iio::Context::new() {
         Ok(c) => {
             ctx = c;
@@ -34,67 +34,53 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
     }
 
+    // Create the IMU device
     let imu_name = "lsm9ds1-imu_accel";
-
-    let dev = ctx.find_device(imu_name).unwrap_or_else(|| {
+    let imu_dev = ctx.find_device(imu_name).unwrap_or_else(|| {
         println!("Error opening device: {}", imu_name);
         process::exit(1);
     });
 
-    let x_chan = dev.find_channel("accel_x", false).unwrap_or_else(|| {
+    // Get the IMU acceleration channels
+    let x_accel_chan = imu_dev.find_channel("accel_x", false).unwrap_or_else(|| {
         println!("No 'accel_x' channel on this device");
         process::exit(1);
     });
-    let y_chan = dev.find_channel("accel_y", false).unwrap_or_else(|| {
+    let y_accel_chan = imu_dev.find_channel("accel_y", false).unwrap_or_else(|| {
         println!("No 'accel_y' channel on this device");
         process::exit(1);
     });
-    let z_chan = dev.find_channel("accel_z", false).unwrap_or_else(|| {
+    let z_accel_chan = imu_dev.find_channel("accel_z", false).unwrap_or_else(|| {
         println!("No 'accel_z' channel on this device");
         process::exit(1);
     });
 
-    let mut x_calib = 0.0;
-    let mut y_calib = 0.0;
-    let mut z_calib = 0.0;
-    let mut x_scale = 1.0;
-    let mut y_scale = 1.0;
-    let mut z_scale = 1.0;
+    let accel_chan: [iio::channel::Channel; 3] = [x_accel_chan, y_accel_chan, z_accel_chan];
+    let mut calib = [0.0, 0.0, 0.0];
+    let mut scale = [1.0, 1.0, 1.0];
 
-    if let Ok(val) = x_chan.attr_read_int("calibbias") {
-        x_calib = val as f64;
-    }
-    if let Ok(val) = y_chan.attr_read_int("calibbias") {
-        y_calib = val as f64;
-    }
-    if let Ok(val) = z_chan.attr_read_int("calibbias") {
-        z_calib = val as f64;
+    // Get the acceleration calibration offset
+    for (i, ac) in accel_chan.iter().enumerate() {
+        if let Ok(val) = ac.attr_read_int("calibbias") {
+            calib[i] = val as f64;
+        }
     }
 
-    if let Ok(val) = x_chan.attr_read_float("scale") {
-        x_scale = val;
-    }
-    if let Ok(val) = y_chan.attr_read_float("scale") {
-        y_scale = val;
-    }
-    if let Ok(val) = z_chan.attr_read_float("scale") {
-        z_scale = val;
+    // Get the acceleration scale
+    for (i, ac) in accel_chan.iter().enumerate() {
+        if let Ok(val) = ac.attr_read_float("scale") {
+            scale[i] = val;
+        }
     }
 
-    x_chan
-        .attr_write_float("sampling_frequency", 238.0)
-        .unwrap();
-    y_chan
-        .attr_write_float("sampling_frequency", 238.0)
-        .unwrap();
-    z_chan
-        .attr_write_float("sampling_frequency", 238.0)
-        .unwrap();
+    // Set the acceleration sampling frequency
+    for ac in accel_chan.iter() {
+        ac.attr_write_float("sampling_frequency", 238.0).unwrap();
+    }
 
+    // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
-
     name.push_str("-imu.cvs");
-
     file_name.pop();
     file_name.push(name);
 
@@ -104,41 +90,29 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         .create(true)
         .truncate(true)
         .open(&file_name);
-
     let fd = imu_file.as_mut().unwrap();
 
+    // Write the CVS headers
     write!(fd, "x,y,z\n").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
-        let mut gx = 0.0;
-        let mut gy = 0.0;
+        let mut g = [0.0, 0.0, 0.0];
 
-        if let Ok(val) = x_chan.attr_read_int("raw") {
-            gx = (val as f64 - x_calib) * x_scale;
+        for (i, ac) in accel_chan.iter().enumerate() {
+            if let Ok(val) = ac.attr_read_int("raw") {
+                g[i] = (val as f64 - calib[i]) * scale[i];
 
-            write!(fd, "{}", gx).unwrap();
-            println!(" {:>9} => {:>8} ", x_chan.id().unwrap(), gx);
+                write!(fd, "{}", g[i]).unwrap();
+            }
+            if i < 2 {
+                write!(fd, ",").unwrap();
+            } else {
+                write!(fd, "\n").unwrap();
+            }
         }
-        write!(fd, ",").unwrap();
-
-        if let Ok(val) = y_chan.attr_read_int("raw") {
-            gy = (val as f64 - y_calib) * y_scale;
-
-            write!(fd, "{}", gy).unwrap();
-            println!(" {:>9} => {:>8} ", y_chan.id().unwrap(), gy);
-        }
-        write!(fd, ",").unwrap();
-
-        if let Ok(val) = z_chan.attr_read_int("raw") {
-            let gz = (val as f64 - z_calib) * z_scale;
-
-            write!(fd, "{}", gz).unwrap();
-            println!(" {:>9} => {:>8} ", z_chan.id().unwrap(), gz);
-        }
-        write!(fd, "\n").unwrap();
 
         // TODO: Convert this to x and y values based on orientation
-        thread_info.imu_tx.send((gx, gy)).unwrap();
+        thread_info.imu_tx.send((g[0], g[1])).unwrap();
     }
 
     fd.flush().unwrap();
