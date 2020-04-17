@@ -272,15 +272,29 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     write!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z\n").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
-        let mut g = [0.0, 0.0, 0.0];
+        let mut accel = Vector3::new(0.0, 0.0, 0.0);
+
         for (i, ac) in accel_chan.iter().enumerate() {
             if let Ok(val) = ac.attr_read_int("raw") {
-                g[i] = (val as f64 - accel_calib[i]) * accel_scale[i];
+                accel[i] = (val as f64 - accel_calib[i]) * accel_scale[i];
 
-                write!(fd, "{}", g[i]).unwrap();
+                write!(fd, "{}", accel[i]).unwrap();
             }
             write!(fd, ",").unwrap();
         }
+
+        let accel_quat = nalgebra::geometry::Quaternion::from_imag(accel);
+        let accel_rotated = quat_mount * accel_quat * quat_mount.conjugate();
+
+        println!(
+            "accel_rotated: x: {}; y: {}",
+            accel_rotated[0], accel_rotated[1]
+        );
+
+        thread_info
+            .imu_tx
+            .send((accel_rotated[0], accel_rotated[1]))
+            .unwrap();
 
         let mut rot = [0.0, 0.0, 0.0];
         for (i, gc) in gyro_chan.iter().enumerate() {
@@ -295,9 +309,6 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
 
         write!(fd, "\n").unwrap();
-
-        // TODO: Convert this to x and y values based on orientation
-        thread_info.imu_tx.send((g[0], g[1])).unwrap();
     }
 
     fd.flush().unwrap();
