@@ -281,7 +281,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     println!("The diff quaternion 1 is: {}", quat_diff_1);
     println!("The diff quaternion 2 is: {}", quat_diff_2);
 
-    let unit_quat_mount_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_1);
+    let unit_quat_mount_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount);
     let unit_quat_mount_2 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_2);
 
     // Open the file to save data
@@ -315,16 +315,35 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
         println!("accel: x: {}; y: {}", accel[0], accel[1]);
 
-        let accel_rotated = unit_quat_mount_1.transform_vector(&accel);
-        let accel_rotated_2 = unit_quat_mount_2.transform_vector(&accel);
+        let accel_quat = nalgebra::geometry::Quaternion::from_imag(accel);
+
+        println!("accel_quat: {:?}", accel_quat);
+
+        let accel_rotated = quat_mount * accel_quat * quat_mount.conjugate();
+        let accel_rotated_unit = unit_quat_mount_1
+            * nalgebra::geometry::UnitQuaternion::from_quaternion(accel_quat)
+            * unit_quat_mount_1.conjugate();
+
+        let accel_rotated_2 = quat_diff_2 * accel_quat * quat_diff_2.conjugate();
+        let accel_rotated_unit_2 = unit_quat_mount_2
+            * nalgebra::geometry::UnitQuaternion::from_quaternion(accel_quat)
+            * unit_quat_mount_2.conjugate();
 
         println!(
             "accel_rotated_1: x: {}; y: {}",
             accel_rotated[0], accel_rotated[1]
         );
         println!(
+            "accel_rotated_unit: x: {}; y: {}",
+            accel_rotated_unit[0], accel_rotated_unit[1]
+        );
+        println!(
             "accel_rotated_2: x: {}; y: {}",
             accel_rotated_2[0], accel_rotated_2[1]
+        );
+        println!(
+            "accel_rotated_unit_2: x: {}; y: {}",
+            accel_rotated_unit_2[0], accel_rotated_unit_2[1]
         );
 
         thread_info
