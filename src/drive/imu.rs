@@ -15,11 +15,14 @@
  */
 
 use crate::drive::drive::*;
+use ahrs::{Ahrs, Madgwick};
 use industrial_io as iio;
+use nalgebra::Vector3;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process;
+use std::{thread, time};
 
 pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Create the IIO context
@@ -119,6 +122,85 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     for ac in accel_chan.iter() {
         ac.attr_write_float("sampling_frequency", 238.0).unwrap();
     }
+
+    // TODO: Add prompt
+    // Make sure sensor axis is lined up with car
+
+    // Create AHRS filter
+    let mut ahrs = Madgwick::default();
+
+    let mut accel_quat = Vector3::new(0.0, 0.0, 0.0);
+    if let Ok(val) = accel_chan[0].attr_read_int("raw") {
+        accel_quat.x = (val as f64 - accel_calib[0]) * accel_scale[0];
+    }
+    if let Ok(val) = accel_chan[1].attr_read_int("raw") {
+        accel_quat.y = (val as f64 - accel_calib[1]) * accel_scale[1];
+    }
+    if let Ok(val) = accel_chan[2].attr_read_int("raw") {
+        accel_quat.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+    }
+
+    let mut gyro_quat = Vector3::new(0.0, 0.0, 0.0);
+    if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
+        gyro_quat.x = val as f64 * accel_scale[0];
+    }
+    if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
+        gyro_quat.y = val as f64 * accel_scale[1];
+    }
+    if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
+        gyro_quat.z = val as f64 * accel_scale[2];
+    }
+
+    // TODO: Set these
+    let mag_quat = Vector3::new(0.0, 0.0, 0.0);
+
+    // Run inputs through AHRS filter (gyroscope must be radians/s)
+    let quat_car = ahrs
+        .update(
+            &(gyro_quat * (std::f64::consts::PI / 180.0)),
+            &accel_quat,
+            &mag_quat,
+        )
+        .unwrap();
+
+    println!("The first (lined up) quaternion is: {}", quat_car);
+
+    println!("Move the device to the mount position");
+    let ten_secs = time::Duration::from_secs(10);
+    thread::sleep(ten_secs);
+
+    if let Ok(val) = accel_chan[0].attr_read_int("raw") {
+        accel_quat.x = (val as f64 - accel_calib[0]) * accel_scale[0];
+    }
+    if let Ok(val) = accel_chan[1].attr_read_int("raw") {
+        accel_quat.y = (val as f64 - accel_calib[1]) * accel_scale[1];
+    }
+    if let Ok(val) = accel_chan[2].attr_read_int("raw") {
+        accel_quat.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+    }
+
+    if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
+        gyro_quat.x = val as f64 * accel_scale[0];
+    }
+    if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
+        gyro_quat.y = val as f64 * accel_scale[1];
+    }
+    if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
+        gyro_quat.z = val as f64 * accel_scale[2];
+    }
+
+    // TODO: Set mag
+
+    // Run inputs through AHRS filter (gyroscope must be radians/s)
+    let quat_mount = ahrs
+        .update(
+            &(gyro_quat * (std::f64::consts::PI / 180.0)),
+            &accel_quat,
+            &mag_quat,
+        )
+        .unwrap();
+
+    println!("The mounted quaternion is: {}", quat_mount);
 
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
