@@ -275,11 +275,14 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     println!("The mounted quaternion is: {}", quat_mount);
 
-    let quat_diff = quat_car - quat_mount;
+    let quat_diff_1 = quat_car - quat_mount;
+    let quat_diff_2 = quat_mount - quat_car;
 
-    println!("The diff quaternion is: {}", quat_diff);
+    println!("The diff quaternion 1 is: {}", quat_diff_1);
+    println!("The diff quaternion 2 is: {}", quat_diff_2);
 
-    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff.clone());
+    let unit_quat_mount_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_1);
+    let unit_quat_mount_2 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_2);
 
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
@@ -310,11 +313,18 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             write!(fd, ",").unwrap();
         }
 
-        let accel_rotated = unit_quat_mount.transform_vector(&accel);
+        println!("accel: x: {}; y: {}", accel[0], accel[1]);
+
+        let accel_rotated = unit_quat_mount_1.transform_vector(&accel);
+        let accel_rotated_2 = unit_quat_mount_2.transform_vector(&accel);
 
         println!(
-            "accel_rotated: x: {}; y: {}",
+            "accel_rotated_1: x: {}; y: {}",
             accel_rotated[0], accel_rotated[1]
+        );
+        println!(
+            "accel_rotated_2: x: {}; y: {}",
+            accel_rotated_2[0], accel_rotated_2[1]
         );
 
         thread_info
