@@ -209,11 +209,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_car = ahrs
-        .update(
-            &(gyro_filt_input),
-            &accel_filt_input,
-            &mag_filt_input,
-        )
+        .update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
         .unwrap()
         .clone();
 
@@ -253,23 +249,15 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
 
         // Run inputs through AHRS filter (gyroscope must be radians/s)
-        ahrs.update(
-            &(gyro_filt_input),
-            &accel_filt_input,
-            &mag_filt_input,
-        )
-        .unwrap();
+        ahrs.update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
+            .unwrap();
     }
 
     println!("Calculating the mount quaternion");
 
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_mount = ahrs
-        .update(
-            &(gyro_filt_input),
-            &accel_filt_input,
-            &mag_filt_input,
-        )
+        .update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
         .unwrap()
         .clone();
 
@@ -337,8 +325,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             * accel_quat
             * unit_quat_mount_1.quaternion().conjugate();
 
-        let accel_rotated_2 = quat_mount.transform_vector(&accel);
-        let accel_rotated_2 = unitquat_mount.transform_vector(&accel);;
+        let accel_rotated_2 = unit_quat_mount_1.transform_vector(&accel);
 
         println!(
             "accel_rotated_1: x: {}; y: {}; z: {}",
@@ -351,10 +338,6 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         println!(
             "accel_rotated_2: x: {}; y: {}; z: {}",
             accel_rotated_2[0], accel_rotated_2[1], accel_rotated_2[2]
-        );
-        println!(
-            "accel_rotated_unit_2: x: {}; y: {}; z: {}",
-            accel_rotated_unit_2[0], accel_rotated_unit_2[1], accel_rotated_unit_2[2]
         );
 
         let accel_rotated_diff_1 = quat_diff_1 * accel_quat * quat_diff_1.conjugate();
