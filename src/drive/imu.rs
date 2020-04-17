@@ -284,6 +284,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
 
         let accel_quat = nalgebra::geometry::Quaternion::from_imag(accel);
+
+        println!("accel_quat: {:?}", accel_quat);
+
         let accel_rotated = quat_mount * accel_quat * quat_mount.conjugate();
 
         println!(
