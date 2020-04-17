@@ -205,7 +205,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             &accel_quat,
             &mag_quat,
         )
-        .unwrap();
+        .unwrap().clone();
 
     println!("The first (lined up) quaternion is: {}", quat_car);
 
@@ -250,10 +250,15 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             &accel_quat,
             &mag_quat,
         )
-        .unwrap();
-    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.clone());
+        .unwrap().clone();
 
     println!("The mounted quaternion is: {}", quat_mount);
+
+    let quat_diff = quat_mount - quat_car;
+
+    println!("The diff quaternion is: {}", quat_diff);
+
+    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff.clone());
 
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
