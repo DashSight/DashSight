@@ -251,6 +251,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             &mag_quat,
         )
         .unwrap();
+    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.clone());
 
     println!("The mounted quaternion is: {}", quat_mount);
 
@@ -283,11 +284,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             write!(fd, ",").unwrap();
         }
 
-        let accel_quat = nalgebra::geometry::Quaternion::from_imag(accel);
-
-        println!("accel_quat: {:?}", accel_quat);
-
-        let accel_rotated = quat_mount * accel_quat * quat_mount.conjugate();
+        let accel_rotated = unit_quat_mount.transform_vector(&accel);
 
         println!(
             "accel_rotated: x: {}; y: {}",
