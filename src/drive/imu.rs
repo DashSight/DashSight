@@ -330,20 +330,20 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             * unit_quat_mount_2.conjugate();
 
         println!(
-            "accel_rotated_1: x: {}; y: {}",
-            accel_rotated[0], accel_rotated[1]
+            "accel_rotated_1: x: {}; y: {}; z: {}",
+            accel_rotated[0], accel_rotated[1], accel_rotated[2]
         );
         println!(
-            "accel_rotated_unit: x: {}; y: {}",
-            accel_rotated_unit[0], accel_rotated_unit[1]
+            "accel_rotated_unit: x: {}; y: {}; z: {}",
+            accel_rotated_unit[0], accel_rotated_unit[1], accel_rotated_unit[2]
         );
         println!(
-            "accel_rotated_2: x: {}; y: {}",
-            accel_rotated_2[0], accel_rotated_2[1]
+            "accel_rotated_2: x: {}; y: {}; z: {}",
+            accel_rotated_2[0], accel_rotated_2[1], accel_rotated_2[2]
         );
         println!(
-            "accel_rotated_unit_2: x: {}; y: {}",
-            accel_rotated_unit_2[0], accel_rotated_unit_2[1]
+            "accel_rotated_unit_2: x: {}; y: {}; z: {}",
+            accel_rotated_unit_2[0], accel_rotated_unit_2[1], accel_rotated_unit_2[2]
         );
 
         thread_info
