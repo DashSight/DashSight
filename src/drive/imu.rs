@@ -326,10 +326,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             * accel_quat
             * unit_quat_mount_1.quaternion().conjugate();
 
-        let accel_rotated_2 = quat_diff_2 * accel_quat * quat_diff_2.conjugate();
-        let accel_rotated_unit_2 = unit_quat_mount_2.quaternion()
-            * accel_quat
-            * unit_quat_mount_2.quaternion().conjugate();
+        let accel_rotated_2 = quat_mount.transform_vector(&accel);
+        let accel_rotated_2 = unitquat_mount.transform_vector(&accel);;
 
         println!(
             "accel_rotated_1: x: {}; y: {}; z: {}",
