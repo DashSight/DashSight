@@ -174,45 +174,45 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Create AHRS filter
     let mut ahrs = Madgwick::default();
 
-    let mut accel_quat = Vector3::new(0.0, 0.0, 0.0);
+    let mut accel_filt_input = Vector3::new(0.0, 0.0, 0.0);
     if let Ok(val) = accel_chan[0].attr_read_int("raw") {
-        accel_quat.x = (val as f64 - accel_calib[0]) * accel_scale[0];
+        accel_filt_input.x = (val as f64 - accel_calib[0]) * accel_scale[0];
     }
     if let Ok(val) = accel_chan[1].attr_read_int("raw") {
-        accel_quat.y = (val as f64 - accel_calib[1]) * accel_scale[1];
+        accel_filt_input.y = (val as f64 - accel_calib[1]) * accel_scale[1];
     }
     if let Ok(val) = accel_chan[2].attr_read_int("raw") {
-        accel_quat.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+        accel_filt_input.z = (val as f64 - accel_calib[2]) * accel_scale[2];
     }
 
-    let mut gyro_quat = Vector3::new(0.0, 0.0, 0.0);
+    let mut gyro_filt_input = Vector3::new(0.0, 0.0, 0.0);
     if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
-        gyro_quat.x = val as f64 * accel_scale[0];
+        gyro_filt_input.x = val as f64 * accel_scale[0];
     }
     if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
-        gyro_quat.y = val as f64 * accel_scale[1];
+        gyro_filt_input.y = val as f64 * accel_scale[1];
     }
     if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
-        gyro_quat.z = val as f64 * accel_scale[2];
+        gyro_filt_input.z = val as f64 * accel_scale[2];
     }
 
-    let mut mag_quat = Vector3::new(0.0, 0.0, 0.0);
+    let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
     if let Ok(val) = mag_chan[0].attr_read_int("raw") {
-        mag_quat.x = val as f64 * mag_scale[0];
+        mag_filt_input.x = val as f64 * mag_scale[0];
     }
     if let Ok(val) = mag_chan[1].attr_read_int("raw") {
-        mag_quat.y = val as f64 * mag_scale[1];
+        mag_filt_input.y = val as f64 * mag_scale[1];
     }
     if let Ok(val) = mag_chan[2].attr_read_int("raw") {
-        mag_quat.z = val as f64 * mag_scale[2];
+        mag_filt_input.z = val as f64 * mag_scale[2];
     }
 
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_car = ahrs
         .update(
-            &(gyro_quat * (std::f64::consts::PI / 180.0)),
-            &accel_quat,
-            &mag_quat,
+            &(gyro_filt_input * (std::f64::consts::PI / 180.0)),
+            &accel_filt_input,
+            &mag_filt_input,
         )
         .unwrap()
         .clone();
@@ -223,40 +223,40 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     for _i in 0..60 {
         if let Ok(val) = accel_chan[0].attr_read_int("raw") {
-            accel_quat.x = (val as f64 - accel_calib[0]) * accel_scale[0];
+            accel_filt_input.x = (val as f64 - accel_calib[0]) * accel_scale[0];
         }
         if let Ok(val) = accel_chan[1].attr_read_int("raw") {
-            accel_quat.y = (val as f64 - accel_calib[1]) * accel_scale[1];
+            accel_filt_input.y = (val as f64 - accel_calib[1]) * accel_scale[1];
         }
         if let Ok(val) = accel_chan[2].attr_read_int("raw") {
-            accel_quat.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+            accel_filt_input.z = (val as f64 - accel_calib[2]) * accel_scale[2];
         }
 
         if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
-            gyro_quat.x = val as f64 * accel_scale[0];
+            gyro_filt_input.x = val as f64 * accel_scale[0];
         }
         if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
-            gyro_quat.y = val as f64 * accel_scale[1];
+            gyro_filt_input.y = val as f64 * accel_scale[1];
         }
         if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
-            gyro_quat.z = val as f64 * accel_scale[2];
+            gyro_filt_input.z = val as f64 * accel_scale[2];
         }
 
         if let Ok(val) = mag_chan[0].attr_read_int("raw") {
-            mag_quat.x = val as f64 * mag_scale[0];
+            mag_filt_input.x = val as f64 * mag_scale[0];
         }
         if let Ok(val) = mag_chan[1].attr_read_int("raw") {
-            mag_quat.y = val as f64 * mag_scale[1];
+            mag_filt_input.y = val as f64 * mag_scale[1];
         }
         if let Ok(val) = mag_chan[2].attr_read_int("raw") {
-            mag_quat.z = val as f64 * mag_scale[2];
+            mag_filt_input.z = val as f64 * mag_scale[2];
         }
 
         // Run inputs through AHRS filter (gyroscope must be radians/s)
         ahrs.update(
-            &(gyro_quat * (std::f64::consts::PI / 180.0)),
-            &accel_quat,
-            &mag_quat,
+            &(gyro_filt_input * (std::f64::consts::PI / 180.0)),
+            &accel_filt_input,
+            &mag_filt_input,
         )
         .unwrap();
     }
@@ -266,9 +266,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_mount = ahrs
         .update(
-            &(gyro_quat * (std::f64::consts::PI / 180.0)),
-            &accel_quat,
-            &mag_quat,
+            &(gyro_filt_input * (std::f64::consts::PI / 180.0)),
+            &accel_filt_input,
+            &mag_filt_input,
         )
         .unwrap()
         .clone();
