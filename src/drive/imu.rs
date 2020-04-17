@@ -282,9 +282,20 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     println!("The diff quaternion 2 is: {}", quat_diff_2);
 
     let unit_quat_mount_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount);
-    println!("Euler angles unit_quat_mount_1: {:?}", unit_quat_mount_1.euler_angles());
-    let unit_quat_mount_2 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_2);
-    println!("Euler angles unit_quat_mount_2: {:?}", unit_quat_mount_2.euler_angles());
+    println!(
+        "Euler angles unit_quat_mount_1: {:?}",
+        unit_quat_mount_1.euler_angles()
+    );
+    let unit_quat_mount_diff_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_1);
+    println!(
+        "Euler angles unit_quat_mount_diff_1: {:?}",
+        unit_quat_mount_diff_1.euler_angles()
+    );
+    let unit_quat_mount_diff_2 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_2);
+    println!(
+        "Euler angles unit_quat_mount_diff_2: {:?}",
+        unit_quat_mount_diff_2.euler_angles()
+    );
 
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
@@ -345,6 +356,35 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             "accel_rotated_unit_2: x: {}; y: {}; z: {}",
             accel_rotated_unit_2[0], accel_rotated_unit_2[1], accel_rotated_unit_2[2]
         );
+
+        let accel_rotated_diff_1 = quat_diff_1 * accel_quat * quat_diff_1.conjugate();
+        let accel_rotated_diff_1_2 = unit_quat_mount_diff_1.quaternion()
+            * accel_quat
+            * unit_quat_mount_diff_1.quaternion().conjugate();
+
+        println!(
+            "accel_rotated_diff_1: x: {}; y: {}; z: {}",
+            accel_rotated_diff_1[0], accel_rotated_diff_1[1], accel_rotated_diff_1[2]
+        );
+        println!(
+            "accel_rotated_diff_1_2: x: {}; y: {}; z: {}",
+            accel_rotated_diff_1_2[0], accel_rotated_diff_1_2[1], accel_rotated_diff_1_2[2]
+        );
+
+        let accel_rotated_diff_2 = quat_diff_1 * accel_quat * quat_diff_1.conjugate();
+        let accel_rotated_diff_2_2 = unit_quat_mount_diff_1.quaternion()
+            * accel_quat
+            * unit_quat_mount_diff_1.quaternion().conjugate();
+
+        println!(
+            "accel_rotated_diff_2: x: {}; y: {}; z: {}",
+            accel_rotated_diff_2[0], accel_rotated_diff_2[1], accel_rotated_diff_2[2]
+        );
+        println!(
+            "accel_rotated_diff_2_2: x: {}; y: {}; z: {}",
+            accel_rotated_diff_2_2[0], accel_rotated_diff_2_2[1], accel_rotated_diff_2_2[2]
+        );
+        println!("");
 
         thread_info
             .imu_tx
