@@ -90,14 +90,14 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     let accel_chan: [iio::channel::Channel; 3] = [x_accel_chan, y_accel_chan, z_accel_chan];
     let gyro_chan: [iio::channel::Channel; 3] = [x_gyro_chan, y_gyro_chan, z_gyro_chan];
-    let mut calib = [0.0, 0.0, 0.0];
+    let mut accel_calib = [0.0, 0.0, 0.0];
     let mut accel_scale = [1.0, 1.0, 1.0];
     let mut gyro_scale = [1.0, 1.0, 1.0];
 
     // Get the acceleration calibration offset
     for (i, ac) in accel_chan.iter().enumerate() {
         if let Ok(val) = ac.attr_read_int("calibbias") {
-            calib[i] = val as f64;
+            accel_calib[i] = val as f64;
         }
     }
 
@@ -141,7 +141,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         let mut g = [0.0, 0.0, 0.0];
         for (i, ac) in accel_chan.iter().enumerate() {
             if let Ok(val) = ac.attr_read_int("raw") {
-                g[i] = (val as f64 - calib[i]) * accel_scale[i];
+                g[i] = (val as f64 - accel_calib[i]) * accel_scale[i];
 
                 write!(fd, "{}", g[i]).unwrap();
             }
