@@ -282,7 +282,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     println!("The diff quaternion 2 is: {}", quat_diff_2);
 
     let unit_quat_mount_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount);
+    println!("Euler angles unit_quat_mount_1: {:?}", unit_quat_mount_1.euler_angles());
     let unit_quat_mount_2 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_2);
+    println!("Euler angles unit_quat_mount_2: {:?}", unit_quat_mount_2.euler_angles());
 
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
