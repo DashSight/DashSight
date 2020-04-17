@@ -22,7 +22,6 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process;
-use std::{thread, time};
 
 pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Create the IIO context
@@ -205,43 +204,54 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             &accel_quat,
             &mag_quat,
         )
-        .unwrap().clone();
+        .unwrap()
+        .clone();
 
     println!("The first (lined up) quaternion is: {}", quat_car);
 
     println!("Move the device to the mount position");
-    let ten_secs = time::Duration::from_secs(10);
-    thread::sleep(ten_secs);
 
-    if let Ok(val) = accel_chan[0].attr_read_int("raw") {
-        accel_quat.x = (val as f64 - accel_calib[0]) * accel_scale[0];
-    }
-    if let Ok(val) = accel_chan[1].attr_read_int("raw") {
-        accel_quat.y = (val as f64 - accel_calib[1]) * accel_scale[1];
-    }
-    if let Ok(val) = accel_chan[2].attr_read_int("raw") {
-        accel_quat.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+    for _i in 0..10 {
+        if let Ok(val) = accel_chan[0].attr_read_int("raw") {
+            accel_quat.x = (val as f64 - accel_calib[0]) * accel_scale[0];
+        }
+        if let Ok(val) = accel_chan[1].attr_read_int("raw") {
+            accel_quat.y = (val as f64 - accel_calib[1]) * accel_scale[1];
+        }
+        if let Ok(val) = accel_chan[2].attr_read_int("raw") {
+            accel_quat.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+        }
+
+        if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
+            gyro_quat.x = val as f64 * accel_scale[0];
+        }
+        if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
+            gyro_quat.y = val as f64 * accel_scale[1];
+        }
+        if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
+            gyro_quat.z = val as f64 * accel_scale[2];
+        }
+
+        if let Ok(val) = mag_chan[0].attr_read_int("raw") {
+            mag_quat.x = val as f64 * mag_scale[0];
+        }
+        if let Ok(val) = mag_chan[1].attr_read_int("raw") {
+            mag_quat.y = val as f64 * mag_scale[1];
+        }
+        if let Ok(val) = mag_chan[2].attr_read_int("raw") {
+            mag_quat.z = val as f64 * mag_scale[2];
+        }
+
+        // Run inputs through AHRS filter (gyroscope must be radians/s)
+        ahrs.update(
+            &(gyro_quat * (std::f64::consts::PI / 180.0)),
+            &accel_quat,
+            &mag_quat,
+        )
+        .unwrap();
     }
 
-    if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
-        gyro_quat.x = val as f64 * accel_scale[0];
-    }
-    if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
-        gyro_quat.y = val as f64 * accel_scale[1];
-    }
-    if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
-        gyro_quat.z = val as f64 * accel_scale[2];
-    }
-
-    if let Ok(val) = mag_chan[0].attr_read_int("raw") {
-        mag_quat.x = val as f64 * mag_scale[0];
-    }
-    if let Ok(val) = mag_chan[1].attr_read_int("raw") {
-        mag_quat.y = val as f64 * mag_scale[1];
-    }
-    if let Ok(val) = mag_chan[2].attr_read_int("raw") {
-        mag_quat.z = val as f64 * mag_scale[2];
-    }
+    println!("Calculating the mount quaternion");
 
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_mount = ahrs
@@ -250,7 +260,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             &accel_quat,
             &mag_quat,
         )
-        .unwrap().clone();
+        .unwrap()
+        .clone();
 
     println!("The mounted quaternion is: {}", quat_mount);
 
