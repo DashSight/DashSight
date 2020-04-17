@@ -210,7 +210,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_car = ahrs
         .update(
-            &(gyro_filt_input * (std::f64::consts::PI / 180.0)),
+            &(gyro_filt_input),
             &accel_filt_input,
             &mag_filt_input,
         )
@@ -254,7 +254,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
         // Run inputs through AHRS filter (gyroscope must be radians/s)
         ahrs.update(
-            &(gyro_filt_input * (std::f64::consts::PI / 180.0)),
+            &(gyro_filt_input),
             &accel_filt_input,
             &mag_filt_input,
         )
@@ -266,7 +266,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_mount = ahrs
         .update(
-            &(gyro_filt_input * (std::f64::consts::PI / 180.0)),
+            &(gyro_filt_input),
             &accel_filt_input,
             &mag_filt_input,
         )
