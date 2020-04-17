@@ -155,7 +155,17 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     // Set the acceleration sampling frequency
     for ac in accel_chan.iter() {
-        ac.attr_write_float("sampling_frequency", 238.0).unwrap();
+        ac.attr_write_float("sampling_frequency", 952.0).unwrap();
+    }
+
+    // Set the gyro sampling frequency
+    for gc in gyro_chan.iter() {
+        gc.attr_write_float("sampling_frequency", 952.0).unwrap();
+    }
+
+    // Set the mag sampling frequency
+    for mc in mag_chan.iter() {
+        mc.attr_write_int("sampling_frequency", 80).unwrap();
     }
 
     // TODO: Add prompt
@@ -211,7 +221,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     println!("Move the device to the mount position");
 
-    for _i in 0..10 {
+    for _i in 0..60 {
         if let Ok(val) = accel_chan[0].attr_read_int("raw") {
             accel_quat.x = (val as f64 - accel_calib[0]) * accel_scale[0];
         }
