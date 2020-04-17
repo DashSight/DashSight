@@ -436,6 +436,9 @@ fn draw_imu(
     me: &gtk::DrawingArea,
     ctx: &cairo::Context,
 ) -> glib::signal::Inhibit {
+    let timeout = Duration::new(0, 100);
+    let rec = imu_rx.recv_timeout(timeout);
+
     let width = me.get_allocated_width() as f64;
     let height = me.get_allocated_width() as f64 * 0.7;
 
@@ -467,8 +470,6 @@ fn draw_imu(
     ctx.line_to(width, 0.5 * height);
     ctx.stroke();
 
-    let timeout = Duration::new(0, 100);
-    let rec = imu_rx.recv_timeout(timeout);
     match rec {
         Ok((x_accel, y_accel)) => {
             ctx.set_source_rgba(0.0, 148.0 / 255.0, 1.0, 1.0);
