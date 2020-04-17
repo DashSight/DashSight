@@ -51,6 +51,13 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         process::exit(1);
     });
 
+    // Create the IMU mag device
+    let imu_name = "lsm9ds1_magn";
+    let imu_mag_dev = ctx.find_device(imu_name).unwrap_or_else(|| {
+        println!("Error opening device: {}", imu_name);
+        process::exit(1);
+    });
+
     // Get the IMU acceleration channels
     let x_accel_chan = imu_accel_dev
         .find_channel("accel_x", false)
@@ -91,11 +98,33 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             process::exit(1);
         });
 
+    // Get the IMU mag channels
+    let x_mag_chan = imu_mag_dev
+        .find_channel("magn_x", false)
+        .unwrap_or_else(|| {
+            println!("No 'magn_x' channel on this device");
+            process::exit(1);
+        });
+    let y_mag_chan = imu_mag_dev
+        .find_channel("magn_y", false)
+        .unwrap_or_else(|| {
+            println!("No 'magn_y' channel on this device");
+            process::exit(1);
+        });
+    let z_mag_chan = imu_mag_dev
+        .find_channel("magn_z", false)
+        .unwrap_or_else(|| {
+            println!("No 'magn_z' channel on this device");
+            process::exit(1);
+        });
+
     let accel_chan: [iio::channel::Channel; 3] = [x_accel_chan, y_accel_chan, z_accel_chan];
     let gyro_chan: [iio::channel::Channel; 3] = [x_gyro_chan, y_gyro_chan, z_gyro_chan];
+    let mag_chan: [iio::channel::Channel; 3] = [x_mag_chan, y_mag_chan, z_mag_chan];
     let mut accel_calib = [0.0, 0.0, 0.0];
     let mut accel_scale = [1.0, 1.0, 1.0];
     let mut gyro_scale = [1.0, 1.0, 1.0];
+    let mut mag_scale = [1.0, 1.0, 1.0];
 
     // Get the acceleration calibration offset
     for (i, ac) in accel_chan.iter().enumerate() {
@@ -115,6 +144,13 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     for (i, ac) in gyro_chan.iter().enumerate() {
         if let Ok(val) = ac.attr_read_float("scale") {
             gyro_scale[i] = val;
+        }
+    }
+
+    // Get the mag scale
+    for (i, mc) in mag_chan.iter().enumerate() {
+        if let Ok(val) = mc.attr_read_float("scale") {
+            mag_scale[i] = val;
         }
     }
 
@@ -151,8 +187,16 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         gyro_quat.z = val as f64 * accel_scale[2];
     }
 
-    // TODO: Set these
-    let mag_quat = Vector3::new(0.0, 0.0, 0.0);
+    let mut mag_quat = Vector3::new(0.0, 0.0, 0.0);
+    if let Ok(val) = mag_chan[0].attr_read_int("raw") {
+        mag_quat.x = val as f64 * mag_scale[0];
+    }
+    if let Ok(val) = mag_chan[1].attr_read_int("raw") {
+        mag_quat.y = val as f64 * mag_scale[1];
+    }
+    if let Ok(val) = mag_chan[2].attr_read_int("raw") {
+        mag_quat.z = val as f64 * mag_scale[2];
+    }
 
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_car = ahrs
@@ -189,7 +233,15 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         gyro_quat.z = val as f64 * accel_scale[2];
     }
 
-    // TODO: Set mag
+    if let Ok(val) = mag_chan[0].attr_read_int("raw") {
+        mag_quat.x = val as f64 * mag_scale[0];
+    }
+    if let Ok(val) = mag_chan[1].attr_read_int("raw") {
+        mag_quat.y = val as f64 * mag_scale[1];
+    }
+    if let Ok(val) = mag_chan[2].attr_read_int("raw") {
+        mag_quat.z = val as f64 * mag_scale[2];
+    }
 
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat_mount = ahrs
