@@ -275,7 +275,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     println!("The mounted quaternion is: {}", quat_mount);
 
-    let quat_diff = quat_mount - quat_car;
+    let quat_diff = quat_car - quat_mount;
 
     println!("The diff quaternion is: {}", quat_diff);
 
