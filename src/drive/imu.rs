@@ -181,12 +181,12 @@ fn set_sampling_freq(
 ) {
     // Set the acceleration sampling frequency
     for ac in accel_chan.iter() {
-        ac.attr_write_float("sampling_frequency", 952.0).unwrap();
+        ac.attr_write_float("sampling_frequency", 476.0).unwrap();
     }
 
     // Set the gyro sampling frequency
     for gc in gyro_chan.iter() {
-        gc.attr_write_float("sampling_frequency", 952.0).unwrap();
+        gc.attr_write_float("sampling_frequency", 476.0).unwrap();
     }
 
     // Set the mag sampling frequency
