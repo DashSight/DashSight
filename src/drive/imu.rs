@@ -195,7 +195,43 @@ fn set_sampling_freq(
     }
 }
 
-fn rewad_9_dofs(
+fn get_accel_data(
+    accel_chan: &[iio::channel::Channel; 3],
+    accel_calib: &[f64; 3],
+    accel_scale: &[f64; 3],
+) -> Vector3<f64> {
+    let mut accel_data = Vector3::new(0.0, 0.0, 0.0);
+
+    if let Ok(val) = accel_chan[0].attr_read_int("raw") {
+        accel_data.x = (val as f64 - accel_calib[0]) * accel_scale[0];
+    }
+    if let Ok(val) = accel_chan[1].attr_read_int("raw") {
+        accel_data.y = (val as f64 - accel_calib[1]) * accel_scale[1];
+    }
+    if let Ok(val) = accel_chan[2].attr_read_int("raw") {
+        accel_data.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+    }
+
+    accel_data
+}
+
+fn get_gyro_data(gyro_chan: &[iio::channel::Channel; 3], gyro_scale: &[f64; 3]) -> Vector3<f64> {
+    let mut gyro_data = Vector3::new(0.0, 0.0, 0.0);
+
+    if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
+        gyro_data.x = val as f64 * gyro_scale[0];
+    }
+    if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
+        gyro_data.y = val as f64 * gyro_scale[1];
+    }
+    if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
+        gyro_data.z = val as f64 * gyro_scale[2];
+    }
+
+    gyro_data
+}
+
+fn get_9_dofs(
     accel_chan: &[iio::channel::Channel; 3],
     accel_calib: &[f64; 3],
     accel_scale: &[f64; 3],
@@ -204,29 +240,7 @@ fn rewad_9_dofs(
     mag_chan: &[iio::channel::Channel; 3],
     mag_scale: &[f64; 3],
 ) -> (Vector3<f64>, Vector3<f64>, Vector3<f64>) {
-    let mut accel_filt_input = Vector3::new(0.0, 0.0, 0.0);
-    let mut gyro_filt_input = Vector3::new(0.0, 0.0, 0.0);
     let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
-
-    if let Ok(val) = accel_chan[0].attr_read_int("raw") {
-        accel_filt_input.x = (val as f64 - accel_calib[0]) * accel_scale[0];
-    }
-    if let Ok(val) = accel_chan[1].attr_read_int("raw") {
-        accel_filt_input.y = (val as f64 - accel_calib[1]) * accel_scale[1];
-    }
-    if let Ok(val) = accel_chan[2].attr_read_int("raw") {
-        accel_filt_input.z = (val as f64 - accel_calib[2]) * accel_scale[2];
-    }
-
-    if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
-        gyro_filt_input.x = val as f64 * gyro_scale[0];
-    }
-    if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
-        gyro_filt_input.y = val as f64 * gyro_scale[1];
-    }
-    if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
-        gyro_filt_input.z = val as f64 * gyro_scale[2];
-    }
 
     if let Ok(val) = mag_chan[0].attr_read_int("raw") {
         mag_filt_input.x = val as f64 * mag_scale[0];
@@ -238,7 +252,36 @@ fn rewad_9_dofs(
         mag_filt_input.z = val as f64 * mag_scale[2];
     }
 
-    (accel_filt_input, gyro_filt_input, mag_filt_input)
+    (
+        get_accel_data(accel_chan, accel_calib, accel_scale),
+        get_gyro_data(gyro_chan, gyro_scale),
+        mag_filt_input,
+    )
+}
+
+fn update_quaternion<'a>(
+    ahrs: &'a mut ahrs::Madgwick<f64>,
+    accel_chan: &[iio::channel::Channel; 3],
+    accel_calib: &[f64; 3],
+    accel_scale: &[f64; 3],
+    gyro_chan: &[iio::channel::Channel; 3],
+    gyro_scale: &[f64; 3],
+    mag_chan: &[iio::channel::Channel; 3],
+    mag_scale: &[f64; 3],
+) -> &'a nalgebra::Quaternion<f64> {
+    let (accel_filt_input, gyro_filt_input, mag_filt_input) = get_9_dofs(
+        &accel_chan,
+        &accel_calib,
+        &accel_scale,
+        &gyro_chan,
+        &gyro_scale,
+        &mag_chan,
+        &mag_scale,
+    );
+
+    // Run inputs through AHRS filter (gyroscope must be radians/s)
+    ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
+        .unwrap()
 }
 
 fn generate_inital_quaternion(
@@ -256,7 +299,8 @@ fn generate_inital_quaternion(
     // TODO: Add prompt
     println!("Make sure sensor axis is lined up with car");
     for _i in 0..10 {
-        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+        update_quaternion(
+            &mut ahrs,
             &accel_chan,
             &accel_calib,
             &accel_scale,
@@ -265,16 +309,13 @@ fn generate_inital_quaternion(
             &mag_chan,
             &mag_scale,
         );
-
-        // Run inputs through AHRS filter (gyroscope must be radians/s)
-        ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
-            .unwrap();
     }
 
     // TODO: Convert to prompt
     println!("Move the device to the mount position");
     for _i in 0..50 {
-        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+        update_quaternion(
+            &mut ahrs,
             &accel_chan,
             &accel_calib,
             &accel_scale,
@@ -283,10 +324,6 @@ fn generate_inital_quaternion(
             &mag_chan,
             &mag_scale,
         );
-
-        // Run inputs through AHRS filter (gyroscope must be radians/s)
-        ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
-            .unwrap();
     }
 
     ahrs
@@ -323,8 +360,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         &mag_scale,
     );
 
-    // Get the latest Quaternion
-    let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+    // Get the mount Quaternion
+    let quat_mount = update_quaternion(
+        &mut ahrs,
         &accel_chan,
         &accel_calib,
         &accel_scale,
@@ -333,22 +371,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         &mag_chan,
         &mag_scale,
     );
-    let quat_mount = ahrs
-        .update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
-        .unwrap();
-
-    println!("The mounted quaternion is: {}", quat_mount);
 
     let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.clone());
-    println!("unit_quat_mount: {:?}", unit_quat_mount);
-    println!(
-        "Rotation Matrix unit_quat_mount: {:?}",
-        unit_quat_mount.to_rotation_matrix()
-    );
-    println!(
-        "Euler angles unit_quat_mount: {:?}",
-        unit_quat_mount.euler_angles()
-    );
 
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
@@ -368,47 +392,43 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     write!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z\n").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
-        let mut accel = Vector3::new(0.0, 0.0, 0.0);
+        // Get the latest Quaternion
+        let quat = update_quaternion(
+            &mut ahrs,
+            &accel_chan,
+            &accel_calib,
+            &accel_scale,
+            &gyro_chan,
+            &gyro_scale,
+            &mag_chan,
+            &mag_scale,
+        );
+        let unit_quat = nalgebra::geometry::UnitQuaternion::from_quaternion(quat.clone());
 
-        for (i, ac) in accel_chan.iter().enumerate() {
-            if let Ok(val) = ac.attr_read_int("raw") {
-                accel[i] = (val as f64 - accel_calib[i]) * accel_scale[i];
+        // Get and rotate the acceleration data
+        let accel_data = get_accel_data(&accel_chan, &accel_calib, &accel_scale);
+        let accel_rotated = unit_quat.conjugate().transform_vector(&accel_data);
 
-                write!(fd, "{}", accel[i]).unwrap();
-            }
+        // Write the acceleration data to file
+        for data in accel_rotated.iter() {
+            write!(fd, "{}", data).unwrap();
             write!(fd, ",").unwrap();
         }
 
-        let accel_quat = nalgebra::geometry::Quaternion::from_imag(accel);
-
-        println!("accel_quat: {:?}", accel_quat);
-
-        let accel_rotated = unit_quat_mount.transform_vector(&accel);
-        let accel_rotated_2 = unit_quat_mount.conjugate().transform_vector(&accel);
-
-        println!(
-            "accel_rotated: x: {}; y: {}; z: {}",
-            accel_rotated[0], accel_rotated[1], accel_rotated[2]
-        );
-        println!(
-            "accel_rotated_2: x: {}; y: {}; z: {}",
-            accel_rotated_2[0], accel_rotated_2[1], accel_rotated_2[2]
-        );
-
-        println!("");
-
+        // Send acceleration data to be drawn on the screen
         thread_info
             .imu_tx
             .send((accel_rotated[0], accel_rotated[1]))
             .unwrap();
 
-        let mut rot = [0.0, 0.0, 0.0];
-        for (i, gc) in gyro_chan.iter().enumerate() {
-            if let Ok(val) = gc.attr_read_int("raw") {
-                rot[i] = val as f64 * gyro_scale[i];
+        // Get and rotate the gyro data
+        // Rotate the data based on the mount quaternion
+        let gyro_data = get_gyro_data(&gyro_chan, &gyro_scale);
+        let gyro_rotated = unit_quat_mount.conjugate().transform_vector(&gyro_data);
 
-                write!(fd, "{}", rot[i]).unwrap();
-            }
+        // Write the gyro data to a file
+        for (i, data) in gyro_rotated.iter().enumerate() {
+            write!(fd, "{}", data).unwrap();
             if i < 2 {
                 write!(fd, ",").unwrap();
             }
