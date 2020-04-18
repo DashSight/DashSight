@@ -238,13 +238,13 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
 
         if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
-            gyro_filt_input.x = val as f64 * accel_scale[0];
+            gyro_filt_input.x = val as f64 * gyro_scale[0];
         }
         if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
-            gyro_filt_input.y = val as f64 * accel_scale[1];
+            gyro_filt_input.y = val as f64 * gyro_scale[1];
         }
         if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
-            gyro_filt_input.z = val as f64 * accel_scale[2];
+            gyro_filt_input.z = val as f64 * gyro_scale[2];
         }
 
         if let Ok(val) = mag_chan[0].attr_read_int("raw") {
