@@ -240,6 +240,57 @@ fn rewad_9_dofs(
     (accel_filt_input, gyro_filt_input, mag_filt_input)
 }
 
+fn generate_inital_quaternion(
+    accel_chan: &[iio::channel::Channel; 3],
+    accel_calib: &[f64; 3],
+    accel_scale: &[f64; 3],
+    gyro_chan: &[iio::channel::Channel; 3],
+    gyro_scale: &[f64; 3],
+    mag_chan: &[iio::channel::Channel; 3],
+    mag_scale: &[f64; 3],
+) -> ahrs::Madgwick<f64> {
+    // Create AHRS filter
+    let mut ahrs = Madgwick::default();
+
+    // TODO: Add prompt
+    println!("Make sure sensor axis is lined up with car");
+    for _i in 0..10 {
+        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+            &accel_chan,
+            &accel_calib,
+            &accel_scale,
+            &gyro_chan,
+            &gyro_scale,
+            &mag_chan,
+            &mag_scale,
+        );
+
+        // Run inputs through AHRS filter (gyroscope must be radians/s)
+        ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
+            .unwrap();
+    }
+
+    // TODO: Convert to prompt
+    println!("Move the device to the mount position");
+    for _i in 0..50 {
+        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+            &accel_chan,
+            &accel_calib,
+            &accel_scale,
+            &gyro_chan,
+            &gyro_scale,
+            &mag_chan,
+            &mag_scale,
+        );
+
+        // Run inputs through AHRS filter (gyroscope must be radians/s)
+        ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
+            .unwrap();
+    }
+
+    ahrs
+}
+
 pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Create the IIO context
     let ctx;
@@ -260,47 +311,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     set_sampling_freq(&accel_chan, &gyro_chan, &mag_chan);
 
-    // Create AHRS filter
-    let mut ahrs = Madgwick::default();
-    let quat_mount;
-
-    // TODO: Add prompt
-    println!("Make sure sensor axis is lined up with car");
-    for _i in 0..10 {
-        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
-            &accel_chan,
-            &accel_calib,
-            &accel_scale,
-            &gyro_chan,
-            &gyro_scale,
-            &mag_chan,
-            &mag_scale,
-        );
-
-        // Run inputs through AHRS filter (gyroscope must be radians/s)
-        ahrs.update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
-            .unwrap();
-    }
-
-    // TODO: Convert to prompt
-    println!("Move the device to the mount position");
-    for _i in 0..50 {
-        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
-            &accel_chan,
-            &accel_calib,
-            &accel_scale,
-            &gyro_chan,
-            &gyro_scale,
-            &mag_chan,
-            &mag_scale,
-        );
-
-        // Run inputs through AHRS filter (gyroscope must be radians/s)
-        ahrs.update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
-            .unwrap();
-    }
-
-    let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+    // Generate the initial quaternion (to handle unalligned axis)
+    let mut ahrs = generate_inital_quaternion(
         &accel_chan,
         &accel_calib,
         &accel_scale,
@@ -310,9 +322,18 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         &mag_scale,
     );
 
-    // Run inputs through AHRS filter (gyroscope must be radians/s)
-    quat_mount = ahrs
-        .update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
+    // Get the latest Quaternion
+    let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+        &accel_chan,
+        &accel_calib,
+        &accel_scale,
+        &gyro_chan,
+        &gyro_scale,
+        &mag_chan,
+        &mag_scale,
+    );
+    let quat_mount = ahrs
+        .update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
         .unwrap();
 
     println!("The mounted quaternion is: {}", quat_mount);
