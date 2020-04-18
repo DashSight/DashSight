@@ -220,56 +220,11 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Create AHRS filter
     let mut ahrs = Madgwick::default();
 
-    let mut accel_filt_input = Vector3::new(0.0, 0.0, 0.0);
-    if let Ok(val) = accel_chan[0].attr_read_int("raw") {
-        accel_filt_input.x = (val as f64 - accel_calib[0]) * accel_scale[0];
-    }
-    if let Ok(val) = accel_chan[1].attr_read_int("raw") {
-        accel_filt_input.y = (val as f64 - accel_calib[1]) * accel_scale[1];
-    }
-    if let Ok(val) = accel_chan[2].attr_read_int("raw") {
-        accel_filt_input.z = (val as f64 - accel_calib[2]) * accel_scale[2];
-    }
-
-    let mut gyro_filt_input = Vector3::new(0.0, 0.0, 0.0);
-    if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
-        gyro_filt_input.x = val as f64 * accel_scale[0];
-    }
-    if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
-        gyro_filt_input.y = val as f64 * accel_scale[1];
-    }
-    if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
-        gyro_filt_input.z = val as f64 * accel_scale[2];
-    }
-
-    let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
-    if let Ok(val) = mag_chan[0].attr_read_int("raw") {
-        mag_filt_input.x = val as f64 * mag_scale[0];
-    }
-    if let Ok(val) = mag_chan[1].attr_read_int("raw") {
-        mag_filt_input.y = val as f64 * mag_scale[1];
-    }
-    if let Ok(val) = mag_chan[2].attr_read_int("raw") {
-        mag_filt_input.z = val as f64 * mag_scale[2];
-    }
-
-    // Run inputs through AHRS filter (gyroscope must be radians/s)
-    let quat_car = ahrs
-        .update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
-        .unwrap()
-        .clone();
-
-    println!("The first (lined up) quaternion is: {}", quat_car);
-    println!(
-        "Euler angles quat_car: {:?}",
-        nalgebra::geometry::UnitQuaternion::from_quaternion(quat_car).euler_angles()
-    );
-    println!(
-        "Rotation Matrix angles quat_car: {:?}",
-        nalgebra::geometry::UnitQuaternion::from_quaternion(quat_car).to_rotation_matrix()
-    );
-
     println!("Move the device to the mount position");
+
+    let mut accel_filt_input = Vector3::new(0.0, 0.0, 0.0);
+    let mut gyro_filt_input = Vector3::new(0.0, 0.0, 0.0);
+    let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
 
     for _i in 0..60 {
         if let Ok(val) = accel_chan[0].attr_read_int("raw") {
@@ -317,35 +272,18 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     println!("The mounted quaternion is: {}", quat_mount);
 
-    let quat_diff_1 = quat_car - quat_mount;
-    let quat_diff_2 = quat_mount - quat_car;
-
-    println!("The diff quaternion 1 is: {}", quat_diff_1);
-    println!("The diff quaternion 2 is: {}", quat_diff_2);
-
-    let unit_quat_mount_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount);
+    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount);
     println!(
-        "Euler angles unit_quat_mount_1: {:?}",
-        unit_quat_mount_1.euler_angles()
-    );
-
-    println!(
-        "Rotation Matrix unit_quat_mount_1: {:?}",
-        unit_quat_mount_1.to_rotation_matrix()
-    );
-    let unit_quat_mount_diff_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_1);
-    println!(
-        "Euler angles unit_quat_mount_diff_1: {:?}",
-        unit_quat_mount_diff_1.euler_angles()
-    );
-    let unit_quat_mount_diff_2 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_2);
-    println!(
-        "Euler angles unit_quat_mount_diff_2: {:?}",
-        unit_quat_mount_diff_2.euler_angles()
+        "Euler angles unit_quat_mount: {:?}",
+        unit_quat_mount.euler_angles()
     );
     println!(
-        "Rotation Matrix unit_quat_mount_diff_2: {:?}",
-        unit_quat_mount_diff_2.to_rotation_matrix()
+        "Rotation Matrix unit_quat_mount: {:?}",
+        unit_quat_mount.to_rotation_matrix()
+    );
+    println!(
+        "Euler angles unit_quat_mount: {:?}",
+        unit_quat_mount.euler_angles()
     );
 
     // Open the file to save data
@@ -377,66 +315,22 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             write!(fd, ",").unwrap();
         }
 
-        println!("accel: x: {}; y: {}", accel[0], accel[1]);
-
         let accel_quat = nalgebra::geometry::Quaternion::from_imag(accel);
 
         println!("accel_quat: {:?}", accel_quat);
 
-        let accel_rotated = unit_quat_mount_1.transform_vector(&accel);
-        let accel_rotated_unit = unit_quat_mount_1.quaternion()
-            * accel_quat
-            * unit_quat_mount_1.quaternion().conjugate();
-
-        let accel_rotated_2 =
-            nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.conjugate())
-                .transform_vector(&accel);
-        let unit_accel_rotated_2 = unit_quat_mount_1.conjugate().transform_vector(&accel);
+        let accel_rotated = unit_quat_mount.transform_vector(&accel);
+        let accel_rotated_2 = unit_quat_mount.conjugate().transform_vector(&accel);
 
         println!(
-            "accel_rotated_1: x: {}; y: {}; z: {}",
+            "accel_rotated: x: {}; y: {}; z: {}",
             accel_rotated[0], accel_rotated[1], accel_rotated[2]
-        );
-        println!(
-            "accel_rotated_unit: x: {}; y: {}; z: {}",
-            accel_rotated_unit[0], accel_rotated_unit[1], accel_rotated_unit[2]
         );
         println!(
             "accel_rotated_2: x: {}; y: {}; z: {}",
             accel_rotated_2[0], accel_rotated_2[1], accel_rotated_2[2]
         );
-        println!(
-            "unit_accel_rotated_2: x: {}; y: {}; z: {}",
-            unit_accel_rotated_2[0], unit_accel_rotated_2[1], unit_accel_rotated_2[2]
-        );
 
-        let accel_rotated_diff_1 = quat_diff_1 * accel_quat * quat_diff_1.conjugate();
-        let accel_rotated_diff_1_2 = unit_quat_mount_diff_1.quaternion()
-            * accel_quat
-            * unit_quat_mount_diff_1.quaternion().conjugate();
-
-        println!(
-            "accel_rotated_diff_1: x: {}; y: {}; z: {}",
-            accel_rotated_diff_1[0], accel_rotated_diff_1[1], accel_rotated_diff_1[2]
-        );
-        println!(
-            "accel_rotated_diff_1_2: x: {}; y: {}; z: {}",
-            accel_rotated_diff_1_2[0], accel_rotated_diff_1_2[1], accel_rotated_diff_1_2[2]
-        );
-
-        let accel_rotated_diff_2 = quat_diff_1 * accel_quat * quat_diff_1.conjugate();
-        let accel_rotated_diff_2_2 = unit_quat_mount_diff_1.quaternion()
-            * accel_quat
-            * unit_quat_mount_diff_1.quaternion().conjugate();
-
-        println!(
-            "accel_rotated_diff_2: x: {}; y: {}; z: {}",
-            accel_rotated_diff_2[0], accel_rotated_diff_2[1], accel_rotated_diff_2[2]
-        );
-        println!(
-            "accel_rotated_diff_2_2: x: {}; y: {}; z: {}",
-            accel_rotated_diff_2_2[0], accel_rotated_diff_2_2[1], accel_rotated_diff_2_2[2]
-        );
         println!("");
 
         thread_info
