@@ -392,22 +392,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     write!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z\n").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
-        // Get the latest Quaternion
-        let quat = update_quaternion(
-            &mut ahrs,
-            &accel_chan,
-            &accel_calib,
-            &accel_scale,
-            &gyro_chan,
-            &gyro_scale,
-            &mag_chan,
-            &mag_scale,
-        );
-        let unit_quat = nalgebra::geometry::UnitQuaternion::from_quaternion(quat.clone());
-
         // Get and rotate the acceleration data
         let accel_data = get_accel_data(&accel_chan, &accel_calib, &accel_scale);
-        let accel_rotated = unit_quat.conjugate().transform_vector(&accel_data);
+        let accel_rotated = unit_quat_mount.transform_vector(&accel_data);
 
         // Write the acceleration data to file
         for data in accel_rotated.iter() {
