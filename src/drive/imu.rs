@@ -150,6 +150,8 @@ fn get_scale_data(
             accel_scale[i] = val;
         }
     }
+    // Negate the y axis
+    accel_scale[1] = accel_scale[1] * -1.0;
 
     // Get the gyro scale
     for (i, ac) in gyro_chan.iter().enumerate() {
@@ -157,6 +159,8 @@ fn get_scale_data(
             gyro_scale[i] = val;
         }
     }
+    // Negate the y axis
+    gyro_scale[1] = gyro_scale[1] * -1.0;
 
     // Get the mag scale
     for (i, mc) in mag_chan.iter().enumerate() {
@@ -164,6 +168,8 @@ fn get_scale_data(
             mag_scale[i] = val;
         }
     }
+    // Negate the y axis
+    mag_scale[1] = mag_scale[1] * -1.0;
 
     (accel_scale, gyro_scale, mag_scale)
 }
