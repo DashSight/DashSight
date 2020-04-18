@@ -168,6 +168,8 @@ fn get_scale_data(
             mag_scale[i] = val;
         }
     }
+    // Negate the x axis
+    mag_scale[0] = mag_scale[0] * -1.0;
     // Negate the y axis
     mag_scale[1] = mag_scale[1] * -1.0;
 
