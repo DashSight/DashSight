@@ -23,19 +23,13 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process;
 
-pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
-    // Create the IIO context
-    let ctx;
-    match iio::Context::new() {
-        Ok(c) => {
-            ctx = c;
-        }
-        Err(e) => {
-            println!("Error creating IIO context: {:?}", e);
-            return;
-        }
-    }
-
+fn create_imu_chans(
+    ctx: &iio::Context,
+) -> (
+    [iio::channel::Channel; 3],
+    [iio::channel::Channel; 3],
+    [iio::channel::Channel; 3],
+) {
     // Create the IMU accel device
     let imu_name = "lsm9ds1-imu_accel";
     let imu_accel_dev = ctx.find_device(imu_name).unwrap_or_else(|| {
@@ -120,10 +114,16 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     let accel_chan: [iio::channel::Channel; 3] = [x_accel_chan, y_accel_chan, z_accel_chan];
     let gyro_chan: [iio::channel::Channel; 3] = [x_gyro_chan, y_gyro_chan, z_gyro_chan];
     let mag_chan: [iio::channel::Channel; 3] = [x_mag_chan, y_mag_chan, z_mag_chan];
+
+    (accel_chan, gyro_chan, mag_chan)
+}
+
+fn get_calibration_data(
+    accel_chan: &[iio::channel::Channel; 3],
+    _gyro_chan: &[iio::channel::Channel; 3],
+    _mag_chan: &[iio::channel::Channel; 3],
+) -> [f64; 3] {
     let mut accel_calib = [0.0, 0.0, 0.0];
-    let mut accel_scale = [1.0, 1.0, 1.0];
-    let mut gyro_scale = [1.0, 1.0, 1.0];
-    let mut mag_scale = [1.0, 1.0, 1.0];
 
     // Get the acceleration calibration offset
     for (i, ac) in accel_chan.iter().enumerate() {
@@ -131,6 +131,18 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             accel_calib[i] = val as f64;
         }
     }
+
+    accel_calib
+}
+
+fn get_scale_data(
+    accel_chan: &[iio::channel::Channel; 3],
+    gyro_chan: &[iio::channel::Channel; 3],
+    mag_chan: &[iio::channel::Channel; 3],
+) -> ([f64; 3], [f64; 3], [f64; 3]) {
+    let mut accel_scale = [1.0, 1.0, 1.0];
+    let mut gyro_scale = [1.0, 1.0, 1.0];
+    let mut mag_scale = [1.0, 1.0, 1.0];
 
     // Get the acceleration scale
     for (i, ac) in accel_chan.iter().enumerate() {
@@ -153,6 +165,13 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
     }
 
+    (accel_scale, gyro_scale, mag_scale)
+}
+fn set_sampling_freq(
+    accel_chan: &[iio::channel::Channel; 3],
+    gyro_chan: &[iio::channel::Channel; 3],
+    mag_chan: &[iio::channel::Channel; 3],
+) {
     // Set the acceleration sampling frequency
     for ac in accel_chan.iter() {
         ac.attr_write_float("sampling_frequency", 952.0).unwrap();
@@ -167,6 +186,27 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     for mc in mag_chan.iter() {
         mc.attr_write_int("sampling_frequency", 80).unwrap();
     }
+}
+
+pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
+    // Create the IIO context
+    let ctx;
+    match iio::Context::new() {
+        Ok(c) => {
+            ctx = c;
+        }
+        Err(e) => {
+            println!("Error creating IIO context: {:?}", e);
+            return;
+        }
+    }
+
+    let (accel_chan, gyro_chan, mag_chan) = create_imu_chans(&ctx);
+
+    let accel_calib = get_calibration_data(&accel_chan, &gyro_chan, &mag_chan);
+    let (accel_scale, gyro_scale, mag_scale) = get_scale_data(&accel_chan, &gyro_chan, &mag_chan);
+
+    set_sampling_freq(&accel_chan, &gyro_chan, &mag_chan);
 
     // TODO: Add prompt
     // Make sure sensor axis is lined up with car
