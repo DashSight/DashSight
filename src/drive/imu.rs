@@ -154,8 +154,8 @@ fn get_scale_data(
     accel_scale[1] = accel_scale[1] * -1.0;
 
     // Get the gyro scale
-    for (i, ac) in gyro_chan.iter().enumerate() {
-        if let Ok(val) = ac.attr_read_float("scale") {
+    for (i, gc) in gyro_chan.iter().enumerate() {
+        if let Ok(val) = gc.attr_read_float("scale") {
             gyro_scale[i] = val;
         }
     }
@@ -194,6 +194,52 @@ fn set_sampling_freq(
     }
 }
 
+fn rewad_9_dofs(
+    accel_chan: &[iio::channel::Channel; 3],
+    accel_calib: &[f64; 3],
+    accel_scale: &[f64; 3],
+    gyro_chan: &[iio::channel::Channel; 3],
+    gyro_scale: &[f64; 3],
+    mag_chan: &[iio::channel::Channel; 3],
+    mag_scale: &[f64; 3],
+) -> (Vector3<f64>, Vector3<f64>, Vector3<f64>) {
+    let mut accel_filt_input = Vector3::new(0.0, 0.0, 0.0);
+    let mut gyro_filt_input = Vector3::new(0.0, 0.0, 0.0);
+    let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
+
+    if let Ok(val) = accel_chan[0].attr_read_int("raw") {
+        accel_filt_input.x = (val as f64 - accel_calib[0]) * accel_scale[0];
+    }
+    if let Ok(val) = accel_chan[1].attr_read_int("raw") {
+        accel_filt_input.y = (val as f64 - accel_calib[1]) * accel_scale[1];
+    }
+    if let Ok(val) = accel_chan[2].attr_read_int("raw") {
+        accel_filt_input.z = (val as f64 - accel_calib[2]) * accel_scale[2];
+    }
+
+    if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
+        gyro_filt_input.x = val as f64 * gyro_scale[0];
+    }
+    if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
+        gyro_filt_input.y = val as f64 * gyro_scale[1];
+    }
+    if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
+        gyro_filt_input.z = val as f64 * gyro_scale[2];
+    }
+
+    if let Ok(val) = mag_chan[0].attr_read_int("raw") {
+        mag_filt_input.x = val as f64 * mag_scale[0];
+    }
+    if let Ok(val) = mag_chan[1].attr_read_int("raw") {
+        mag_filt_input.y = val as f64 * mag_scale[1];
+    }
+    if let Ok(val) = mag_chan[2].attr_read_int("raw") {
+        mag_filt_input.z = val as f64 * mag_scale[2];
+    }
+
+    (accel_filt_input, gyro_filt_input, mag_filt_input)
+}
+
 pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Create the IIO context
     let ctx;
@@ -214,69 +260,65 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     set_sampling_freq(&accel_chan, &gyro_chan, &mag_chan);
 
-    // TODO: Add prompt
-    // Make sure sensor axis is lined up with car
-
     // Create AHRS filter
     let mut ahrs = Madgwick::default();
+    let quat_mount;
 
-    println!("Move the device to the mount position");
-
-    let mut accel_filt_input = Vector3::new(0.0, 0.0, 0.0);
-    let mut gyro_filt_input = Vector3::new(0.0, 0.0, 0.0);
-    let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
-
-    for _i in 0..60 {
-        if let Ok(val) = accel_chan[0].attr_read_int("raw") {
-            accel_filt_input.x = (val as f64 - accel_calib[0]) * accel_scale[0];
-        }
-        if let Ok(val) = accel_chan[1].attr_read_int("raw") {
-            accel_filt_input.y = (val as f64 - accel_calib[1]) * accel_scale[1];
-        }
-        if let Ok(val) = accel_chan[2].attr_read_int("raw") {
-            accel_filt_input.z = (val as f64 - accel_calib[2]) * accel_scale[2];
-        }
-
-        if let Ok(val) = gyro_chan[0].attr_read_int("raw") {
-            gyro_filt_input.x = val as f64 * gyro_scale[0];
-        }
-        if let Ok(val) = gyro_chan[1].attr_read_int("raw") {
-            gyro_filt_input.y = val as f64 * gyro_scale[1];
-        }
-        if let Ok(val) = gyro_chan[2].attr_read_int("raw") {
-            gyro_filt_input.z = val as f64 * gyro_scale[2];
-        }
-
-        if let Ok(val) = mag_chan[0].attr_read_int("raw") {
-            mag_filt_input.x = val as f64 * mag_scale[0];
-        }
-        if let Ok(val) = mag_chan[1].attr_read_int("raw") {
-            mag_filt_input.y = val as f64 * mag_scale[1];
-        }
-        if let Ok(val) = mag_chan[2].attr_read_int("raw") {
-            mag_filt_input.z = val as f64 * mag_scale[2];
-        }
+    // TODO: Add prompt
+    println!("Make sure sensor axis is lined up with car");
+    for _i in 0..10 {
+        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+            &accel_chan,
+            &accel_calib,
+            &accel_scale,
+            &gyro_chan,
+            &gyro_scale,
+            &mag_chan,
+            &mag_scale,
+        );
 
         // Run inputs through AHRS filter (gyroscope must be radians/s)
         ahrs.update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
             .unwrap();
     }
 
-    println!("Calculating the mount quaternion");
+    // TODO: Convert to prompt
+    println!("Move the device to the mount position");
+    for _i in 0..50 {
+        let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+            &accel_chan,
+            &accel_calib,
+            &accel_scale,
+            &gyro_chan,
+            &gyro_scale,
+            &mag_chan,
+            &mag_scale,
+        );
+
+        // Run inputs through AHRS filter (gyroscope must be radians/s)
+        ahrs.update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
+            .unwrap();
+    }
+
+    let (accel_filt_input, gyro_filt_input, mag_filt_input) = rewad_9_dofs(
+        &accel_chan,
+        &accel_calib,
+        &accel_scale,
+        &gyro_chan,
+        &gyro_scale,
+        &mag_chan,
+        &mag_scale,
+    );
 
     // Run inputs through AHRS filter (gyroscope must be radians/s)
-    let quat_mount = ahrs
+    quat_mount = ahrs
         .update(&(gyro_filt_input), &accel_filt_input, &mag_filt_input)
-        .unwrap()
-        .clone();
+        .unwrap();
 
     println!("The mounted quaternion is: {}", quat_mount);
 
-    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount);
-    println!(
-        "Euler angles unit_quat_mount: {:?}",
-        unit_quat_mount.euler_angles()
-    );
+    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.clone());
+    println!("unit_quat_mount: {:?}", unit_quat_mount);
     println!(
         "Rotation Matrix unit_quat_mount: {:?}",
         unit_quat_mount.to_rotation_matrix()
