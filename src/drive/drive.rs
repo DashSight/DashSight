@@ -436,6 +436,7 @@ fn draw_imu(
     me: &gtk::DrawingArea,
     ctx: &cairo::Context,
 ) -> glib::signal::Inhibit {
+    println!("Starting redraw");
     let timeout = Duration::new(0, 100);
     let rec = imu_rx.recv_timeout(timeout);
 
@@ -472,6 +473,7 @@ fn draw_imu(
 
     match rec {
         Ok((x_accel, y_accel)) => {
+            println!(" Adding dot: {}, {}", x_accel, y_accel);
             ctx.set_source_rgba(0.0, 148.0 / 255.0, 1.0, 1.0);
 
             ctx.arc(
@@ -483,9 +485,13 @@ fn draw_imu(
             );
             ctx.fill();
 
+            println!("  Done");
             Inhibit(false)
         }
-        Err(mpsc::RecvTimeoutError::Timeout) => Inhibit(false),
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            println!("  Timeout");
+            Inhibit(false)
+        }
         _ => Inhibit(true),
     }
 }

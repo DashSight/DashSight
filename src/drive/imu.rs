@@ -374,6 +374,11 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.clone());
 
+    println!(
+        "Euler angles unit_quat_mount: {:?}",
+        unit_quat_mount.euler_angles()
+    );
+
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
     name.push_str("-imu.cvs");
@@ -395,6 +400,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         // Get and rotate the acceleration data
         let accel_data = get_accel_data(&accel_chan, &accel_calib, &accel_scale);
         let accel_rotated = unit_quat_mount.transform_vector(&accel_data);
+
+        println!("accel_data: {:?}", accel_data);
+        println!("accel_rotated: {:?}", accel_rotated);
 
         // Write the acceleration data to file
         for data in accel_rotated.iter() {
