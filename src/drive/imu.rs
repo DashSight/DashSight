@@ -214,6 +214,14 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         .clone();
 
     println!("The first (lined up) quaternion is: {}", quat_car);
+    println!(
+        "Euler angles quat_car: {:?}",
+        nalgebra::geometry::UnitQuaternion::from_quaternion(quat_car).euler_angles()
+    );
+    println!(
+        "Rotation Matrix angles quat_car: {:?}",
+        nalgebra::geometry::UnitQuaternion::from_quaternion(quat_car).to_rotation_matrix()
+    );
 
     println!("Move the device to the mount position");
 
@@ -274,6 +282,11 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         "Euler angles unit_quat_mount_1: {:?}",
         unit_quat_mount_1.euler_angles()
     );
+
+    println!(
+        "Rotation Matrix unit_quat_mount_1: {:?}",
+        unit_quat_mount_1.to_rotation_matrix()
+    );
     let unit_quat_mount_diff_1 = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_diff_1);
     println!(
         "Euler angles unit_quat_mount_diff_1: {:?}",
@@ -283,6 +296,10 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     println!(
         "Euler angles unit_quat_mount_diff_2: {:?}",
         unit_quat_mount_diff_2.euler_angles()
+    );
+    println!(
+        "Rotation Matrix unit_quat_mount_diff_2: {:?}",
+        unit_quat_mount_diff_2.to_rotation_matrix()
     );
 
     // Open the file to save data
@@ -325,7 +342,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             * accel_quat
             * unit_quat_mount_1.quaternion().conjugate();
 
-        let accel_rotated_2 = quat_mount.conjugate().transform_vector(&accel);
+        let accel_rotated_2 =
+            nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.conjugate())
+                .transform_vector(&accel);
         let unit_accel_rotated_2 = unit_quat_mount_1.conjugate().transform_vector(&accel);
 
         println!(
@@ -344,7 +363,6 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             "unit_accel_rotated_2: x: {}; y: {}; z: {}",
             unit_accel_rotated_2[0], unit_accel_rotated_2[1], unit_accel_rotated_2[2]
         );
-
 
         let accel_rotated_diff_1 = quat_diff_1 * accel_quat * quat_diff_1.conjugate();
         let accel_rotated_diff_1_2 = unit_quat_mount_diff_1.quaternion()
