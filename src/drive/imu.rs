@@ -156,7 +156,8 @@ fn get_scale_data(
     // Get the gyro scale
     for (i, gc) in gyro_chan.iter().enumerate() {
         if let Ok(val) = gc.attr_read_float("scale") {
-            gyro_scale[i] = val;
+            // Set scale in radians/s
+            gyro_scale[i] = val * std::f64::consts::PI / 180.0;
         }
     }
     // Negate the y axis
