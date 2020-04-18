@@ -437,7 +437,7 @@ fn draw_imu(
     ctx: &cairo::Context,
 ) -> glib::signal::Inhibit {
     println!("Starting redraw");
-    let timeout = Duration::new(0, 100);
+    let timeout = Duration::new(0, 200);
     let rec = imu_rx.recv_timeout(timeout);
 
     let width = me.get_allocated_width() as f64;
@@ -590,7 +590,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     imu_area.connect_draw(move |me, ctx| draw_imu(&imu_rx, me, ctx));
 
-    gtk::timeout_add(10, move || {
+    gtk::timeout_add(20, move || {
         imu_area.queue_draw();
 
         glib::source::Continue(true)
