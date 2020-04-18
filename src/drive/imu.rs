@@ -157,11 +157,9 @@ fn get_scale_data(
     for (i, gc) in gyro_chan.iter().enumerate() {
         if let Ok(val) = gc.attr_read_float("scale") {
             // Set scale in radians/s
-            gyro_scale[i] = val * std::f64::consts::PI / 180.0;
+            gyro_scale[i] = val;
         }
     }
-    // Negate the y axis
-    gyro_scale[1] = gyro_scale[1] * -1.0;
 
     // Get the mag scale
     for (i, mc) in mag_chan.iter().enumerate() {
