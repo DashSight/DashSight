@@ -17,6 +17,7 @@
 use crate::drive::threading::ThreadingRef;
 use ahrs::{Ahrs, Madgwick};
 use industrial_io as iio;
+use nalgebra::geometry::{Quaternion, UnitQuaternion};
 use nalgebra::Vector3;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -266,6 +267,28 @@ impl ImuContext {
 
         ahrs
     }
+
+    fn rotate_accel_data(quat_mount: Quaternion<f64>, accel_data: Vector3<f64>) -> Vector3<f64> {
+        let unit_quat_mount = UnitQuaternion::from_quaternion(quat_mount);
+
+        let accel_rotated = unit_quat_mount.transform_vector(&accel_data);
+
+        println!("accel_data: {:?}", accel_data);
+        println!("accel_rotated: {:?}", accel_rotated);
+
+        accel_rotated
+    }
+
+    fn rotate_gyro_data(quat_mount: Quaternion<f64>, gyro_data: Vector3<f64>) -> Vector3<f64> {
+        let unit_quat_mount = UnitQuaternion::from_quaternion(quat_mount);
+
+        let gyro_rotated = unit_quat_mount.conjugate().transform_vector(&gyro_data);
+
+        println!("gyro_data: {:?}", gyro_data);
+        println!("gyro_rotated: {:?}", gyro_rotated);
+
+        gyro_rotated
+    }
 }
 
 pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
@@ -294,11 +317,10 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Get the mount Quaternion
     let quat_mount = imu_context.update_quaternion(&mut ahrs);
 
-    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(*quat_mount);
-
     println!(
-        "Euler angles unit_quat_mount: {:?}",
-        unit_quat_mount.euler_angles()
+        "Euler angles unit_quat_mount: {:?} : {:?}",
+        UnitQuaternion::from_quaternion(*quat_mount).euler_angles(),
+        *quat_mount,
     );
 
     // Open the file to save data
@@ -321,10 +343,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     while !thread_info.close.lock().unwrap().get() {
         // Get and rotate the acceleration data
         let accel_data = imu_context.get_accel_data();
-        let accel_rotated = unit_quat_mount.transform_vector(&accel_data);
-
-        println!("accel_data: {:?}", accel_data);
-        println!("accel_rotated: {:?}", accel_rotated);
+        let accel_rotated = ImuContext::rotate_accel_data(*quat_mount, accel_data);
 
         // Write the acceleration data to file
         for data in accel_rotated.iter() {
@@ -341,7 +360,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         // Get and rotate the gyro data
         // Rotate the data based on the mount quaternion
         let gyro_data = imu_context.get_gyro_data();
-        let gyro_rotated = unit_quat_mount.conjugate().transform_vector(&gyro_data);
+        let gyro_rotated = ImuContext::rotate_gyro_data(*quat_mount, gyro_data);
 
         // Write the gyro data to a file
         for (i, data) in gyro_rotated.iter().enumerate() {
@@ -355,4 +374,29 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     }
 
     fd.flush().unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_accel_rotate() {
+        let accel_data = Vector3::new(0.0, 0.0, 9.8);
+        let quat_mount = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+
+        let accel_rotated = ImuContext::rotate_accel_data(quat_mount, accel_data);
+
+        // assert_eq!(accel_rotated, Vector3::new(1.0, 2.0, 3.0));
+    }
+
+    #[test]
+    fn test_gyro_rotate() {
+        let gyro_data = Vector3::new(0.0, 0.0, 9.8);
+        let quat_mount = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+
+        let gyro_rotated = ImuContext::rotate_gyro_data(quat_mount, gyro_data);
+
+        // assert_eq!(accel_rotated, Vector3::new(1.0, 2.0, 3.0));
+    }
 }
