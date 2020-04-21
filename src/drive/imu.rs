@@ -394,7 +394,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     let fd = imu_file.as_mut().unwrap();
 
     // Write the CVS headers
-    write!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z\n").unwrap();
+    writeln!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
         // Get and rotate the acceleration data
@@ -429,7 +429,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             }
         }
 
-        write!(fd, "\n").unwrap();
+        writeln!(fd, "").unwrap();
     }
 
     fd.flush().unwrap();

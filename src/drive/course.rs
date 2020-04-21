@@ -58,7 +58,7 @@ impl MapWrapper {
         champlain_point: *mut champlain::clutter::ClutterActor,
     ) -> MapWrapper {
         MapWrapper {
-            path_layer: path_layer,
+            path_layer,
             point: champlain_point,
         }
     }

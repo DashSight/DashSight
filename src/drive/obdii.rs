@@ -150,7 +150,7 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
         write!(fd, ",{}", command.com_string).unwrap();
     }
 
-    write!(fd, "\n").unwrap();
+    writeln!(fd, "").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
         let pyobd_res;
