@@ -44,51 +44,51 @@ impl TrackSelection {
             map_widget: champlain_widget,
         })
     }
-}
 
-fn file_picker_clicked(display: DisplayRef, track_sel_info: TrackSelectionRef) {
-    let builder = display.builder.clone();
-    let champlain_view = champlain::gtk_embed::get_view(track_sel_info.map_widget.clone()).unwrap();
+    fn file_picker_clicked(&self, display: DisplayRef) {
+        let builder = display.builder.clone();
+        let champlain_view = champlain::gtk_embed::get_view(self.map_widget.clone()).unwrap();
 
-    let file_picker_button = builder
-        .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
-        .expect("Can't find LoadMapFileLoadButton in ui file.");
+        let file_picker_button = builder
+            .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
+            .expect("Can't find LoadMapFileLoadButton in ui file.");
 
-    if let Some(filepath) = file_picker_button.get_filename() {
-        let track_file = OpenOptions::new()
-            .read(true)
-            .write(false)
-            .create(false)
-            .open(&filepath);
+        if let Some(filepath) = file_picker_button.get_filename() {
+            let track_file = OpenOptions::new()
+                .read(true)
+                .write(false)
+                .create(false)
+                .open(&filepath);
 
-        track_sel_info.track_file.replace(filepath);
+            self.track_file.replace(filepath);
 
-        let reader = BufReader::new(track_file.unwrap());
-        let track_points = read_track::get_long_and_lat(reader);
+            let reader = BufReader::new(track_file.unwrap());
+            let track_points = read_track::get_long_and_lat(reader);
 
-        let path_layer = champlain::path_layer::new();
-        champlain::view::set_zoom_level(champlain_view, 17);
-        champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
+            let path_layer = champlain::path_layer::new();
+            champlain::view::set_zoom_level(champlain_view, 17);
+            champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
 
-        champlain::path_layer::remove_all(path_layer);
+            champlain::path_layer::remove_all(path_layer);
 
-        for coord in track_points.iter() {
-            let c_point = champlain::coordinate::new_full(coord.lat, coord.lon);
-            champlain::path_layer::add_node(
-                path_layer,
-                champlain::coordinate::to_location(c_point),
-            );
+            for coord in track_points.iter() {
+                let c_point = champlain::coordinate::new_full(coord.lat, coord.lon);
+                champlain::path_layer::add_node(
+                    path_layer,
+                    champlain::coordinate::to_location(c_point),
+                );
+            }
+
+            champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+
+            self.track_points.replace(track_points);
+
+            let forward_button = builder
+                .get_object::<gtk::Button>("LoadMapForwardButton")
+                .expect("Can't find LoadMapForwardButton in ui file.");
+
+            forward_button.set_sensitive(true);
         }
-
-        champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
-
-        track_sel_info.track_points.replace(track_points);
-
-        let forward_button = builder
-            .get_object::<gtk::Button>("LoadMapForwardButton")
-            .expect("Can't find LoadMapForwardButton in ui file.");
-
-        forward_button.set_sensitive(true);
     }
 }
 
@@ -140,7 +140,7 @@ pub fn button_press_event(display: DisplayRef) {
     file_picker_button.connect_file_set(move |_| {
         let display = upgrade_weak!(display_weak);
         let track_sel_info = upgrade_weak!(track_sel_info_weak);
-        file_picker_clicked(display, track_sel_info);
+        track_sel_info.file_picker_clicked(display);
     });
 
     let forward_button = builder
