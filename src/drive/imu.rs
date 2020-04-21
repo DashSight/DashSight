@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::drive::drive::*;
+use crate::drive::threading::ThreadingRef;
 use ahrs::{Ahrs, Madgwick};
 use industrial_io as iio;
 use nalgebra::Vector3;

@@ -15,7 +15,7 @@
  */
 
 extern crate cpython;
-use crate::drive::drive::*;
+use crate::drive::threading::ThreadingRef;
 use chrono::prelude::*;
 use cpython::{PyResult, Python};
 use std::fs::OpenOptions;

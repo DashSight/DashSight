@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+pub mod course;
 pub mod drive;
 pub mod imu;
 pub mod obdii;
 pub mod prepare;
 pub mod read_track;
+pub mod threading;
