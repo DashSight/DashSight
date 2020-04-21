@@ -14,5 +14,6 @@
  * limitations under the License.
  */
 
+pub mod info;
 pub mod print;
 pub mod track;
