@@ -15,7 +15,7 @@
  */
 
 use crate::display::*;
-use crate::drive::drive;
+use crate::drive::display;
 use crate::drive::read_track;
 use gtk;
 use gtk::prelude::*;
@@ -149,6 +149,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     let display_weak = DisplayRef::downgrade(&display);
     // We use a strong reference here to make sure that track_sel_info isn't dropped
+    #[allow(clippy::redundant_clone)]
     let track_sel_info_clone = track_sel_info.clone();
     forward_button.connect_clicked(move |_| {
         let display = upgrade_weak!(display_weak);
@@ -158,7 +159,7 @@ pub fn button_press_event(display: DisplayRef) {
 
         map_frame.remove(&champlain_widget);
 
-        drive::button_press_event(display, track_sel_info);
+        display::button_press_event(display, track_sel_info);
     });
 
     forward_button.set_sensitive(false);

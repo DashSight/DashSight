@@ -15,7 +15,7 @@
  */
 
 pub mod course;
-pub mod drive;
+pub mod display;
 pub mod imu;
 pub mod obdii;
 pub mod prepare;

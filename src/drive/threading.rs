@@ -67,9 +67,9 @@ impl Threading {
             no_track: Mutex::new(Cell::new(false)),
             serialise: Mutex::new(Cell::new(false)),
             time_file: RefCell::new(PathBuf::new()),
-            location_tx: location_tx,
-            times_tx: times_tx,
-            obdii_tx: obdii_tx,
+            location_tx,
+            times_tx,
+            obdii_tx,
             imu_tx,
         })
     }
@@ -126,13 +126,11 @@ impl Threading {
                                 course_info.times.push(elapsed);
                                 course_info.last = elapsed;
                                 course_info.times.sort_unstable();
-                                match course_info.times.last() {
-                                    Some(worst) => course_info.worst = worst.clone(),
-                                    _ => {}
+                                if let Some(worst) = course_info.times.last() {
+                                    course_info.worst = *worst
                                 }
-                                match course_info.times.first() {
-                                    Some(best) => course_info.best = best.clone(),
-                                    _ => {}
+                                if let Some(best) = course_info.times.first() {
+                                    course_info.best = *best
                                 }
                                 self.times_tx
                                     .send((course_info.last, course_info.best, course_info.worst))
@@ -255,18 +253,18 @@ impl Threading {
             Ok(data) => {
                 if data.command == OBDIICommandType::Rpm {
                 } else if data.command == OBDIICommandType::Throttle {
-                    let bar = builder
+                    let pbar = builder
                         .get_object::<gtk::ProgressBar>("ThrottleBar")
                         .expect("Can't find ThrottleBar in ui file.");
                     unsafe {
-                        bar.set_fraction(data.val.float / 100.0);
+                        pbar.set_fraction(data.val.float / 100.0);
                     }
                 } else if data.command == OBDIICommandType::EngineLoad {
-                    let bar = builder
+                    let pbar = builder
                         .get_object::<gtk::ProgressBar>("LoadBar")
                         .expect("Can't find LoadBar in ui file.");
                     unsafe {
-                        bar.set_fraction(data.val.float / 100.0);
+                        pbar.set_fraction(data.val.float / 100.0);
                     }
                 } else if data.command == OBDIICommandType::TimingAdv {
                     let label = builder
@@ -394,13 +392,37 @@ impl Threading {
         ctx.set_line_width(0.2);
 
         // draw circles
-        ctx.arc(0.5 * width, 0.5 * height, 0.1 * height, 0.0, 3.1415 * 2.);
+        ctx.arc(
+            0.5 * width,
+            0.5 * height,
+            0.1 * height,
+            0.0,
+            std::f64::consts::PI * 2.,
+        );
         ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.2 * height, 0.0, 3.1415 * 2.);
+        ctx.arc(
+            0.5 * width,
+            0.5 * height,
+            0.2 * height,
+            0.0,
+            std::f64::consts::PI * 2.,
+        );
         ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.3 * height, 0.0, 3.1415 * 2.);
+        ctx.arc(
+            0.5 * width,
+            0.5 * height,
+            0.3 * height,
+            0.0,
+            std::f64::consts::PI * 2.,
+        );
         ctx.stroke();
-        ctx.arc(0.5 * width, 0.5 * height, 0.4 * height, 0.0, 3.1415 * 2.);
+        ctx.arc(
+            0.5 * width,
+            0.5 * height,
+            0.4 * height,
+            0.0,
+            std::f64::consts::PI * 2.,
+        );
         ctx.stroke();
 
         // draw border
@@ -428,7 +450,7 @@ impl Threading {
                     (0.5 * height) + y_accel,
                     5.0,
                     0.0,
-                    3.1415 * 2.,
+                    std::f64::consts::PI * 2.,
                 );
                 ctx.fill();
 

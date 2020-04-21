@@ -127,6 +127,7 @@ pub fn button_press_event(display: DisplayRef) {
         .expect("Can't find RecordBackButton in ui file.");
 
     // We use a strong reference here to make sure that rec_info isn't dropped
+    #[allow(clippy::redundant_clone)]
     let rec_info_clone = rec_info.clone();
     back_button.connect_clicked(move |_| {
         let rec_info = RecordInfoRef::downgrade(&rec_info_clone).upgrade().unwrap();

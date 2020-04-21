@@ -150,7 +150,7 @@ impl ImuContext {
             }
         }
         // Negate the y axis
-        self.accel_scale[1] = self.accel_scale[1] * -1.0;
+        self.accel_scale[1] *= -1.0;
 
         // Get the gyro scale
         for (i, gc) in self.gyro_chan.iter().enumerate() {
@@ -167,9 +167,9 @@ impl ImuContext {
             }
         }
         // Negate the x axis
-        self.mag_scale[0] = self.mag_scale[0] * -1.0;
+        self.mag_scale[0] *= -1.0;
         // Negate the y axis
-        self.mag_scale[1] = self.mag_scale[1] * -1.0;
+        self.mag_scale[1] *= -1.0;
     }
 
     fn set_sampling_freq(&self) {
@@ -294,7 +294,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     // Get the mount Quaternion
     let quat_mount = imu_context.update_quaternion(&mut ahrs);
 
-    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(quat_mount.clone());
+    let unit_quat_mount = nalgebra::geometry::UnitQuaternion::from_quaternion(*quat_mount);
 
     println!(
         "Euler angles unit_quat_mount: {:?}",
@@ -351,7 +351,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             }
         }
 
-        writeln!(fd, "").unwrap();
+        writeln!(fd).unwrap();
     }
 
     fd.flush().unwrap();

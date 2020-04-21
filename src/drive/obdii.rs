@@ -150,7 +150,7 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
         write!(fd, ",{}", command.com_string).unwrap();
     }
 
-    writeln!(fd, "").unwrap();
+    writeln!(fd).unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
         let pyobd_res;
@@ -264,16 +264,14 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
 
                     data = OBDIIData {
                         command: command.command,
-                        val: PythonValues {
-                            fuel_status: fuel_status,
-                        },
+                        val: PythonValues { fuel_status },
                     };
                 }
 
                 thread_info.obdii_tx.send(data).unwrap();
             }
 
-            write!(fd, "\n").unwrap();
+            writeln!(fd).unwrap();
         }
     }
 

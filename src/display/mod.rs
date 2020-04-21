@@ -90,9 +90,7 @@ impl Display {
         stack.set_visible_child_name("SplashImage");
         window.show_all();
 
-        DisplayRef::new(Self {
-            builder: builder.clone(),
-        })
+        DisplayRef::new(Self { builder })
     }
 
     pub fn on_startup(gtk_app: &gtk::Application) {
@@ -129,6 +127,7 @@ impl Display {
         let close_button: gtk::Button = builder.get_object("Close").expect("Couldn't get Close");
 
         // We use a strong reference here to make sure that Display isn't dropped
+        #[allow(clippy::redundant_clone)]
         let display_clone = display.clone();
         close_button.connect_clicked(move |_| {
             // Just do something here to make sure this isn't dropped

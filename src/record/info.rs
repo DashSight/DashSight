@@ -46,8 +46,8 @@ impl MapWrapper {
         champlain_point: *mut champlain::clutter::ClutterActor,
     ) -> MapWrapper {
         MapWrapper {
-            champlain_view: champlain_view,
-            path_layer: path_layer,
+            champlain_view,
+            path_layer,
             point: champlain_point,
         }
     }
@@ -75,7 +75,7 @@ impl RecordInfo {
             save: Mutex::new(Cell::new(false)),
             toggle_save: Mutex::new(Cell::new(false)),
             close: Mutex::new(Cell::new(false)),
-            location_tx: location_tx,
+            location_tx,
         })
     }
 
@@ -95,7 +95,7 @@ impl RecordInfo {
         );
 
         let response = file_chooser.run();
-        if ResponseType::from(response) == ResponseType::Accept {
+        if response == ResponseType::Accept {
             if let Some(filepath) = file_chooser.get_filename() {
                 self.new_file.lock().unwrap().set(true);
                 self.track_file.replace(filepath);
@@ -187,31 +187,25 @@ impl RecordInfo {
                     .truncate(true)
                     .open(self.track_file.borrow().clone());
 
-                match track_file.as_mut() {
-                    Ok(mut fd) => {
-                        print::gpx_start(&mut fd).unwrap();
-                        print::gpx_metadata(&mut fd).unwrap();
-                        if let Some(filename) = self.track_file.borrow().file_name() {
-                            if let Some(name) = filename.to_str() {
-                                print::gpx_track_start(&mut fd, name.to_string()).unwrap();
-                            }
+                if let Ok(mut fd) = track_file.as_mut() {
+                    print::gpx_start(&mut fd).unwrap();
+                    print::gpx_metadata(&mut fd).unwrap();
+                    if let Some(filename) = self.track_file.borrow().file_name() {
+                        if let Some(name) = filename.to_str() {
+                            print::gpx_track_start(&mut fd, name.to_string()).unwrap();
                         }
                     }
-                    _ => {}
                 }
                 self.new_file.lock().unwrap().set(false);
             }
 
             if self.toggle_save.lock().unwrap().get() {
-                match track_file.as_mut() {
-                    Ok(mut fd) => {
-                        if self.save.lock().unwrap().get() {
-                            print::gpx_track_seg_start(&mut fd).unwrap();
-                        } else {
-                            print::gpx_track_seg_stop(&mut fd).unwrap();
-                        }
+                if let Ok(mut fd) = track_file.as_mut() {
+                    if self.save.lock().unwrap().get() {
+                        print::gpx_track_seg_start(&mut fd).unwrap();
+                    } else {
+                        print::gpx_track_seg_stop(&mut fd).unwrap();
                     }
-                    _ => {}
                 }
                 self.toggle_save.lock().unwrap().set(false);
             }
@@ -223,11 +217,8 @@ impl RecordInfo {
                     self.location_tx.send((lat, lon)).unwrap();
 
                     if self.save.lock().unwrap().get() && !self.toggle_save.lock().unwrap().get() {
-                        match track_file.as_mut() {
-                            Ok(mut fd) => {
-                                print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
-                            }
-                            _ => {}
+                        if let Ok(mut fd) = track_file.as_mut() {
+                            print::gpx_point_info(&mut fd, lat, lon, alt, time).unwrap();
                         }
                     }
                 }
@@ -239,13 +230,10 @@ impl RecordInfo {
             }
         }
 
-        match track_file.as_mut() {
-            Ok(mut fd) => {
-                print::gpx_track_stop(&mut fd).unwrap();
-                print::gpx_stop(&mut fd).unwrap();
-                fd.sync_all().unwrap();
-            }
-            _ => {}
+        if let Ok(mut fd) = track_file.as_mut() {
+            print::gpx_track_stop(&mut fd).unwrap();
+            print::gpx_stop(&mut fd).unwrap();
+            fd.sync_all().unwrap();
         }
     }
 }

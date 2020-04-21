@@ -56,7 +56,7 @@ pub fn get_long_and_lat(
 
                 // Let's assume a lat/lon of 0 is just invalid
                 if lat != 0.0 && lon != 0.0 {
-                    let c = Coord { lat: lat, lon: lon };
+                    let c = Coord { lat, lon };
                     coord_vec.push(c);
                 }
             }

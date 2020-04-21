@@ -43,7 +43,7 @@ pub fn gpx_metadata(fd: &mut File) -> Result<(), std::io::Error> {
 
 pub fn gpx_track_start(fd: &mut File, track_name: String) -> Result<(), std::io::Error> {
     fd.write_all(b"  <trk>\n")?;
-    write!(fd, "    <name>{}</name>\n", track_name)?;
+    writeln!(fd, "    <name>{}</name>", track_name)?;
     Ok(())
 }
 
@@ -60,10 +60,10 @@ pub fn gpx_point_info(
     alt: f32,
     time: String,
 ) -> Result<(), std::io::Error> {
-    write!(fd, "      <trkpt lat=\"{}\" lon=\"{}\">\n", lat, lon)?;
-    write!(fd, "        <ele>{}</ele>\n", alt)?;
-    write!(fd, "        <time>{}</time>\n", time)?;
-    write!(fd, "      </trkpt>\n")?;
+    writeln!(fd, "      <trkpt lat=\"{}\" lon=\"{}\">", lat, lon)?;
+    writeln!(fd, "        <ele>{}</ele>", alt)?;
+    writeln!(fd, "        <time>{}</time>", time)?;
+    writeln!(fd, "      </trkpt>")?;
     Ok(())
 }
 

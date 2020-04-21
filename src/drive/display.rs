@@ -161,7 +161,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         );
 
         let response = file_chooser.run();
-        if ResponseType::from(response) == ResponseType::Accept {
+        if response == ResponseType::Accept {
             if let Some(filepath) = file_chooser.get_filename() {
                 thread_info.time_file.replace(filepath);
                 thread_info.serialise.lock().unwrap().set(true);
@@ -191,6 +191,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let map_wrapper = MapWrapper::new(path_layer, point);
 
+    #[allow(clippy::redundant_clone)]
     let thread_info_clone = thread_info.clone();
     gtk::timeout_add(10, move || {
         let thread_info = ThreadingRef::downgrade(&thread_info_clone)
