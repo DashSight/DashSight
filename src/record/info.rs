@@ -159,6 +159,10 @@ impl RecordInfo {
                     break;
                 }
                 Err(err) => {
+                    if self.close.lock().unwrap().get() {
+                        return;
+                    }
+
                     println!("Failed to connect to GPSD: {:?}", err);
                     std::thread::sleep(std::time::Duration::from_secs(5));
                     continue;
@@ -243,5 +247,22 @@ impl RecordInfo {
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::mpsc;
+
+    #[test]
+    fn test_run() {
+        let (location_tx, _location_rx) = mpsc::channel::<(f64, f64)>();
+        let rec_info = RecordInfo::new(location_tx);
+
+        // Tell run to exit straight away, otherwise we loop for a GPSD conection
+        rec_info.close.lock().unwrap().set(true);
+
+        rec_info.run();
     }
 }
