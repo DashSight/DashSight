@@ -87,3 +87,14 @@ pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, S
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_comparison() {
+        assert_eq!(lat_lon_comp(10.0, 10.0, 10.0, 10.0), true);
+        assert_eq!(lat_lon_comp(10.0, 10.0, 15.0, 15.0), false);
+    }
+}
