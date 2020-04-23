@@ -77,7 +77,7 @@ impl TempContext {
 
         for (i, chan) in self.infra_chan.iter().enumerate() {
             if let Ok(val) = chan.attr_read_float("raw") {
-                infra_values[i] = (val + self.infra_offset[i]) * self.infra_scale[i]
+                infra_values[i] = (val + self.infra_offset[i]) * self.infra_scale[i] / 1000.0;
             }
         }
 
