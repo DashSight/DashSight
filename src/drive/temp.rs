@@ -85,7 +85,7 @@ impl TempContext {
     }
 }
 
-pub fn temp_thread(_thread_info: ThreadingRef, _file_name: &mut PathBuf) {
+pub fn temp_thread(thread_info: ThreadingRef, _file_name: &mut PathBuf) {
     // Create the IIO context
     let ctx;
     match iio::Context::new() {
@@ -100,7 +100,9 @@ pub fn temp_thread(_thread_info: ThreadingRef, _file_name: &mut PathBuf) {
 
     let temp_context = TempContext::new(&ctx);
 
-    let temp = temp_context.get_temperature_celsius();
+    while !thread_info.close.lock().unwrap().get() {
+        let temp = temp_context.get_temperature_celsius();
 
-    println!("{:?}", temp);
+        println!("{:?}", temp);
+    }
 }
