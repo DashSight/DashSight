@@ -44,8 +44,8 @@ impl TempContext {
 
         let mut infra_chan: Vec<iio::channel::Channel> = Vec::new();
         for dev in infra_dev {
-            infra_chan.push(dev.find_channel("temp", false).unwrap_or_else(|| {
-                println!("No 'temp' channel on this device");
+            infra_chan.push(dev.find_channel("temp_object", false).unwrap_or_else(|| {
+                println!("No 'temp_object' channel on this device");
                 process::exit(1);
             }));
         }
@@ -76,7 +76,7 @@ impl TempContext {
         infra_values.resize(self.infra_chan.len(), 0.0);
 
         for (i, chan) in self.infra_chan.iter().enumerate() {
-            if let Ok(val) = chan.attr_read_float("object_raw") {
+            if let Ok(val) = chan.attr_read_float("raw") {
                 infra_values[i] = (val + self.infra_offset[i]) * self.infra_scale[i]
             }
         }
