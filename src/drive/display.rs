@@ -19,6 +19,7 @@ use crate::drive::course::{Course, MapWrapper};
 use crate::drive::imu;
 use crate::drive::obdii;
 use crate::drive::prepare;
+use crate::drive::temp;
 use crate::drive::threading::Threading;
 use crate::drive::threading::ThreadingRef;
 use gtk;
@@ -88,6 +89,14 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         let thread_info = upgrade_weak!(thread_info_weak);
 
         imu::imu_thread(thread_info, &mut track_name);
+    });
+
+    let mut track_name = track_sel_info.track_file.borrow().clone();
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let _handler_imu = thread::spawn(move || {
+        let thread_info = upgrade_weak!(thread_info_weak);
+
+        temp::temp_thread(thread_info, &mut track_name);
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);

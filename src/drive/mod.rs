@@ -20,4 +20,5 @@ pub mod imu;
 pub mod obdii;
 pub mod prepare;
 pub mod read_track;
+pub mod temp;
 pub mod threading;
