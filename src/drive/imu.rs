@@ -17,7 +17,7 @@
 use crate::drive::threading::ThreadingRef;
 use ahrs::{Ahrs, Madgwick};
 use industrial_io as iio;
-use nalgebra::geometry::{Quaternion, UnitQuaternion};
+use nalgebra::geometry::UnitQuaternion;
 use nalgebra::Vector3;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -273,26 +273,12 @@ impl ImuContext {
         ahrs
     }
 
-    fn rotate_accel_data(quat_mount: Quaternion<f64>, accel_data: Vector3<f64>) -> Vector3<f64> {
-        let unit_quat_mount = UnitQuaternion::from_quaternion(quat_mount);
-
-        let accel_rotated = unit_quat_mount.transform_vector(&accel_data);
-
-        println!("accel_data: {:?}", accel_data);
-        println!("accel_rotated: {:?}", accel_rotated);
-
-        accel_rotated
+    fn rotate_accel_data(unit_quat: UnitQuaternion<f64>, accel_data: Vector3<f64>) -> Vector3<f64> {
+        unit_quat.transform_vector(&accel_data)
     }
 
-    fn rotate_gyro_data(quat_mount: Quaternion<f64>, gyro_data: Vector3<f64>) -> Vector3<f64> {
-        let unit_quat_mount = UnitQuaternion::from_quaternion(quat_mount);
-
-        let gyro_rotated = unit_quat_mount.conjugate().transform_vector(&gyro_data);
-
-        println!("gyro_data: {:?}", gyro_data);
-        println!("gyro_rotated: {:?}", gyro_rotated);
-
-        gyro_rotated
+    fn rotate_gyro_data(unit_quat: UnitQuaternion<f64>, gyro_data: Vector3<f64>) -> Vector3<f64> {
+        unit_quat.conjugate().transform_vector(&gyro_data)
     }
 }
 
@@ -348,7 +334,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     while !thread_info.close.lock().unwrap().get() {
         // Get and rotate the acceleration data
         let accel_data = imu_context.get_accel_data();
-        let accel_rotated = ImuContext::rotate_accel_data(*quat_mount, accel_data);
+        let accel_rotated =
+            ImuContext::rotate_accel_data(UnitQuaternion::from_quaternion(*quat_mount), accel_data);
 
         // Write the acceleration data to file
         for data in accel_rotated.iter() {
@@ -365,7 +352,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         // Get and rotate the gyro data
         // Rotate the data based on the mount quaternion
         let gyro_data = imu_context.get_gyro_data();
-        let gyro_rotated = ImuContext::rotate_gyro_data(*quat_mount, gyro_data);
+        let gyro_rotated =
+            ImuContext::rotate_gyro_data(UnitQuaternion::from_quaternion(*quat_mount), gyro_data);
 
         // Write the gyro data to a file
         for (i, data) in gyro_rotated.iter().enumerate() {
@@ -387,21 +375,45 @@ mod tests {
 
     #[test]
     fn test_accel_rotate() {
-        let accel_data = Vector3::new(0.0, 0.0, 9.8);
-        let quat_mount = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let accel_data = Vector3::new(-4.707456, -5.550636, 5.477082);
+        let unit_quat = UnitQuaternion::from_euler_angles(-0.7921, 0.5432, 0.07);
 
-        let accel_rotated = ImuContext::rotate_accel_data(quat_mount, accel_data);
+        let accel_rotated = ImuContext::rotate_accel_data(unit_quat, accel_data);
 
-        // assert_eq!(accel_rotated, Vector3::new(1.0, 2.0, 3.0));
+        assert_eq!(
+            accel_rotated,
+            Vector3::new(
+                0.0007081578911547481,
+                0.0002999181164016207,
+                9.108684243057144
+            )
+        );
     }
 
     #[test]
     fn test_gyro_rotate() {
-        let gyro_data = Vector3::new(0.0, 0.0, 9.8);
-        let quat_mount = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let gyro_data = Vector3::new(-0.571302, 0.377145, 0.171054);
+        // let quat_mount = Quaternion::new(
+        //     -0.07210097397673415,
+        //     0.03503206144556142,
+        //     0.040285340134302454,
+        //     0.9959675173381631,
+        // );
+        let unit_quat = UnitQuaternion::from_euler_angles(
+            -0.14167536249352172,
+            0.07566298807523707,
+            0.07548149738661153,
+        );
 
-        let gyro_rotated = ImuContext::rotate_gyro_data(quat_mount, gyro_data);
+        let gyro_rotated = ImuContext::rotate_gyro_data(unit_quat, gyro_data);
 
-        // assert_eq!(accel_rotated, Vector3::new(1.0, 2.0, 3.0));
+        assert_eq!(
+            gyro_rotated,
+            Vector3::new(
+                -0.5526164393071215,
+                0.39664621409393747,
+                0.18753839339576528
+            )
+        );
     }
 }
