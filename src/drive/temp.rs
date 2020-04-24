@@ -99,8 +99,6 @@ pub fn temp_thread(thread_info: ThreadingRef, _file_name: &mut PathBuf) {
     let temp_context = TempContext::new(&ctx);
 
     while !thread_info.close.lock().unwrap().get() {
-        let temp = temp_context.get_temperature_celsius();
-
-        println!("{:?}", temp);
+        let _temp = temp_context.get_temperature_celsius();
     }
 }
