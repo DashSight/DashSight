@@ -244,6 +244,11 @@ impl ImuContext {
     ) -> &'a nalgebra::Quaternion<f64> {
         let (accel_filt_input, gyro_filt_input, mag_filt_input) = self.get_9_dofs();
 
+        println!(
+            "Update Quat: ({:?}, {:?}, {:?})",
+            accel_filt_input, gyro_filt_input, mag_filt_input
+        );
+
         // Run inputs through AHRS filter (gyroscope must be radians/s)
         ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
             .unwrap()

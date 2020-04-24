@@ -33,10 +33,8 @@ impl TempContext {
 
         let dev_name = "mlx90614";
         for dev in ctx.devices() {
-            println!("{:?}", dev.name());
             if let Some(name) = dev.name() {
                 if name == dev_name {
-                    println!("Found infra temp device: {}", name);
                     infra_dev.push(dev)
                 }
             }
