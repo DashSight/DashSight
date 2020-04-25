@@ -54,8 +54,16 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
     let (imu_tx, imu_rx) = mpsc::channel::<(f64, f64)>();
+    let (imu_page_tx, imu_page_rx) = mpsc::channel::<(f64, f64)>();
     let (temp_tx, temp_rx) = mpsc::channel::<Vec<f64>>();
-    let thread_info = Threading::new(location_tx, times_tx, obdii_tx, imu_tx, temp_tx);
+    let thread_info = Threading::new(
+        location_tx,
+        times_tx,
+        obdii_tx,
+        imu_tx,
+        imu_page_tx,
+        temp_tx,
+    );
 
     let window: gtk::ApplicationWindow = builder
         .get_object("MainPage")
@@ -148,6 +156,16 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     imu_area.connect_draw(move |me, ctx| {
         let thread_info = upgrade_weak!(thread_info_weak, glib::signal::Inhibit(true));
         thread_info.imu_draw_idle_thread(&imu_rx, me, ctx)
+    });
+
+    let imu_page_accel_area: gtk::DrawingArea = builder
+        .get_object("IMUPageAcellDraw")
+        .expect("Couldn't find IMUPageAcellDraw in ui file.");
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    imu_page_accel_area.connect_draw(move |me, ctx| {
+        let thread_info = upgrade_weak!(thread_info_weak, glib::signal::Inhibit(true));
+        thread_info.imu_draw_idle_thread(&imu_page_rx, me, ctx)
     });
 
     let close_button = builder

@@ -339,6 +339,10 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             .imu_tx
             .send((accel_rotated[0], accel_rotated[1]))
             .unwrap();
+        thread_info
+            .imu_page_tx
+            .send((accel_rotated[0], accel_rotated[1]))
+            .unwrap();
 
         // Get and rotate the gyro data
         // Rotate the data based on the mount quaternion

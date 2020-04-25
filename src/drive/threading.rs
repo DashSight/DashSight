@@ -45,6 +45,7 @@ pub struct Threading {
     pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
     pub imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    pub imu_page_tx: std::sync::mpsc::Sender<(f64, f64)>,
     pub temp_tx: std::sync::mpsc::Sender<Vec<f64>>,
 }
 
@@ -59,6 +60,7 @@ impl Threading {
         times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
         obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
         imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
+        imu_page_tx: std::sync::mpsc::Sender<(f64, f64)>,
         temp_tx: std::sync::mpsc::Sender<Vec<f64>>,
     ) -> ThreadingRef {
         ThreadingRef::new(Self {
@@ -75,6 +77,7 @@ impl Threading {
             times_tx,
             obdii_tx,
             imu_tx,
+            imu_page_tx,
             temp_tx,
         })
     }
