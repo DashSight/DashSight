@@ -28,7 +28,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="CalibrateOptionsPopOverSave">
             <property name="label" translatable="yes">Calibrate</property>
             <property name="height_request">100</property>
             <property name="visible">True</property>

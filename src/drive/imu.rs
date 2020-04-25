@@ -293,10 +293,6 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
     imu_context.set_sampling_freq();
 
-    println!("Calibrating, make sure there is no acceleration");
-    let accel_data = imu_context.get_accel_data();
-    imu_context.calibrate_rotation_matrix(&accel_data);
-
     // Open the file to save data
     let mut name = file_name.file_stem().unwrap().to_str().unwrap().to_string();
     name.push_str("-imu.cvs");
@@ -315,6 +311,12 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
     writeln!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z").unwrap();
 
     while !thread_info.close.lock().unwrap().get() {
+        if thread_info.calibrate.lock().unwrap().get() {
+            println!("Calibrating, make sure there is no acceleration");
+            let accel_data = imu_context.get_accel_data();
+            imu_context.calibrate_rotation_matrix(&accel_data);
+        }
+
         // Get and rotate the acceleration data
         let accel_data = imu_context.get_accel_data();
         let accel_rotated = imu_context.rotate_accel_data(&accel_data);

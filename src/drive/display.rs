@@ -171,6 +171,18 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         }
     });
 
+    let calibrate_button = display
+        .builder
+        .get_object::<gtk::Button>("CalibrateOptionsPopOverSave")
+        .expect("Can't find CalibrateOptionsPopOverSave in ui file.");
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    calibrate_button.connect_clicked(move |_| {
+        let thread_info = upgrade_weak!(thread_info_weak);
+
+        thread_info.calibrate.lock().unwrap().set(true);
+    });
+
     let layer = champlain::marker_layer::new();
     champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
         champlain::marker_layer::to_layer(layer),
