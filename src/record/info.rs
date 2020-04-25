@@ -17,7 +17,6 @@
 use crate::display::*;
 use crate::record::print;
 use gpsd_proto::handshake;
-use gtk;
 use gtk::prelude::*;
 use gtk::ResponseType;
 use std::cell::Cell;

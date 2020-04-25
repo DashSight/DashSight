@@ -22,7 +22,6 @@ use crate::drive::prepare;
 use crate::drive::temp;
 use crate::drive::threading::Threading;
 use crate::drive::threading::ThreadingRef;
-use gtk;
 use gtk::prelude::*;
 use gtk::ResponseType;
 use std::sync::mpsc;

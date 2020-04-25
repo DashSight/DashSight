@@ -17,7 +17,6 @@
 use crate::display::*;
 use crate::drive::display;
 use crate::drive::read_track;
-use gtk;
 use gtk::prelude::*;
 use std::cell::Cell;
 use std::cell::RefCell;

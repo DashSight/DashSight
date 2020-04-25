@@ -18,7 +18,6 @@ use crate::display::DisplayRef;
 use crate::record::info::MapWrapper;
 use crate::record::info::RecordInfo;
 use crate::record::info::RecordInfoRef;
-use gtk;
 use gtk::prelude::*;
 use std::process;
 use std::sync::mpsc;
