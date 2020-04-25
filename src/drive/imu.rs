@@ -256,20 +256,27 @@ impl ImuContext {
         (self.get_accel_data(), self.get_gyro_data(), mag_filt_input)
     }
 
+    /// Calibrate the internal rotation matrix
     fn calibrate_rotation_matrix(&mut self, accel_data: &Vector3<f64>) {
         let gravity = Vector3::new(0.0, 0.0, 9.8);
         self.rotation_unit_quat =
             Some(UnitQuaternion::rotation_between(&accel_data, &gravity).unwrap());
     }
 
+    /// Rotate the acceleration data by the already calibrated rotation matrix
     fn rotate_accel_data(&self, accel_data: &Vector3<f64>) -> Vector3<f64> {
-        self.rotation_unit_quat
-            .unwrap()
-            .transform_vector(accel_data)
+        match self.rotation_unit_quat {
+            Some(rotate) => rotate.transform_vector(accel_data),
+            None => *accel_data,
+        }
     }
 
+    /// Rotate the gyro data by the already calibrated rotation matrix
     fn rotate_gyro_data(&self, gyro_data: &Vector3<f64>) -> Vector3<f64> {
-        self.rotation_unit_quat.unwrap().transform_vector(gyro_data)
+        match self.rotation_unit_quat {
+            Some(rotate) => rotate.transform_vector(gyro_data),
+            None => *gyro_data,
+        }
     }
 }
 
@@ -357,6 +364,7 @@ mod tests {
     use super::*;
 
     #[test]
+    /// Tests generating a rotation matrix and rotating acceleration data
     fn test_accel_rotate() {
         let mut imu_context = ImuContext::default();
 
@@ -379,5 +387,17 @@ mod tests {
             accel_rotated,
             Vector3::new(0.0, -0.0000000000000008881784197001252, 9.108684275522783)
         );
+    }
+
+    #[test]
+    /// Tests rotating acceleration data without any rotation matrix
+    fn test_accel_empty_rotate() {
+        let mut imu_context = ImuContext::default();
+
+        let accel_data = Vector3::new(-4.707456, -5.550636, 5.477082);
+
+        let accel_rotated = imu_context.rotate_accel_data(&accel_data);
+
+        assert_eq!(accel_rotated, Vector3::new(-4.707456, -5.550636, 5.477082));
     }
 }
