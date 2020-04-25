@@ -25,15 +25,29 @@ use std::path::PathBuf;
 use std::process;
 
 struct ImuContext {
-    accel_chan: [iio::channel::Channel; 3],
-    gyro_chan: [iio::channel::Channel; 3],
-    mag_chan: [iio::channel::Channel; 3],
+    accel_chan: Option<[iio::channel::Channel; 3]>,
+    gyro_chan: Option<[iio::channel::Channel; 3]>,
+    mag_chan: Option<[iio::channel::Channel; 3]>,
 
     accel_calib: [f64; 3],
 
     accel_scale: [f64; 3],
     gyro_scale: [f64; 3],
     mag_scale: [f64; 3],
+}
+
+impl Default for ImuContext {
+    fn default() -> Self {
+        ImuContext {
+            accel_chan: None,
+            gyro_chan: None,
+            mag_chan: None,
+            accel_calib: [0.0, 0.0, 0.0],
+            accel_scale: [0.0, 0.0, 0.0],
+            gyro_scale: [0.0, 0.0, 0.0],
+            mag_scale: [0.0, 0.0, 0.0],
+        }
+    }
 }
 
 impl ImuContext {
@@ -124,9 +138,9 @@ impl ImuContext {
         let mag_chan: [iio::channel::Channel; 3] = [x_mag_chan, y_mag_chan, z_mag_chan];
 
         ImuContext {
-            accel_chan,
-            gyro_chan,
-            mag_chan,
+            accel_chan: Some(accel_chan),
+            gyro_chan: Some(gyro_chan),
+            mag_chan: Some(mag_chan),
             accel_calib: [0.0, 0.0, 0.0],
             accel_scale: [0.0, 0.0, 0.0],
             gyro_scale: [0.0, 0.0, 0.0],
@@ -136,7 +150,7 @@ impl ImuContext {
 
     fn get_calibration_data(&mut self) {
         // Get the acceleration calibration offset
-        for (i, ac) in self.accel_chan.iter().enumerate() {
+        for (i, ac) in self.accel_chan.as_ref().unwrap().iter().enumerate() {
             if let Ok(val) = ac.attr_read_int("calibbias") {
                 self.accel_calib[i] = val as f64;
             }
@@ -145,7 +159,7 @@ impl ImuContext {
 
     fn get_scale_data(&mut self) {
         // Get the acceleration scale
-        for (i, ac) in self.accel_chan.iter().enumerate() {
+        for (i, ac) in self.accel_chan.as_ref().unwrap().iter().enumerate() {
             if let Ok(val) = ac.attr_read_float("scale") {
                 self.accel_scale[i] = val;
             }
@@ -154,7 +168,7 @@ impl ImuContext {
         self.accel_scale[1] *= -1.0;
 
         // Get the gyro scale
-        for (i, gc) in self.gyro_chan.iter().enumerate() {
+        for (i, gc) in self.gyro_chan.as_ref().unwrap().iter().enumerate() {
             if let Ok(val) = gc.attr_read_float("scale") {
                 // Set scale in radians/s
                 self.gyro_scale[i] = val;
@@ -162,7 +176,7 @@ impl ImuContext {
         }
 
         // Get the mag scale
-        for (i, mc) in self.mag_chan.iter().enumerate() {
+        for (i, mc) in self.mag_chan.as_ref().unwrap().iter().enumerate() {
             if let Ok(val) = mc.attr_read_float("scale") {
                 self.mag_scale[i] = val;
             }
@@ -175,17 +189,17 @@ impl ImuContext {
 
     fn set_sampling_freq(&self) {
         // Set the acceleration sampling frequency
-        for ac in self.accel_chan.iter() {
+        for ac in self.accel_chan.as_ref().unwrap().iter() {
             ac.attr_write_float("sampling_frequency", 476.0).unwrap();
         }
 
         // Set the gyro sampling frequency
-        for gc in self.gyro_chan.iter() {
+        for gc in self.gyro_chan.as_ref().unwrap().iter() {
             gc.attr_write_float("sampling_frequency", 476.0).unwrap();
         }
 
         // Set the mag sampling frequency
-        for mc in self.mag_chan.iter() {
+        for mc in self.mag_chan.as_ref().unwrap().iter() {
             mc.attr_write_int("sampling_frequency", 80).unwrap();
         }
     }
@@ -193,13 +207,13 @@ impl ImuContext {
     fn get_accel_data(&self) -> Vector3<f64> {
         let mut accel_data = Vector3::new(0.0, 0.0, 0.0);
 
-        if let Ok(val) = self.accel_chan[0].attr_read_int("raw") {
+        if let Ok(val) = self.accel_chan.as_ref().unwrap()[0].attr_read_int("raw") {
             accel_data.x = (val as f64 - self.accel_calib[0]) * self.accel_scale[0];
         }
-        if let Ok(val) = self.accel_chan[1].attr_read_int("raw") {
+        if let Ok(val) = self.accel_chan.as_ref().unwrap()[1].attr_read_int("raw") {
             accel_data.y = (val as f64 - self.accel_calib[1]) * self.accel_scale[1];
         }
-        if let Ok(val) = self.accel_chan[2].attr_read_int("raw") {
+        if let Ok(val) = self.accel_chan.as_ref().unwrap()[2].attr_read_int("raw") {
             accel_data.z = (val as f64 - self.accel_calib[2]) * self.accel_scale[2];
         }
 
@@ -209,13 +223,13 @@ impl ImuContext {
     fn get_gyro_data(&self) -> Vector3<f64> {
         let mut gyro_data = Vector3::new(0.0, 0.0, 0.0);
 
-        if let Ok(val) = self.gyro_chan[0].attr_read_int("raw") {
+        if let Ok(val) = self.gyro_chan.as_ref().unwrap()[0].attr_read_int("raw") {
             gyro_data.x = val as f64 * self.gyro_scale[0];
         }
-        if let Ok(val) = self.gyro_chan[1].attr_read_int("raw") {
+        if let Ok(val) = self.gyro_chan.as_ref().unwrap()[1].attr_read_int("raw") {
             gyro_data.y = val as f64 * self.gyro_scale[1];
         }
-        if let Ok(val) = self.gyro_chan[2].attr_read_int("raw") {
+        if let Ok(val) = self.gyro_chan.as_ref().unwrap()[2].attr_read_int("raw") {
             gyro_data.z = val as f64 * self.gyro_scale[2];
         }
 
@@ -225,13 +239,13 @@ impl ImuContext {
     fn get_9_dofs(&self) -> (Vector3<f64>, Vector3<f64>, Vector3<f64>) {
         let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
 
-        if let Ok(val) = self.mag_chan[0].attr_read_int("raw") {
+        if let Ok(val) = self.mag_chan.as_ref().unwrap()[0].attr_read_int("raw") {
             mag_filt_input.x = val as f64 * self.mag_scale[0];
         }
-        if let Ok(val) = self.mag_chan[1].attr_read_int("raw") {
+        if let Ok(val) = self.mag_chan.as_ref().unwrap()[1].attr_read_int("raw") {
             mag_filt_input.y = val as f64 * self.mag_scale[1];
         }
-        if let Ok(val) = self.mag_chan[2].attr_read_int("raw") {
+        if let Ok(val) = self.mag_chan.as_ref().unwrap()[2].attr_read_int("raw") {
             mag_filt_input.z = val as f64 * self.mag_scale[2];
         }
 
