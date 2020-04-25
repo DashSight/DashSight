@@ -107,6 +107,8 @@ pub fn temp_thread(thread_info: ThreadingRef, _file_name: &mut PathBuf) {
         .set(temp_context.num_temp_sensors());
 
     while !thread_info.close.lock().unwrap().get() {
-        let _temp = temp_context.get_temperature_celsius();
+        let temp = temp_context.get_temperature_celsius();
+
+        thread_info.temp_tx.send(temp).unwrap();
     }
 }

@@ -45,6 +45,7 @@ pub struct Threading {
     pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
     pub imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    pub temp_tx: std::sync::mpsc::Sender<Vec<f64>>,
 }
 
 pub type ThreadingRef = Arc<Threading>;
@@ -58,6 +59,7 @@ impl Threading {
         times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
         obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
         imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
+        temp_tx: std::sync::mpsc::Sender<Vec<f64>>,
     ) -> ThreadingRef {
         ThreadingRef::new(Self {
             lap_start: RefCell::new(SystemTime::now()),
@@ -73,6 +75,7 @@ impl Threading {
             times_tx,
             obdii_tx,
             imu_tx,
+            temp_tx,
         })
     }
 
@@ -458,6 +461,32 @@ impl Threading {
             }
             Err(mpsc::RecvTimeoutError::Timeout) => Inhibit(false),
             _ => Inhibit(true),
+        }
+    }
+
+    pub fn temp_update_idle_thread(
+        &self,
+        temp_rx: &std::sync::mpsc::Receiver<Vec<f64>>,
+        builder: gtk::Builder,
+    ) -> glib::source::Continue {
+        let timeout = Duration::new(0, 100);
+        let rec = temp_rx.recv_timeout(timeout);
+        match rec {
+            Ok(temps) => {
+                for (i, temp) in temps.iter().enumerate() {
+                    if i == 0 {
+                        let label = builder
+                            .get_object::<gtk::Label>("TopLeftTempLabel")
+                            .expect("Can't find TopLeftTempLabel in ui file.");
+
+                        let text = format!("{:2.2}", temp);
+                        label.set_text(&text);
+                    }
+                }
+                glib::source::Continue(true)
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
+            _ => glib::source::Continue(false),
         }
     }
 }

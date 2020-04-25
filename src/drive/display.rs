@@ -54,7 +54,8 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
     let (imu_tx, imu_rx) = mpsc::channel::<(f64, f64)>();
-    let thread_info = Threading::new(location_tx, times_tx, obdii_tx, imu_tx);
+    let (temp_tx, temp_rx) = mpsc::channel::<Vec<f64>>();
+    let thread_info = Threading::new(location_tx, times_tx, obdii_tx, imu_tx, temp_tx);
 
     let window: gtk::ApplicationWindow = builder
         .get_object("MainPage")
@@ -122,6 +123,21 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         let builder = display.builder.clone();
 
         thread_info.obdii_update_idle_thread(&obdii_rx, builder)
+    });
+
+    let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let display_weak = DisplayRef::downgrade(&display);
+    gtk::timeout_add(10, move || {
+        let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
+        let display = upgrade_weak!(display_weak, glib::source::Continue(false));
+
+        let builder = display.builder.clone();
+
+        if thread_info.close.lock().unwrap().get() {
+            return glib::source::Continue(false);
+        }
+
+        thread_info.temp_update_idle_thread(&temp_rx, builder)
     });
 
     let imu_area: gtk::DrawingArea = builder
