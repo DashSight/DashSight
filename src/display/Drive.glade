@@ -490,27 +490,40 @@
       </packing>
     </child>
     <child>
-      <object class="GtkFrame" id="UnusedIMUFrame">
+      <object class="GtkGrid" id="IMUGrid">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label_xalign">0</property>
-        <property name="shadow_type">none</property>
         <child>
-          <object class="GtkAlignment">
+          <object class="GtkDrawingArea" id="IMUPageAcellDraw">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="left_padding">12</property>
-            <child>
-              <placeholder/>
-            </child>
           </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
+          </packing>
         </child>
-        <child type="label">
-          <object class="GtkLabel">
+        <child>
+          <object class="GtkDrawingArea" id="IMUPageGyroDraw">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">UnusedIMUFrame</property>
           </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
         </child>
       </object>
       <packing>
