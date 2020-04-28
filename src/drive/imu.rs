@@ -322,6 +322,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             println!("Calibrating, make sure there is no acceleration");
             let accel_data = imu_context.get_accel_data();
             imu_context.calibrate_rotation_matrix(&accel_data);
+            thread_info.calibrate.lock().unwrap().set(false);
         }
 
         // Get and rotate the acceleration data
