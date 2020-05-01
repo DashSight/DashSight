@@ -451,27 +451,48 @@
       </packing>
     </child>
     <child>
-      <object class="GtkFrame" id="UnusedOBDIIFrame">
+      <object class="GtkGrid" id="OBDIIPageGrid">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label_xalign">0</property>
-        <property name="shadow_type">none</property>
         <child>
-          <object class="GtkAlignment">
+          <object class="GtkDrawingArea" id="OBDIIChartOne">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="left_padding">12</property>
-            <child>
-              <placeholder/>
-            </child>
           </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
+          </packing>
         </child>
-        <child type="label">
-          <object class="GtkLabel">
+        <child>
+          <object class="GtkDrawingArea" id="OBDIIChartTwo">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">UnusedOBDIIFrame</property>
           </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkDrawingArea" id="OBDIIChartThree">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkDrawingArea" id="OBDIIChartFour">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">1</property>
+          </packing>
         </child>
       </object>
       <packing>
