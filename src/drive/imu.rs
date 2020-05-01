@@ -397,7 +397,7 @@ mod tests {
     #[test]
     /// Tests rotating acceleration data without any rotation matrix
     fn test_accel_empty_rotate() {
-        let mut imu_context = ImuContext::default();
+        let imu_context = ImuContext::default();
 
         let accel_data = Vector3::new(-4.707456, -5.550636, 5.477082);
 
