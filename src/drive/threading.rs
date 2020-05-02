@@ -271,6 +271,8 @@ impl Threading {
                         .get_object::<gtk::DrawingArea>("OBDIIChartOne")
                         .expect("Can't find OBDIIChartOne in ui file.");
 
+                    println!("About to draw the RPM graph");
+
                     chart.connect_draw(move |me, cr| {
                         let width = me.get_allocated_width() as f64;
                         let height = me.get_allocated_width() as f64 * 0.7;
