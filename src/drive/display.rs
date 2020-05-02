@@ -37,8 +37,8 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     stack.set_visible_child_name("DrivePage");
 
     let drive_page = builder
-        .get_object::<gtk::Grid>("DriveGrid")
-        .expect("Can't find DriveGrid in ui file.");
+        .get_object::<gtk::Notebook>("DriveNotebook")
+        .expect("Can't find DriveNotebook in ui file.");
 
     let map_frame = builder
         .get_object::<gtk::Frame>("DriveMapFrame")
