@@ -69,10 +69,6 @@ impl TempContext {
         }
     }
 
-    fn num_temp_sensors(&self) -> usize {
-        self.infra_chan.len()
-    }
-
     fn get_temperature_celsius(&self) -> Vec<f64> {
         let mut infra_values: Vec<f64> = Vec::new();
         infra_values.resize(self.infra_chan.len(), 0.0);
@@ -101,10 +97,6 @@ pub fn temp_thread(thread_info: ThreadingRef, _file_name: &mut PathBuf) {
     }
 
     let temp_context = TempContext::new(&ctx);
-
-    thread_info
-        .temp_sensors
-        .set(temp_context.num_temp_sensors());
 
     while !thread_info.close.lock().unwrap().get() {
         let temp = temp_context.get_temperature_celsius();

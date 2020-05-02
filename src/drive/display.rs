@@ -168,6 +168,12 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         thread_info.imu_draw_idle_thread(&imu_page_rx, me, ctx)
     });
 
+    gtk::timeout_add(30, move || {
+        imu_area.queue_draw();
+
+        glib::source::Continue(true)
+    });
+
     let close_button = builder
         .get_object::<gtk::Button>("DriveOptionsPopOverClose")
         .expect("Can't find DriveOptionsPopOverClose in ui file.");
@@ -252,20 +258,6 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
         thread_info.map_update_idle_thread(&location_rx, &map_wrapper)
     });
-
-    println!(
-        "Delyaing IMU update by {}s",
-        thread_info.temp_sensors.get() * 5
-    );
-
-    gtk::timeout_add(
-        35 + (thread_info.temp_sensors.get() as u32 * 5),
-        move || {
-            imu_area.queue_draw();
-
-            glib::source::Continue(true)
-        },
-    );
 
     drive_page.show_all();
 }
