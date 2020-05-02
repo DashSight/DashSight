@@ -170,6 +170,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     gtk::timeout_add(30, move || {
         imu_area.queue_draw();
+        imu_page_accel_area.queue_draw();
 
         glib::source::Continue(true)
     });
