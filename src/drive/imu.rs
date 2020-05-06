@@ -305,6 +305,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         .open(&file_name);
     let fd = imu_file.as_mut().unwrap();
 
+    let mut ahrs = Madgwick::default();
+
     // Write the CVS headers
     writeln!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z").unwrap();
 
@@ -350,6 +352,23 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
 
         writeln!(fd).unwrap();
+
+        let mag_data = imu_context.get_mag_data();
+
+        let quat = ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+        let unit_quat = UnitQuaternion::from_quaternion(quat.clone());
+
+        let quat_rotated = ahrs.update(&gyro_rotated, &accel_rotated, &mag_data).unwrap();
+        let unit_quat_rotated = UnitQuaternion::from_quaternion(quat_rotated.clone());
+
+        println!(
+            "({:?}, {:?}, {:?}) -> {:?} and {:?}",
+            gyro_data,
+            accel_data,
+            mag_data,
+            unit_quat.euler_angles(),
+            unit_quat_rotated.euler_angles()
+        );
     }
 
     fd.flush().unwrap();
