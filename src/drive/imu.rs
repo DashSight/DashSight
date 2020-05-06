@@ -15,6 +15,7 @@
  */
 
 use crate::drive::threading::ThreadingRef;
+use ahrs::{Ahrs, Madgwick};
 use industrial_io as iio;
 use nalgebra::geometry::UnitQuaternion;
 use nalgebra::Vector3;
@@ -256,7 +257,38 @@ impl ImuContext {
         (self.get_accel_data(), self.get_gyro_data(), mag_filt_input)
     }
 
-    /// Calibrate the internal rotation matrix
+    #[allow(dead_code)]
+    fn update_quaternion<'a>(
+        &self,
+        ahrs: &'a mut ahrs::Madgwick<f64>,
+    ) -> &'a nalgebra::Quaternion<f64> {
+        let (accel_filt_input, gyro_filt_input, mag_filt_input) = self.get_9_dofs();
+
+        // Run inputs through AHRS filter (gyroscope must be radians/s)
+        ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
+            .unwrap()
+    }
+
+    #[allow(dead_code)]
+    fn generate_inital_quaternion(&self) -> ahrs::Madgwick<f64> {
+        // Create AHRS filter
+        let mut ahrs = Madgwick::default();
+
+        // TODO: Add prompt
+        println!("Make sure sensor axis is lined up with car");
+        for _i in 0..10 {
+            self.update_quaternion(&mut ahrs);
+        }
+
+        // TODO: Convert to prompt
+        println!("Move the device to the mount position");
+        for _i in 0..50 {
+            self.update_quaternion(&mut ahrs);
+        }
+
+        ahrs
+    }
+
     fn calibrate_rotation_matrix(&mut self, accel_data: &Vector3<f64>) {
         let gravity = Vector3::new(0.0, 0.0, 9.8);
         self.rotation_unit_quat =

@@ -6,6 +6,7 @@ authors = ["Alistair Francis <alistair@alistair23.me>"]
 edition = "2018"
 
 [dependencies]
+ahrs = "0.2.2"
 cairo-rs = "0.8.1"
 champlain = { git = "https://github.com/alistair23/champlain.git" }
 chrono = "0.4.11"
@@ -14,7 +15,7 @@ gio = "0.8.1"
 glib = "0.9.3"
 gpsd_proto = "0.6.0"
 industrial-io = "0.2.0"
-nalgebra = "0.21.0"
+nalgebra = "0.18.1"
 serde = { version = "1.0.106", features = ["derive"] }
 serde_json = "1.0.51"
 
