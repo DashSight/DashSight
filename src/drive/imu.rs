@@ -240,53 +240,20 @@ impl ImuContext {
         gyro_data
     }
 
-    #[allow(dead_code)]
-    fn get_9_dofs(&self) -> (Vector3<f64>, Vector3<f64>, Vector3<f64>) {
-        let mut mag_filt_input = Vector3::new(0.0, 0.0, 0.0);
+    fn get_mag_data(&self) -> Vector3<f64> {
+        let mut mag_data = Vector3::new(0.0, 0.0, 0.0);
 
         if let Ok(val) = self.mag_chan.as_ref().unwrap()[0].attr_read_int("raw") {
-            mag_filt_input.x = val as f64 * self.mag_scale[0];
+            mag_data.x = val as f64 * self.mag_scale[0];
         }
         if let Ok(val) = self.mag_chan.as_ref().unwrap()[1].attr_read_int("raw") {
-            mag_filt_input.y = val as f64 * self.mag_scale[1];
+            mag_data.y = val as f64 * self.mag_scale[1];
         }
         if let Ok(val) = self.mag_chan.as_ref().unwrap()[2].attr_read_int("raw") {
-            mag_filt_input.z = val as f64 * self.mag_scale[2];
+            mag_data.z = val as f64 * self.mag_scale[2];
         }
 
-        (self.get_accel_data(), self.get_gyro_data(), mag_filt_input)
-    }
-
-    #[allow(dead_code)]
-    fn update_quaternion<'a>(
-        &self,
-        ahrs: &'a mut ahrs::Madgwick<f64>,
-    ) -> &'a nalgebra::Quaternion<f64> {
-        let (accel_filt_input, gyro_filt_input, mag_filt_input) = self.get_9_dofs();
-
-        // Run inputs through AHRS filter (gyroscope must be radians/s)
-        ahrs.update(&gyro_filt_input, &accel_filt_input, &mag_filt_input)
-            .unwrap()
-    }
-
-    #[allow(dead_code)]
-    fn generate_inital_quaternion(&self) -> ahrs::Madgwick<f64> {
-        // Create AHRS filter
-        let mut ahrs = Madgwick::default();
-
-        // TODO: Add prompt
-        println!("Make sure sensor axis is lined up with car");
-        for _i in 0..10 {
-            self.update_quaternion(&mut ahrs);
-        }
-
-        // TODO: Convert to prompt
-        println!("Move the device to the mount position");
-        for _i in 0..50 {
-            self.update_quaternion(&mut ahrs);
-        }
-
-        ahrs
+        mag_data
     }
 
     fn calibrate_rotation_matrix(&mut self, accel_data: &Vector3<f64>) {
