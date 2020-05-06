@@ -263,18 +263,10 @@ impl ImuContext {
     }
 
     /// Rotate the acceleration data by the already calibrated rotation matrix
-    fn rotate_accel_data(&self, accel_data: &Vector3<f64>) -> Vector3<f64> {
+    fn rotate_data(&self, accel_data: &Vector3<f64>) -> Vector3<f64> {
         match self.rotation_unit_quat {
             Some(rotate) => rotate.transform_vector(accel_data),
             None => *accel_data,
-        }
-    }
-
-    /// Rotate the gyro data by the already calibrated rotation matrix
-    fn rotate_gyro_data(&self, gyro_data: &Vector3<f64>) -> Vector3<f64> {
-        match self.rotation_unit_quat {
-            Some(rotate) => rotate.transform_vector(gyro_data),
-            None => *gyro_data,
         }
     }
 }
@@ -326,7 +318,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
 
         // Get and rotate the acceleration data
         let accel_data = imu_context.get_accel_data();
-        let accel_rotated = imu_context.rotate_accel_data(&accel_data);
+        let accel_rotated = imu_context.rotate_data(&accel_data);
 
         // Write the acceleration data to file
         for data in accel_rotated.iter() {
@@ -347,7 +339,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         // Get and rotate the gyro data
         // Rotate the data based on the mount quaternion
         let gyro_data = imu_context.get_gyro_data();
-        let gyro_rotated = imu_context.rotate_gyro_data(&gyro_data);
+        let gyro_rotated = imu_context.rotate_data(&gyro_data);
 
         // Write the gyro data to a file
         for (i, data) in gyro_rotated.iter().enumerate() {
@@ -385,7 +377,7 @@ mod tests {
             )
         );
 
-        let accel_rotated = imu_context.rotate_accel_data(&accel_data);
+        let accel_rotated = imu_context.rotate_data(&accel_data);
 
         assert_eq!(
             accel_rotated,
@@ -400,7 +392,7 @@ mod tests {
 
         let accel_data = Vector3::new(-4.707456, -5.550636, 5.477082);
 
-        let accel_rotated = imu_context.rotate_accel_data(&accel_data);
+        let accel_rotated = imu_context.rotate_data(&accel_data);
 
         assert_eq!(accel_rotated, Vector3::new(-4.707456, -5.550636, 5.477082));
     }
