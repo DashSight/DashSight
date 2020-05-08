@@ -24,6 +24,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process;
 
+pub const IMU_SAMPLE_FREQ: f64 = 40.0;
+
 struct ImuContext {
     accel_chan: Option<[iio::channel::Channel; 3]>,
     gyro_chan: Option<[iio::channel::Channel; 3]>,
@@ -305,7 +307,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         .open(&file_name);
     let fd = imu_file.as_mut().unwrap();
 
-    let mut ahrs = Madgwick::default();
+    let mut ahrs = Madgwick::new(IMU_SAMPLE_FREQ / 1000.0, 0.1);
 
     // Write the CVS headers
     writeln!(fd, "accel x, accel y, accel z, gyro x, gyro y, gyro z").unwrap();
@@ -315,6 +317,11 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             println!("Calibrating, make sure there is no acceleration");
             let accel_data = imu_context.get_accel_data();
             imu_context.calibrate_rotation_matrix(&accel_data);
+            ahrs = Madgwick::new_with_quat(
+                IMU_SAMPLE_FREQ / 1000.0,
+                0.1,
+                imu_context.rotation_unit_quat.unwrap().quaternion().clone(),
+            );
             thread_info.calibrate.lock().unwrap().set(false);
         }
 
@@ -358,7 +365,9 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         let quat = ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
         let unit_quat = UnitQuaternion::from_quaternion(quat.clone());
 
-        let quat_rotated = ahrs.update(&gyro_rotated, &accel_rotated, &mag_data).unwrap();
+        let quat_rotated = ahrs
+            .update(&gyro_rotated, &accel_rotated, &mag_data)
+            .unwrap();
         let unit_quat_rotated = UnitQuaternion::from_quaternion(quat_rotated.clone());
 
         println!(
@@ -414,5 +423,171 @@ mod tests {
         let accel_rotated = imu_context.rotate_data(&accel_data);
 
         assert_eq!(accel_rotated, Vector3::new(-4.707456, -5.550636, 5.477082));
+    }
+
+    #[test]
+    /// Tests generating a Quaternion for Movement
+    fn test_quat_gen() {
+        let mut ahrs = Madgwick::new(IMU_SAMPLE_FREQ / 1000.0, 0.1);
+
+        let gyro_data = Vector3::new(-0.405909, 0.5429970000000001, 0.150093);
+        let accel_data = Vector3::new(-0.057408, -0.001794, 8.52748);
+        let mag_data = Vector3::new(-0.036062, -0.688974, -0.205568);
+
+        let quat = ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+        let unit_quat = UnitQuaternion::from_quaternion(quat.clone());
+
+        assert_eq!(
+            unit_quat.euler_angles(),
+            (
+                -0.013916623737608484,
+                0.01955564405741197,
+                0.01322374356461911
+            )
+        );
+
+        let gyro_data = Vector3::new(-0.622251, 0.45027900000000004, 0.16784100000000002);
+        let accel_data = Vector3::new(-0.050232, -0.066378, 8.537646);
+        let mag_data = Vector3::new(-0.038398, -0.70007, -0.19637);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.648108, 0.340731, 0.187731);
+        let accel_data = Vector3::new(-0.004784, -0.0041860000000000005, 8.525088);
+        let mag_data = Vector3::new(-0.034602, -0.700946, -0.199436);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.631125, 0.486846, 0.14688);
+        let accel_data = Vector3::new(-0.01794, 0.005382, 8.514324);
+        let mag_data = Vector3::new(-0.03431, -0.698026, -0.208196);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.6175080000000001, 0.377604, 0.131274);
+        let accel_data = Vector3::new(-0.02093, -0.013156000000000001, 8.550204);
+        let mag_data = Vector3::new(-0.032558, -0.6939379999999999, -0.204254);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.587214, 0.570843, 0.13617);
+        let accel_data = Vector3::new(-0.029302, -0.029302, 8.544224);
+        let mag_data = Vector3::new(-0.033434, -0.696274, -0.198414);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.507654, 0.228276, 0.16156800000000002);
+        let accel_data = Vector3::new(-0.035282, -0.037076, 8.550802000000001);
+        let mag_data = Vector3::new(-0.036938, -0.696274, -0.202356);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.66861, 0.46512000000000003, 0.16845300000000002);
+        let accel_data = Vector3::new(-0.030498, -0.01196, 8.551998);
+        let mag_data = Vector3::new(-0.029054, -0.69277, -0.19125999999999999);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.5454450000000001, 0.337977, 0.201501);
+        let accel_data = Vector3::new(-0.016146, -0.000598, 8.571732);
+        let mag_data = Vector3::new(-0.027594, -0.69277, -0.201918);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.681768, 0.386478, 0.13464);
+        let accel_data = Vector3::new(-0.021528, -0.008372000000000001, 8.554988);
+        let mag_data = Vector3::new(-0.034894, -0.69277, -0.203816);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.476748, 0.52479, 0.153153);
+        let accel_data = Vector3::new(-0.025714, -0.034086, 8.571732);
+        let mag_data = Vector3::new(-0.028762, -0.694814, -0.20586);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.649332, 0.5347350000000001, 0.20349);
+        let accel_data = Vector3::new(-0.031096, -0.016146, 8.565154);
+        let mag_data = Vector3::new(-0.037814, -0.6994859999999999, -0.198706);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.6306660000000001, 0.364599, 0.200583);
+        let accel_data = Vector3::new(-0.025116, -0.02093, 8.55439);
+        let mag_data = Vector3::new(-0.033434, -0.6994859999999999, -0.20469199999999999);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.65484, 0.368271, 0.200277);
+        let accel_data = Vector3::new(-0.034684, -0.013754, 8.574124);
+        let mag_data = Vector3::new(-0.035186, -0.693354, -0.19856);
+
+        let quat = ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+        let unit_quat = UnitQuaternion::from_quaternion(quat.clone());
+
+        assert_eq!(
+            unit_quat.euler_angles(),
+            (-0.2979194890059548, 0.22481238222493047, 0.1670652971858595)
+        );
+
+        let gyro_data = Vector3::new(-0.550647, 0.55692, 0.16065000000000002);
+        let accel_data = Vector3::new(-0.034684, -0.026312000000000002, 8.56037);
+        let mag_data = Vector3::new(-0.031974, -0.703866, -0.195786);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.26759700000000003, 0.463743, 0.156978);
+        let accel_data = Vector3::new(-0.024518, 0.033488000000000004, 8.574722);
+        let mag_data = Vector3::new(-0.032266, -0.695106, -0.20221);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.62424, 0.561816, 0.171513);
+        let accel_data = Vector3::new(-0.071162, -0.089102, 8.630934);
+        let mag_data = Vector3::new(-0.03431, -0.694814, -0.205422);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.6820740000000001, 0.342414, 0.199512);
+        let accel_data = Vector3::new(0.110032, -0.2392, 8.696714);
+        let mag_data = Vector3::new(-0.03723, -0.69131, -0.213598);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.6289830000000001, 0.321453, 0.140148);
+        let accel_data = Vector3::new(-0.502918, -0.359996, 9.676238);
+        let mag_data = Vector3::new(-0.045698, -0.655978, -0.258566);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.6367860000000001, 0.33858900000000003, 0.145044);
+        let accel_data = Vector3::new(-1.095536, -1.561378, 9.094982);
+        let mag_data = Vector3::new(-0.046574, -0.623566, -0.285284);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.6158250000000001, 0.523872, 0.149481);
+        let accel_data = Vector3::new(-2.2807720000000002, -2.05712, 7.964762);
+        let mag_data = Vector3::new(-0.019418, -0.610134, -0.29419);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.606951, 0.5071950000000001, 0.200583);
+        let accel_data = Vector3::new(-3.023488, -2.243696, 7.7877540000000005);
+        let mag_data = Vector3::new(0.002774, -0.596702, -0.300614);
+
+        ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+
+        let gyro_data = Vector3::new(-0.6009840000000001, 0.32436000000000004, 0.165699);
+        let accel_data = Vector3::new(-3.34581, -2.450006, 8.162700000000001);
+        let mag_data = Vector3::new(0.012118, -0.582102, -0.31317);
+
+        let quat = ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
+        let unit_quat = UnitQuaternion::from_quaternion(quat.clone());
+
+        assert_eq!(
+            unit_quat.euler_angles(),
+            (-0.4896476132800323, 0.3842247985547172, 0.237439732266644)
+        );
     }
 }

@@ -168,7 +168,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         thread_info.imu_draw_idle_thread(&imu_page_rx, me, ctx)
     });
 
-    gtk::timeout_add(20, move || {
+    gtk::timeout_add(imu::IMU_SAMPLE_FREQ as u32, move || {
         imu_area.queue_draw();
         imu_page_accel_area.queue_draw();
 
