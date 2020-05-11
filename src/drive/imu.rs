@@ -24,7 +24,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process;
 
-pub const IMU_SAMPLE_FREQ: f64 = 40.0;
+pub const IMU_SAMPLE_FREQ: f64 = 60.0;
 
 struct ImuContext {
     accel_chan: Option<[iio::channel::Channel; 3]>,
