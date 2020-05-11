@@ -320,7 +320,7 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
             ahrs = Madgwick::new_with_quat(
                 IMU_SAMPLE_FREQ / 1000.0,
                 0.1,
-                imu_context.rotation_unit_quat.unwrap().quaternion().clone(),
+                *imu_context.rotation_unit_quat.unwrap().quaternion(),
             );
             thread_info.calibrate.lock().unwrap().set(false);
         }
@@ -363,12 +363,12 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         let mag_data = imu_context.get_mag_data();
 
         let quat = ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
-        let unit_quat = UnitQuaternion::from_quaternion(quat.clone());
+        let unit_quat = UnitQuaternion::from_quaternion(*quat);
 
         let quat_rotated = ahrs
             .update(&gyro_rotated, &accel_rotated, &mag_data)
             .unwrap();
-        let unit_quat_rotated = UnitQuaternion::from_quaternion(quat_rotated.clone());
+        let unit_quat_rotated = UnitQuaternion::from_quaternion(*quat_rotated);
 
         println!(
             "({:?}, {:?}, {:?}) -> {:?} and {:?}",
