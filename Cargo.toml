@@ -24,6 +24,5 @@ version = "0.8.1"
 features = ["v3_22"]
 
 [dependencies.plotters]
-version = "0.2.12"
-git = "https://github.com/38/plotters.git"
-features = ["cairo-rs"]
+version = "0.2.14"
+features = ["cairo"]
