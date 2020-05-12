@@ -295,11 +295,42 @@ impl Threading {
 
             chart
                 .draw_series(LineSeries::new(
-                    obdii_rpm
-                        .iter()
-                        .enumerate()
-                        .map(|(x, y)| (x as u32, *y)),
+                    obdii_rpm.iter().enumerate().map(|(x, y)| (x as u32, *y)),
                     &BLUE,
+                ))
+                .unwrap();
+
+            Inhibit(true)
+        });
+
+        let chart = builder
+            .get_object::<gtk::DrawingArea>("OBDIIChartTwo")
+            .expect("Can't find OBDIIChartTwo in ui file.");
+
+        let obdii_maf = obdii_data.maf.clone();
+
+        chart.connect_draw(move |me, cr| {
+            let width = me.get_allocated_width() as f64 * 0.07;
+            let height = me.get_allocated_width() as f64 * 0.07;
+
+            let root = CairoBackend::new(cr, (500, 500))
+                .unwrap()
+                .into_drawing_area();
+
+            let mut chart = ChartBuilder::on(&root)
+                .margin(10)
+                .caption("MAF", ("sans-serif", 30).into_font())
+                .x_label_area_size(width as u32)
+                .y_label_area_size(height as u32)
+                .build_ranged(0..100 as u32, 0f64..100f64)
+                .unwrap();
+
+            chart.configure_mesh().draw().unwrap();
+
+            chart
+                .draw_series(LineSeries::new(
+                    obdii_maf.iter().enumerate().map(|(x, y)| (x as u32, *y)),
+                    &RED,
                 ))
                 .unwrap();
 

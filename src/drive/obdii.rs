@@ -74,12 +74,18 @@ pub struct OBDIIData {
 
 pub struct OBDIIGraphData {
     pub rpm: VecDeque<f64>,
+    pub throttle: VecDeque<f64>,
+    pub load: VecDeque<f64>,
+    pub maf: VecDeque<f64>,
 }
 
 impl OBDIIGraphData {
     pub fn new() -> OBDIIGraphData {
         Self {
             rpm: VecDeque::with_capacity(100),
+            throttle: VecDeque::with_capacity(100),
+            load: VecDeque::with_capacity(100),
+            maf: VecDeque::with_capacity(100),
         }
     }
 }
