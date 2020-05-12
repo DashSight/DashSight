@@ -276,8 +276,8 @@ impl Threading {
         let obdii_rpm = obdii_data.rpm.clone();
 
         chart.connect_draw(move |me, cr| {
-            let width = me.get_allocated_width() as f64;
-            let height = me.get_allocated_width() as f64 * 0.7;
+            let width = me.get_allocated_width() as f64 * 0.07;
+            let height = me.get_allocated_width() as f64 * 0.07;
 
             let root = CairoBackend::new(cr, (500, 500))
                 .unwrap()
