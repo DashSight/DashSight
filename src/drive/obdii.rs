@@ -16,8 +16,9 @@
 
 extern crate cpython;
 use crate::drive::threading::ThreadingRef;
-use chrono::prelude::*;
+use chrono::Utc;
 use cpython::{PyResult, Python};
+use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
@@ -69,6 +70,18 @@ pub union PythonValues {
 pub struct OBDIIData {
     pub command: OBDIICommandType,
     pub val: PythonValues,
+}
+
+pub struct OBDIIGraphData {
+    pub rpm: VecDeque<f64>,
+}
+
+impl OBDIIGraphData {
+    pub fn new() -> OBDIIGraphData {
+        Self {
+            rpm: VecDeque::with_capacity(100),
+        }
+    }
 }
 
 pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyResult<()> {

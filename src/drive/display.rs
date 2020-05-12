@@ -24,6 +24,7 @@ use crate::drive::threading::Threading;
 use crate::drive::threading::ThreadingRef;
 use gtk::prelude::*;
 use gtk::ResponseType;
+use plotters::prelude::*;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
@@ -124,13 +125,16 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let display_weak = DisplayRef::downgrade(&display);
+    let mut obdii_data = obdii::OBDIIGraphData::new();
+    thread_info.set_cairo_graphs(&builder, &obdii_data);
+
     gtk::timeout_add(10, move || {
         let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
         let display = upgrade_weak!(display_weak, glib::source::Continue(false));
 
         let builder = display.builder.clone();
 
-        thread_info.obdii_update_idle_thread(&obdii_rx, builder)
+        thread_info.obdii_update_idle_thread(&obdii_rx, builder, &mut obdii_data)
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
@@ -261,4 +265,45 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     });
 
     drive_page.show_all();
+}
+
+impl Threading {
+    pub fn set_cairo_graphs(&self, builder: &gtk::Builder, obdii_data: &obdii::OBDIIGraphData) {
+        let chart = builder
+            .get_object::<gtk::DrawingArea>("OBDIIChartOne")
+            .expect("Can't find OBDIIChartOne in ui file.");
+
+        let obdii_rpm = obdii_data.rpm.clone();
+
+        chart.connect_draw(move |me, cr| {
+            let width = me.get_allocated_width() as f64;
+            let height = me.get_allocated_width() as f64 * 0.7;
+
+            let root = CairoBackend::new(cr, (500, 500))
+                .unwrap()
+                .into_drawing_area();
+
+            let mut chart = ChartBuilder::on(&root)
+                .margin(10)
+                .caption("RPM", ("sans-serif", 30).into_font())
+                .x_label_area_size(width as u32)
+                .y_label_area_size(height as u32)
+                .build_ranged(0..100 as u32, 0f64..15000f64)
+                .unwrap();
+
+            chart.configure_mesh().draw().unwrap();
+
+            chart
+                .draw_series(LineSeries::new(
+                    obdii_rpm
+                        .iter()
+                        .enumerate()
+                        .map(|(x, y)| (x as u32, *y)),
+                    &BLUE,
+                ))
+                .unwrap();
+
+            Inhibit(true)
+        });
+    }
 }

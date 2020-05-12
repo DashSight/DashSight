@@ -20,7 +20,6 @@ use crate::drive::obdii::OBDIICommandType;
 use crate::utils::lat_lon_comp;
 use gpsd_proto::handshake;
 use gtk::prelude::*;
-use plotters::prelude::*;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::fs::OpenOptions;
@@ -253,12 +252,25 @@ impl Threading {
         &self,
         obdii_rx: &std::sync::mpsc::Receiver<obdii::OBDIIData>,
         builder: gtk::Builder,
+        obdii_data: &mut obdii::OBDIIGraphData,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
         let rec = obdii_rx.recv_timeout(timeout);
         match rec {
             Ok(data) => {
                 if data.command == OBDIICommandType::Rpm {
+                    unsafe {
+                        obdii_data.rpm.push_back(data.val.float);
+                    }
+                    if obdii_data.rpm.len() > obdii_data.rpm.capacity() {
+                        obdii_data.rpm.pop_front();
+                    }
+
+                    let chart = builder
+                        .get_object::<gtk::DrawingArea>("OBDIIChartOne")
+                        .expect("Can't find OBDIIChartOne in ui file.");
+
+                    chart.queue_draw();
                 } else if data.command == OBDIICommandType::Throttle {
                     let pbar = builder
                         .get_object::<gtk::ProgressBar>("ThrottleBar")
@@ -266,33 +278,6 @@ impl Threading {
                     unsafe {
                         pbar.set_fraction(data.val.float / 100.0);
                     }
-
-                    let chart = builder
-                        .get_object::<gtk::DrawingArea>("OBDIIChartOne")
-                        .expect("Can't find OBDIIChartOne in ui file.");
-
-                    println!("About to draw the RPM graph");
-
-                    chart.connect_draw(move |me, cr| {
-                        let width = me.get_allocated_width() as f64;
-                        let height = me.get_allocated_width() as f64 * 0.7;
-
-                        let root = CairoBackend::new(cr, (500, 500))
-                            .unwrap()
-                            .into_drawing_area();
-
-                        let mut chart = ChartBuilder::on(&root)
-                            .margin(10)
-                            .caption("RPM", ("sans-serif", 30).into_font())
-                            .x_label_area_size(width as u32)
-                            .y_label_area_size(height as u32)
-                            .build_ranged(0..100 as u32, 0f32..1f32)
-                            .unwrap();
-
-                        chart.configure_mesh().draw().unwrap();
-
-                        Inhibit(true)
-                    });
                 } else if data.command == OBDIICommandType::EngineLoad {
                     let pbar = builder
                         .get_object::<gtk::ProgressBar>("LoadBar")
