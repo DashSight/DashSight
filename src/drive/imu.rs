@@ -22,7 +22,6 @@ use nalgebra::Vector3;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
-use std::process;
 
 pub const IMU_SAMPLE_FREQ: f64 = 60.0;
 
@@ -56,93 +55,99 @@ impl Default for ImuContext {
 }
 
 impl ImuContext {
-    fn new(ctx: &iio::Context) -> ImuContext {
+    fn new(ctx: &iio::Context) -> Result<ImuContext, String> {
         // Create the IMU accel device
         let imu_name = "lsm9ds1-imu_accel";
-        let imu_accel_dev = ctx.find_device(imu_name).unwrap_or_else(|| {
-            println!("Error opening device: {}", imu_name);
-            process::exit(1);
-        });
+        let imu_accel_dev;
+        match ctx.find_device(imu_name) {
+            Some(dev) => {
+                imu_accel_dev = dev;
+            }
+            None => {
+                return Err(format!("Error opening device: {}", imu_name));
+            }
+        }
 
         // Create the IMU gyro device
         let imu_name = "lsm9ds1-imu_gyro";
-        let imu_gyro_dev = ctx.find_device(imu_name).unwrap_or_else(|| {
-            println!("Error opening device: {}", imu_name);
-            process::exit(1);
-        });
+        let imu_gyro_dev;
+        match ctx.find_device(imu_name) {
+            Some(dev) => {
+                imu_gyro_dev = dev;
+            }
+            None => {
+                return Err(format!("Error opening device: {}", imu_name));
+            }
+        }
 
         // Create the IMU mag device
         let imu_name = "lsm9ds1_magn";
-        let imu_mag_dev = ctx.find_device(imu_name).unwrap_or_else(|| {
-            println!("Error opening device: {}", imu_name);
-            process::exit(1);
-        });
+        let imu_mag_dev;
+        match ctx.find_device(imu_name) {
+            Some(dev) => {
+                imu_mag_dev = dev;
+            }
+            None => {
+                return Err(format!("Error opening device: {}", imu_name));
+            }
+        }
 
         // Get the IMU acceleration channels
         let x_accel_chan = imu_accel_dev
             .find_channel("accel_x", false)
             .unwrap_or_else(|| {
-                println!("No 'accel_x' channel on this device");
-                process::exit(1);
+                panic!("No 'accel_x' channel on this device");
             });
         let y_accel_chan = imu_accel_dev
             .find_channel("accel_y", false)
             .unwrap_or_else(|| {
-                println!("No 'accel_y' channel on this device");
-                process::exit(1);
+                panic!("No 'accel_y' channel on this device");
             });
         let z_accel_chan = imu_accel_dev
             .find_channel("accel_z", false)
             .unwrap_or_else(|| {
-                println!("No 'accel_z' channel on this device");
-                process::exit(1);
+                panic!("No 'accel_z' channel on this device");
             });
 
         // Get the IMU gyro channels
         let x_gyro_chan = imu_gyro_dev
             .find_channel("anglvel_x", false)
             .unwrap_or_else(|| {
-                println!("No 'anglvel_x' channel on this device");
-                process::exit(1);
+                panic!("No 'anglvel_x' channel on this device");
             });
         let y_gyro_chan = imu_gyro_dev
             .find_channel("anglvel_y", false)
             .unwrap_or_else(|| {
-                println!("No 'anglvel_y' channel on this device");
-                process::exit(1);
+                panic!("No 'anglvel_y' channel on this device");
             });
         let z_gyro_chan = imu_gyro_dev
             .find_channel("anglvel_z", false)
             .unwrap_or_else(|| {
-                println!("No 'anglvel_z' channel on this device");
-                process::exit(1);
+                panic!("No 'anglvel_z' channel on this device");
             });
 
         // Get the IMU mag channels
         let x_mag_chan = imu_mag_dev
             .find_channel("magn_x", false)
             .unwrap_or_else(|| {
-                println!("No 'magn_x' channel on this device");
-                process::exit(1);
+                panic!("No 'magn_x' channel on this device");
             });
         let y_mag_chan = imu_mag_dev
             .find_channel("magn_y", false)
             .unwrap_or_else(|| {
-                println!("No 'magn_y' channel on this device");
-                process::exit(1);
+                panic!("No 'magn_y' channel on this device");
             });
         let z_mag_chan = imu_mag_dev
             .find_channel("magn_z", false)
             .unwrap_or_else(|| {
-                println!("No 'magn_z' channel on this device");
-                process::exit(1);
+                panic!("No 'magn_z' channel on this device");
             });
 
         let accel_chan: [iio::channel::Channel; 3] = [x_accel_chan, y_accel_chan, z_accel_chan];
         let gyro_chan: [iio::channel::Channel; 3] = [x_gyro_chan, y_gyro_chan, z_gyro_chan];
         let mag_chan: [iio::channel::Channel; 3] = [x_mag_chan, y_mag_chan, z_mag_chan];
 
-        ImuContext {
+        Ok(ImuContext {
             accel_chan: Some(accel_chan),
             gyro_chan: Some(gyro_chan),
             mag_chan: Some(mag_chan),
@@ -151,7 +156,7 @@ impl ImuContext {
             gyro_scale: [0.0, 0.0, 0.0],
             mag_scale: [0.0, 0.0, 0.0],
             rotation_unit_quat: None,
-        }
+        })
     }
 
     fn get_calibration_data(&mut self) {
@@ -286,7 +291,16 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
     }
 
-    let mut imu_context = ImuContext::new(&ctx);
+    let mut imu_context;
+    match ImuContext::new(&ctx) {
+        Ok(imu) => {
+            imu_context = imu;
+        }
+        Err(e) => {
+            println!("{:?}", e);
+            return;
+        }
+    }
 
     imu_context.get_calibration_data();
     imu_context.get_scale_data();
