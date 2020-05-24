@@ -263,7 +263,7 @@ impl Threading {
                     unsafe {
                         obdii_data.borrow_mut().rpm.push_front(data.val.float);
                     }
-                    if obdii_data.borrow().rpm.len() > obdii_data.borrow().rpm.capacity() {
+                    if obdii_data.borrow().rpm.len() > obdii::VECTOR_LEN {
                         obdii_data.borrow_mut().rpm.pop_back();
                     }
 
@@ -308,7 +308,7 @@ impl Threading {
                     unsafe {
                         obdii_data.borrow_mut().maf.push_front(data.val.float);
                     }
-                    if obdii_data.borrow().maf.len() > obdii_data.borrow().maf.capacity() {
+                    if obdii_data.borrow().maf.len() > obdii::VECTOR_LEN {
                         obdii_data.borrow_mut().maf.pop_back();
                     }
 

@@ -79,13 +79,15 @@ pub struct OBDIIGraphData {
     pub maf: VecDeque<f64>,
 }
 
+pub static VECTOR_LEN: usize = 100;
+
 impl OBDIIGraphData {
     pub fn new() -> OBDIIGraphData {
         Self {
-            rpm: VecDeque::with_capacity(100),
-            throttle: VecDeque::with_capacity(100),
-            load: VecDeque::with_capacity(100),
-            maf: VecDeque::with_capacity(100),
+            rpm: VecDeque::with_capacity(VECTOR_LEN),
+            throttle: VecDeque::with_capacity(VECTOR_LEN),
+            load: VecDeque::with_capacity(VECTOR_LEN),
+            maf: VecDeque::with_capacity(VECTOR_LEN),
         }
     }
 }
