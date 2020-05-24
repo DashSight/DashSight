@@ -261,10 +261,10 @@ impl Threading {
             Ok(data) => {
                 if data.command == OBDIICommandType::Rpm {
                     unsafe {
-                        obdii_data.borrow_mut().rpm.push_back(data.val.float);
+                        obdii_data.borrow_mut().rpm.push_front(data.val.float);
                     }
                     if obdii_data.borrow().rpm.len() > obdii_data.borrow().rpm.capacity() {
-                        obdii_data.borrow_mut().rpm.pop_front();
+                        obdii_data.borrow_mut().rpm.pop_back();
                     }
 
                     let chart = builder
