@@ -256,110 +256,112 @@ impl Threading {
         obdii_data: &Rc<RefCell<obdii::OBDIIGraphData>>,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
-        let rec = obdii_rx.recv_timeout(timeout);
-        match rec {
-            Ok(data) => {
-                if data.command == OBDIICommandType::Rpm {
-                    unsafe {
-                        obdii_data.borrow_mut().rpm.push_front(data.val.float);
-                    }
-                    if obdii_data.borrow().rpm.len() > obdii::VECTOR_LEN {
-                        obdii_data.borrow_mut().rpm.pop_back();
-                    }
+        for _i in 0..20 {
+            let rec = obdii_rx.recv_timeout(timeout);
+            match rec {
+                Ok(data) => {
+                    if data.command == OBDIICommandType::Rpm {
+                        unsafe {
+                            obdii_data.borrow_mut().rpm.push_front(data.val.float);
+                        }
+                        if obdii_data.borrow().rpm.len() > obdii::VECTOR_LEN {
+                            obdii_data.borrow_mut().rpm.pop_back();
+                        }
 
-                    let chart = builder
-                        .get_object::<gtk::DrawingArea>("OBDIIChartOne")
-                        .expect("Can't find OBDIIChartOne in ui file.");
+                        let chart = builder
+                            .get_object::<gtk::DrawingArea>("OBDIIChartOne")
+                            .expect("Can't find OBDIIChartOne in ui file.");
 
-                    chart.queue_draw();
-                } else if data.command == OBDIICommandType::Throttle {
-                    let pbar = builder
-                        .get_object::<gtk::ProgressBar>("ThrottleBar")
-                        .expect("Can't find ThrottleBar in ui file.");
-                    unsafe {
-                        pbar.set_fraction(data.val.float / 100.0);
-                    }
-                } else if data.command == OBDIICommandType::EngineLoad {
-                    let pbar = builder
-                        .get_object::<gtk::ProgressBar>("LoadBar")
-                        .expect("Can't find LoadBar in ui file.");
-                    unsafe {
-                        pbar.set_fraction(data.val.float / 100.0);
-                    }
-                } else if data.command == OBDIICommandType::TimingAdv {
-                    let label = builder
-                        .get_object::<gtk::Label>("TimingAdvValue")
-                        .expect("Can't find TimingAdvValue in ui file.");
-                    let text;
-                    unsafe {
-                        text = format!("{:3.2}", data.val.float);
-                    }
-                    label.set_text(&text);
-                } else if data.command == OBDIICommandType::Maf {
-                    let label = builder
-                        .get_object::<gtk::Label>("MAFValue")
-                        .expect("Can't find MAFValue in ui file.");
-                    let text;
-                    unsafe {
-                        text = format!("{:3.2}", data.val.float);
-                    }
-                    label.set_text(&text);
+                        chart.queue_draw();
+                    } else if data.command == OBDIICommandType::Throttle {
+                        let pbar = builder
+                            .get_object::<gtk::ProgressBar>("ThrottleBar")
+                            .expect("Can't find ThrottleBar in ui file.");
+                        unsafe {
+                            pbar.set_fraction(data.val.float / 100.0);
+                        }
+                    } else if data.command == OBDIICommandType::EngineLoad {
+                        let pbar = builder
+                            .get_object::<gtk::ProgressBar>("LoadBar")
+                            .expect("Can't find LoadBar in ui file.");
+                        unsafe {
+                            pbar.set_fraction(data.val.float / 100.0);
+                        }
+                    } else if data.command == OBDIICommandType::TimingAdv {
+                        let label = builder
+                            .get_object::<gtk::Label>("TimingAdvValue")
+                            .expect("Can't find TimingAdvValue in ui file.");
+                        let text;
+                        unsafe {
+                            text = format!("{:3.2}", data.val.float);
+                        }
+                        label.set_text(&text);
+                    } else if data.command == OBDIICommandType::Maf {
+                        let label = builder
+                            .get_object::<gtk::Label>("MAFValue")
+                            .expect("Can't find MAFValue in ui file.");
+                        let text;
+                        unsafe {
+                            text = format!("{:3.2}", data.val.float);
+                        }
+                        label.set_text(&text);
 
-                    unsafe {
-                        obdii_data.borrow_mut().maf.push_front(data.val.float);
-                    }
-                    if obdii_data.borrow().maf.len() > obdii::VECTOR_LEN {
-                        obdii_data.borrow_mut().maf.pop_back();
-                    }
+                        unsafe {
+                            obdii_data.borrow_mut().maf.push_front(data.val.float);
+                        }
+                        if obdii_data.borrow().maf.len() > obdii::VECTOR_LEN {
+                            obdii_data.borrow_mut().maf.pop_back();
+                        }
 
-                    let chart = builder
-                        .get_object::<gtk::DrawingArea>("OBDIIChartTwo")
-                        .expect("Can't find OBDIIChartTwo in ui file.");
+                        let chart = builder
+                            .get_object::<gtk::DrawingArea>("OBDIIChartTwo")
+                            .expect("Can't find OBDIIChartTwo in ui file.");
 
-                    chart.queue_draw();
-                } else if data.command == OBDIICommandType::CoolantTemp {
-                    let label = builder
-                        .get_object::<gtk::Label>("CoolantTempValue")
-                        .expect("Can't find CoolantTempValue in ui file.");
-                    let text;
-                    unsafe {
-                        text = format!("{:3}", data.val.long);
+                        chart.queue_draw();
+                    } else if data.command == OBDIICommandType::CoolantTemp {
+                        let label = builder
+                            .get_object::<gtk::Label>("CoolantTempValue")
+                            .expect("Can't find CoolantTempValue in ui file.");
+                        let text;
+                        unsafe {
+                            text = format!("{:3}", data.val.long);
+                        }
+                        label.set_text(&text);
+                    } else if data.command == OBDIICommandType::IntakeTemp {
+                        let label = builder
+                            .get_object::<gtk::Label>("IntakeTempValue")
+                            .expect("Can't find IntakeTempValue in ui file.");
+                        let text;
+                        unsafe {
+                            text = format!("{:3}", data.val.long);
+                        }
+                        label.set_text(&text);
+                    } else if data.command == OBDIICommandType::ShortFuelT1 {
+                        let label = builder
+                            .get_object::<gtk::Label>("ShortFuelB1Value")
+                            .expect("Can't find ShortFuelB1Value in ui file.");
+                        let text;
+                        unsafe {
+                            text = format!("{:3}", data.val.float);
+                        }
+                        label.set_text(&text);
+                    } else if data.command == OBDIICommandType::LongFuelT1 {
+                        let label = builder
+                            .get_object::<gtk::Label>("LongFuelB1Value")
+                            .expect("Can't find LongFuelB1Value in ui file.");
+                        let text;
+                        unsafe {
+                            text = format!("{:3}", data.val.float);
+                        }
+                        label.set_text(&text);
+                    } else if data.command == OBDIICommandType::FuelStatus {
                     }
-                    label.set_text(&text);
-                } else if data.command == OBDIICommandType::IntakeTemp {
-                    let label = builder
-                        .get_object::<gtk::Label>("IntakeTempValue")
-                        .expect("Can't find IntakeTempValue in ui file.");
-                    let text;
-                    unsafe {
-                        text = format!("{:3}", data.val.long);
-                    }
-                    label.set_text(&text);
-                } else if data.command == OBDIICommandType::ShortFuelT1 {
-                    let label = builder
-                        .get_object::<gtk::Label>("ShortFuelB1Value")
-                        .expect("Can't find ShortFuelB1Value in ui file.");
-                    let text;
-                    unsafe {
-                        text = format!("{:3}", data.val.float);
-                    }
-                    label.set_text(&text);
-                } else if data.command == OBDIICommandType::LongFuelT1 {
-                    let label = builder
-                        .get_object::<gtk::Label>("LongFuelB1Value")
-                        .expect("Can't find LongFuelB1Value in ui file.");
-                    let text;
-                    unsafe {
-                        text = format!("{:3}", data.val.float);
-                    }
-                    label.set_text(&text);
-                } else if data.command == OBDIICommandType::FuelStatus {
                 }
-                glib::source::Continue(true)
+                Err(mpsc::RecvTimeoutError::Timeout) => return glib::source::Continue(true),
+                _ => return glib::source::Continue(false),
             }
-            Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
-            _ => glib::source::Continue(false),
         }
+        glib::source::Continue(true)
     }
 
     pub fn map_update_idle_thread(
