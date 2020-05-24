@@ -25,6 +25,8 @@ use crate::drive::threading::ThreadingRef;
 use gtk::prelude::*;
 use gtk::ResponseType;
 use plotters::prelude::*;
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
@@ -125,7 +127,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let display_weak = DisplayRef::downgrade(&display);
-    let mut obdii_data = obdii::OBDIIGraphData::new();
+    let obdii_data = Rc::new(RefCell::new(obdii::OBDIIGraphData::new()));
     thread_info.set_cairo_graphs(&builder, &obdii_data);
 
     gtk::timeout_add(10, move || {
@@ -134,7 +136,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
         let builder = display.builder.clone();
 
-        thread_info.obdii_update_idle_thread(&obdii_rx, builder, &mut obdii_data)
+        thread_info.obdii_update_idle_thread(&obdii_rx, builder, &obdii_data)
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
@@ -268,12 +270,16 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 }
 
 impl Threading {
-    pub fn set_cairo_graphs(&self, builder: &gtk::Builder, obdii_data: &obdii::OBDIIGraphData) {
+    pub fn set_cairo_graphs(
+        &self,
+        builder: &gtk::Builder,
+        obdii_data: &Rc<RefCell<obdii::OBDIIGraphData>>,
+    ) {
         let chart = builder
             .get_object::<gtk::DrawingArea>("OBDIIChartOne")
             .expect("Can't find OBDIIChartOne in ui file.");
 
-        let obdii_rpm = obdii_data.rpm.clone();
+        let obdii_data_cloned = obdii_data.clone();
 
         chart.connect_draw(move |me, cr| {
             let width = me.get_allocated_width() as f64 * 0.07;
@@ -295,7 +301,12 @@ impl Threading {
 
             chart
                 .draw_series(LineSeries::new(
-                    obdii_rpm.iter().enumerate().map(|(x, y)| (x as u32, *y)),
+                    obdii_data_cloned
+                        .borrow_mut()
+                        .rpm
+                        .iter()
+                        .enumerate()
+                        .map(|(x, y)| (x as u32, *y)),
                     &BLUE,
                 ))
                 .unwrap();
@@ -307,7 +318,7 @@ impl Threading {
             .get_object::<gtk::DrawingArea>("OBDIIChartTwo")
             .expect("Can't find OBDIIChartTwo in ui file.");
 
-        let obdii_maf = obdii_data.maf.clone();
+        let obdii_data_cloned = obdii_data.clone();
 
         chart.connect_draw(move |me, cr| {
             let width = me.get_allocated_width() as f64 * 0.07;
@@ -329,7 +340,12 @@ impl Threading {
 
             chart
                 .draw_series(LineSeries::new(
-                    obdii_maf.iter().enumerate().map(|(x, y)| (x as u32, *y)),
+                    obdii_data_cloned
+                        .borrow_mut()
+                        .maf
+                        .iter()
+                        .enumerate()
+                        .map(|(x, y)| (x as u32, *y)),
                     &RED,
                 ))
                 .unwrap();

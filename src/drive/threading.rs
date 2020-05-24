@@ -26,6 +26,7 @@ use std::fs::OpenOptions;
 use std::io;
 use std::net::TcpStream;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -252,7 +253,7 @@ impl Threading {
         &self,
         obdii_rx: &std::sync::mpsc::Receiver<obdii::OBDIIData>,
         builder: gtk::Builder,
-        obdii_data: &mut obdii::OBDIIGraphData,
+        obdii_data: &Rc<RefCell<obdii::OBDIIGraphData>>,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
         let rec = obdii_rx.recv_timeout(timeout);
@@ -260,10 +261,10 @@ impl Threading {
             Ok(data) => {
                 if data.command == OBDIICommandType::Rpm {
                     unsafe {
-                        obdii_data.rpm.push_back(data.val.float);
+                        obdii_data.borrow_mut().rpm.push_back(data.val.float);
                     }
-                    if obdii_data.rpm.len() > obdii_data.rpm.capacity() {
-                        obdii_data.rpm.pop_front();
+                    if obdii_data.borrow().rpm.len() > obdii_data.borrow().rpm.capacity() {
+                        obdii_data.borrow_mut().rpm.pop_front();
                     }
 
                     let chart = builder
