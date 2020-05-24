@@ -330,7 +330,7 @@ impl Threading {
 
             let mut chart = ChartBuilder::on(&root)
                 .margin(10)
-                .caption("MAF", ("sans-serif", 30).into_font())
+                .caption("MAF (%)", ("sans-serif", 30).into_font())
                 .x_label_area_size(width as u32)
                 .y_label_area_size(height as u32)
                 .build_ranged(0..100 as u32, 0f64..100f64)
