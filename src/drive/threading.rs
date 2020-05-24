@@ -304,6 +304,19 @@ impl Threading {
                         text = format!("{:3.2}", data.val.float);
                     }
                     label.set_text(&text);
+
+                    unsafe {
+                        obdii_data.borrow_mut().maf.push_front(data.val.float);
+                    }
+                    if obdii_data.borrow().maf.len() > obdii_data.borrow().maf.capacity() {
+                        obdii_data.borrow_mut().maf.pop_back();
+                    }
+
+                    let chart = builder
+                        .get_object::<gtk::DrawingArea>("OBDIIChartTwo")
+                        .expect("Can't find OBDIIChartTwo in ui file.");
+
+                    chart.queue_draw();
                 } else if data.command == OBDIICommandType::CoolantTemp {
                     let label = builder
                         .get_object::<gtk::Label>("CoolantTempValue")
