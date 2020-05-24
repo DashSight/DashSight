@@ -280,6 +280,19 @@ impl Threading {
                         unsafe {
                             pbar.set_fraction(data.val.float / 100.0);
                         }
+
+                        unsafe {
+                            obdii_data.borrow_mut().throttle.push_front(data.val.float);
+                        }
+                        if obdii_data.borrow().throttle.len() > obdii::VECTOR_LEN {
+                            obdii_data.borrow_mut().throttle.pop_back();
+                        }
+
+                        let chart = builder
+                            .get_object::<gtk::DrawingArea>("OBDIIChartThree")
+                            .expect("Can't find OBDIIChartThree in ui file.");
+
+                        chart.queue_draw();
                     } else if data.command == OBDIICommandType::EngineLoad {
                         let pbar = builder
                             .get_object::<gtk::ProgressBar>("LoadBar")
@@ -287,6 +300,19 @@ impl Threading {
                         unsafe {
                             pbar.set_fraction(data.val.float / 100.0);
                         }
+
+                        unsafe {
+                            obdii_data.borrow_mut().load.push_front(data.val.float);
+                        }
+                        if obdii_data.borrow().load.len() > obdii::VECTOR_LEN {
+                            obdii_data.borrow_mut().load.pop_back();
+                        }
+
+                        let chart = builder
+                            .get_object::<gtk::DrawingArea>("OBDIIChartFour")
+                            .expect("Can't find OBDIIChartFour in ui file.");
+
+                        chart.queue_draw();
                     } else if data.command == OBDIICommandType::TimingAdv {
                         let label = builder
                             .get_object::<gtk::Label>("TimingAdvValue")
