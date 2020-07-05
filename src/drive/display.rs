@@ -300,13 +300,14 @@ impl Threading {
             chart.configure_mesh().draw().unwrap();
 
             chart
-                .draw_series(LineSeries::new(
+                .draw_series(AreaSeries::new(
                     obdii_data_cloned
                         .borrow_mut()
                         .rpm
                         .iter()
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
+                    0.0,
                     &BLUE,
                 ))
                 .unwrap();
@@ -339,13 +340,14 @@ impl Threading {
             chart.configure_mesh().draw().unwrap();
 
             chart
-                .draw_series(LineSeries::new(
+                .draw_series(AreaSeries::new(
                     obdii_data_cloned
                         .borrow_mut()
                         .maf
                         .iter()
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
+                    0.0,
                     &RED,
                 ))
                 .unwrap();
@@ -378,13 +380,14 @@ impl Threading {
             chart.configure_mesh().draw().unwrap();
 
             chart
-                .draw_series(LineSeries::new(
+                .draw_series(AreaSeries::new(
                     obdii_data_cloned
                         .borrow_mut()
                         .throttle
                         .iter()
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
+                    0.0,
                     &GREEN,
                 ))
                 .unwrap();
@@ -417,13 +420,14 @@ impl Threading {
             chart.configure_mesh().draw().unwrap();
 
             chart
-                .draw_series(LineSeries::new(
+                .draw_series(AreaSeries::new(
                     obdii_data_cloned
                         .borrow_mut()
                         .load
                         .iter()
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
+                    0.0,
                     &YELLOW,
                 ))
                 .unwrap();
