@@ -308,7 +308,7 @@ impl Threading {
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
                     0.0,
-                    &BLUE,
+                    &BLUE.mix(0.2),
                 ))
                 .unwrap();
 
@@ -348,7 +348,7 @@ impl Threading {
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
                     0.0,
-                    &RED,
+                    &RED.mix(0.2),
                 ))
                 .unwrap();
 
@@ -388,7 +388,7 @@ impl Threading {
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
                     0.0,
-                    &GREEN,
+                    &GREEN.mix(0.2),
                 ))
                 .unwrap();
 
@@ -428,7 +428,7 @@ impl Threading {
                         .enumerate()
                         .map(|(x, y)| (x as u32, *y)),
                     0.0,
-                    &YELLOW,
+                    &YELLOW.mix(0.2),
                 ))
                 .unwrap();
 
