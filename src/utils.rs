@@ -52,36 +52,31 @@ pub fn lat_lon_comp(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> bool {
 pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, String, f32), ()> {
     loop {
         let msg = get_data(reader);
-        let gpsd_message;
-
-        match msg {
-            Ok(msg) => {
-                gpsd_message = msg;
-            }
+        let gpsd_message = match msg {
+            Ok(msg) => msg,
             Err(_err) => {
                 return Err(());
             }
-        }
+        };
 
         println!("gpsd_message: {:?}", gpsd_message);
 
         match gpsd_message {
             ResponseData::Device(_) => {}
             ResponseData::Tpv(t) => {
-                match t.lat {
-                    Some(lat) => {
-                        return Ok((
-                            lat,
-                            t.lon.unwrap(),
-                            t.alt.unwrap(),
-                            t.time.unwrap(),
-                            t.speed.unwrap(),
-                        ));
-                    }
-                    _ => {
-                        return Err(());
-                    }
-                };
+                // Check if we have a longitude and latitude
+                if t.lat.is_some() && t.lon.is_some() {
+                    // Return the longitude and latitude
+                    // If we don't have a time (which apparently can happen)
+                    // then return the Unix Epoch start time instead
+                    return Ok((
+                        t.lat.unwrap(),
+                        t.lon.unwrap(),
+                        t.alt.unwrap(),
+                        t.time.unwrap_or("1970-01-01T00:00:00.000Z".to_string()),
+                        t.speed.unwrap(),
+                    ));
+                }
             }
             ResponseData::Sky(_) => {}
             ResponseData::Pps(_) => {}
