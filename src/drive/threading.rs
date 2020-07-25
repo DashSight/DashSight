@@ -151,7 +151,7 @@ impl Threading {
                 }
                 Err(err) => {
                     println!("Failed to get a message from GPSD: {:?}", err);
-                    std::thread::sleep(std::time::Duration::from_millis(10));
+                    std::thread::sleep(std::time::Duration::from_millis(30));
                     continue;
                 }
             }
