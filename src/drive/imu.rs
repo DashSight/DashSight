@@ -377,21 +377,21 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         let mag_data = imu_context.get_mag_data();
 
         let quat = ahrs.update(&gyro_data, &accel_data, &mag_data).unwrap();
-        let unit_quat = UnitQuaternion::from_quaternion(*quat);
+        let _unit_quat = UnitQuaternion::from_quaternion(*quat);
 
         let quat_rotated = ahrs
             .update(&gyro_rotated, &accel_rotated, &mag_data)
             .unwrap();
-        let unit_quat_rotated = UnitQuaternion::from_quaternion(*quat_rotated);
+        let _unit_quat_rotated = UnitQuaternion::from_quaternion(*quat_rotated);
 
-        println!(
-            "({:?}, {:?}, {:?}) -> {:?} and {:?}",
-            gyro_data,
-            accel_data,
-            mag_data,
-            unit_quat.euler_angles(),
-            unit_quat_rotated.euler_angles()
-        );
+        // println!(
+        //     "({:?}, {:?}, {:?}) -> {:?} and {:?}",
+        //     gyro_data,
+        //     accel_data,
+        //     mag_data,
+        //     unit_quat.euler_angles(),
+        //     unit_quat_rotated.euler_angles()
+        // );
     }
 
     fd.flush().unwrap();

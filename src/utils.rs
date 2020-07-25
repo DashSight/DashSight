@@ -63,6 +63,8 @@ pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, S
             }
         }
 
+        println!("gpsd_message: {:?}", gpsd_message);
+
         match gpsd_message {
             ResponseData::Device(_) => {}
             ResponseData::Tpv(t) => {
