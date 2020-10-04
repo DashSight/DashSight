@@ -59,10 +59,12 @@ pub fn gpx_point_info(
     lon: f64,
     alt: f32,
     time: String,
+    heading: f32,
 ) -> Result<(), std::io::Error> {
     writeln!(fd, "      <trkpt lat=\"{}\" lon=\"{}\">", lat, lon)?;
     writeln!(fd, "        <ele>{}</ele>", alt)?;
     writeln!(fd, "        <time>{}</time>", time)?;
+    writeln!(fd, "        <degreesType>{}</degreesType>", heading)?;
     writeln!(fd, "      </trkpt>")?;
     Ok(())
 }

@@ -51,7 +51,9 @@ pub fn lat_lon_comp(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> bool {
 
 /// Gets the relevent location/velocity data from the GPS device
 /// Returns latitude, longitude, altitude, time, speed and track
-pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<(f64, f64, f32, String, f32, f32), ()> {
+pub fn get_gps_lat_lon(
+    reader: &mut dyn io::BufRead,
+) -> Result<(f64, f64, f32, String, f32, f32), ()> {
     loop {
         let msg = get_data(reader);
         let gpsd_message = match msg {
