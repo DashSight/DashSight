@@ -212,7 +212,7 @@ impl RecordInfo {
             let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
             match msg {
-                Ok((lat, lon, alt, time, _speed)) => {
+                Ok((lat, lon, alt, time, _speed, _track)) => {
                     self.location_tx.send((lat, lon)).unwrap();
 
                     if self.save.lock().unwrap().get() && !self.toggle_save.lock().unwrap().get() {

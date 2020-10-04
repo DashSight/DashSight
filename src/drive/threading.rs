@@ -111,7 +111,7 @@ impl Threading {
             let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
             match msg {
-                Ok((lat, lon, _alt, _time, _speed)) => {
+                Ok((lat, lon, _alt, _time, _speed, _track)) => {
                     self.location_tx.send((lat, lon)).unwrap();
 
                     if !self.on_track.lock().unwrap().get()
