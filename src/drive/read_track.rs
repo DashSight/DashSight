@@ -21,6 +21,7 @@ use std::io::BufRead;
 pub struct Coord {
     pub lat: f64,
     pub lon: f64,
+    pub head: Option<f32>,
 }
 
 pub fn get_long_and_lat(
@@ -56,7 +57,11 @@ pub fn get_long_and_lat(
 
                 // Let's assume a lat/lon of 0 is just invalid
                 if lat != 0.0 && lon != 0.0 {
-                    let c = Coord { lat, lon };
+                    let c = Coord {
+                        lat,
+                        lon,
+                        head: None,
+                    };
                     coord_vec.push(c);
                 }
             }

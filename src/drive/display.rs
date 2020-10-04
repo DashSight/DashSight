@@ -80,8 +80,10 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         let mut course_info = Course::new(
             (&track_points).first().unwrap().lat,
             (&track_points).first().unwrap().lon,
+            (&track_points).first().unwrap().head.unwrap_or(0.0),
             (&track_points).last().unwrap().lat,
             (&track_points).last().unwrap().lon,
+            (&track_points).last().unwrap().head.unwrap_or(0.0),
         );
 
         thread_info.gpsd_thread(&mut course_info);
