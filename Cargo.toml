@@ -7,22 +7,20 @@ edition = "2018"
 
 [dependencies]
 ahrs = "0.2.2"
-cairo-rs = "0.8.1"
+cairo-rs = "0.9.1"
 champlain = { git = "https://github.com/DashSight/champlain.git" }
-chrono = "0.4.13"
-cpython = "0.5.0"
-gio = "0.8.1"
-glib = "0.9.3"
-gpsd_proto = "0.6.0"
+chrono = "0.4.19"
+cpython = "0.5.1"
+gio = "0.9.1"
+glib = "0.10.2"
+gpsd_proto = "0.7.0"
 industrial-io = "0.2.0"
 nalgebra = "0.18.1"
-serde = { version = "1.0.115", features = ["derive"] }
-serde_json = "1.0.57"
+plotters = "0.3.0"
+plotters-cairo = "0.3.1"
+serde = { version = "1.0.116", features = ["derive"] }
+serde_json = "1.0.58"
 
 [dependencies.gtk]
-version = "0.8.1"
+version = "0.9.2"
 features = ["v3_22"]
-
-[dependencies.plotters]
-version = "0.2.15"
-features = ["cairo"]

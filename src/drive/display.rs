@@ -25,6 +25,7 @@ use crate::drive::threading::ThreadingRef;
 use gtk::prelude::*;
 use gtk::ResponseType;
 use plotters::prelude::*;
+use plotters_cairo::CairoBackend;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::mpsc;
