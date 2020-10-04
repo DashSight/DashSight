@@ -46,24 +46,30 @@ pub fn get_long_and_lat(
     reader_iterator.next();
     reader_iterator.next();
 
+    let mut lat: f64 = 0.0;
+    let mut lon: f64 = 0.0;
+    let mut head: Option<f32> = None;
+
     for line in reader_iterator {
         let trim_line = line.trim();
         if let Some(trkpt_num) = trim_line.find("<trkpt") {
             if let Some(trkpt_line) = trim_line.get((trkpt_num + 5)..) {
                 let split_line: Vec<&str> = trkpt_line.split('"').collect();
 
-                let lat: f64 = split_line[1].parse().unwrap();
-                let lon: f64 = split_line[3].parse().unwrap();
+                lat = split_line[1].parse().unwrap();
+                lon = split_line[3].parse().unwrap();
+            }
+        } else if let Some(degrees_num) = trim_line.find("<degreesType") {
+            if let Some(degrees_line) = trim_line.get((degrees_num + 1)..) {
+                let split_line: Vec<&str> = degrees_line.split('<').collect();
 
-                // Let's assume a lat/lon of 0 is just invalid
-                if lat != 0.0 && lon != 0.0 {
-                    let c = Coord {
-                        lat,
-                        lon,
-                        head: None,
-                    };
-                    coord_vec.push(c);
-                }
+                head = Some(split_line[0].parse().unwrap());
+            }
+        } else if let Some(_) = trim_line.find("</trkpt") {
+            // Let's assume a lat/lon of 0 is just invalid
+            if lat != 0.0 && lon != 0.0 {
+                let c = Coord { lat, lon, head };
+                coord_vec.push(c);
             }
         }
     }
