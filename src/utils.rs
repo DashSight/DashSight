@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::drive::read_track::Coord;
 use gpsd_proto::{get_data, ResponseData};
 use std::io;
 
@@ -28,6 +29,50 @@ macro_rules! upgrade_weak {
     ($x:expr) => {
         upgrade_weak!($x, ())
     };
+}
+
+/// Generate a polygon based on the information provided.
+/// This takes the start or end latitude, longitude and heading
+/// to generate a polygon we use to determine if we have crossed
+/// the start or end.
+/// We ignore the curvature of the Earth to simplify this.
+pub fn genereate_polygon(lat: f64, lon: f64, track: f32) -> (Coord, Coord, Coord, Coord) {
+    // Be lazy and assume
+    //    - 111,111 metres is 1 degree latitude
+    //    - 111,111 * cos(lat) meters is 1 degree longitude
+
+    let top_left_x = (2.0 * (track * std::f32::consts::PI / 180.0).cos())
+        - (0.5 * (track * std::f32::consts::PI / 180.0).sin());
+    let top_left_y = (2.0 * (track * std::f32::consts::PI / 180.0).sin())
+        + (0.5 * (track * std::f32::consts::PI / 180.0).cos());
+
+    let bot_left_x = (2.0 * (track * std::f32::consts::PI / 180.0).cos())
+        + (0.5 * (track * std::f32::consts::PI / 180.0).sin());
+    let bot_left_y = (2.0 * (track * std::f32::consts::PI / 180.0).sin())
+        - (0.5 * (track * std::f32::consts::PI / 180.0).cos());
+
+    let top_left = Coord {
+        lat: lat + (top_left_y as f64 / 111111.0),
+        lon: lon - (top_left_x as f64 / (111111.0 * lat.cos())),
+        head: None,
+    };
+    let bot_left = Coord {
+        lat: lat + (bot_left_y as f64 / 111111.0),
+        lon: lon - (bot_left_x as f64 / (111111.0 * lat.cos())),
+        head: None,
+    };
+    let top_right = Coord {
+        lat: lat - (bot_left_y as f64 / 111111.0),
+        lon: lon + (bot_left_x as f64 / (111111.0 * lat.cos())),
+        head: None,
+    };
+    let bot_right = Coord {
+        lat: lat - (top_left_y as f64 / 111111.0),
+        lon: lon + (top_left_x as f64 / (111111.0 * lat.cos())),
+        head: None,
+    };
+
+    (top_left, bot_left, top_right, bot_right)
 }
 
 pub fn lat_lon_comp(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> bool {
@@ -98,5 +143,43 @@ mod tests {
     fn test_comparison() {
         assert_eq!(lat_lon_comp(10.0, 10.0, 10.0, 10.0), true);
         assert_eq!(lat_lon_comp(10.0, 10.0, 15.0, 15.0), false);
+    }
+
+    #[test]
+    fn test_poly() {
+        let top_left = Coord {
+            lat: 37.32449490991848,
+            lon: -121.92461158738175,
+            head: None,
+        };
+        let bot_left = Coord {
+            lat: 37.32448854595066,
+            lon: -121.92461842563702,
+            head: None,
+        };
+        let top_right = Coord {
+            lat: 37.324469454049336,
+            lon: -121.92458423436298,
+            head: None,
+        };
+        let bot_right = Coord {
+            lat: 37.324463090081515,
+            lon: -121.92459107261826,
+            head: None,
+        };
+
+        let poly = genereate_polygon(37.32447900, -121.92460133, 45.0);
+
+        assert_eq!(poly.0.lat, top_left.lat);
+        assert_eq!(poly.0.lon, top_left.lon);
+
+        assert_eq!(poly.1.lat, bot_left.lat);
+        assert_eq!(poly.1.lon, bot_left.lon);
+
+        assert_eq!(poly.2.lat, top_right.lat);
+        assert_eq!(poly.2.lon, top_right.lon);
+
+        assert_eq!(poly.3.lat, bot_right.lat);
+        assert_eq!(poly.3.lon, bot_right.lon);
     }
 }

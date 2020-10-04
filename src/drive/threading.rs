@@ -17,6 +17,7 @@
 use crate::drive::course::{Course, MapWrapper};
 use crate::drive::obdii;
 use crate::drive::obdii::OBDIICommandType;
+use crate::utils::genereate_polygon;
 use crate::utils::lat_lon_comp;
 use gpsd_proto::handshake;
 use gtk::prelude::*;
@@ -106,6 +107,8 @@ impl Threading {
         let mut writer = io::BufWriter::new(&gpsd_connect);
 
         handshake(&mut reader, &mut writer).unwrap();
+
+        let poly = genereate_polygon(course_info.start.lat, course_info.start.lon, 45.0);
 
         while !self.close.lock().unwrap().get() {
             let msg = crate::utils::get_gps_lat_lon(&mut reader);
