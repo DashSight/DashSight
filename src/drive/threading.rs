@@ -18,9 +18,10 @@ use crate::drive::course::{Course, MapWrapper};
 use crate::drive::obdii;
 use crate::drive::obdii::OBDIICommandType;
 use crate::utils::genereate_polygon;
-use crate::utils::lat_lon_comp;
 use gpsd_proto::handshake;
 use gtk::prelude::*;
+use nalgebra::geometry::{Isometry2, Point2};
+use ncollide2d::query::point_internal::point_query::PointQuery;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::fs::OpenOptions;
@@ -118,7 +119,10 @@ impl Threading {
                     self.location_tx.send((lat, lon)).unwrap();
 
                     if !self.on_track.lock().unwrap().get()
-                        && lat_lon_comp(lat, lon, course_info.start.lat, course_info.start.lon)
+                        && poly.contains_point(
+                            &Isometry2::identity(),
+                            &Point2::new(course_info.start.lat, course_info.start.lon),
+                        )
                     {
                         self.lap_start.replace(SystemTime::now());
                         self.on_track.lock().unwrap().set(true);
@@ -126,7 +130,10 @@ impl Threading {
                     }
 
                     if self.on_track.lock().unwrap().get()
-                        && lat_lon_comp(lat, lon, course_info.finish.lat, course_info.finish.lon)
+                        && poly.contains_point(
+                            &Isometry2::identity(),
+                            &Point2::new(course_info.finish.lat, course_info.finish.lon),
+                        )
                     {
                         self.on_track.lock().unwrap().set(false);
                         self.change_colour.lock().unwrap().set(true);
