@@ -218,7 +218,7 @@ impl RecordInfo {
                     if self.save.lock().unwrap().get() && !self.toggle_save.lock().unwrap().get() {
                         if let Ok(mut fd) = track_file.as_mut() {
                             // Only record the point if we are moving
-                            if speed > 0.1 {
+                            if speed > 0.5 {
                                 print::gpx_point_info(&mut fd, lat, lon, alt, time, track).unwrap();
                             }
                         }
