@@ -213,14 +213,12 @@ impl Threading {
                     let current_time = builder
                         .get_object::<gtk::Label>("CurrentTime")
                         .expect("Can't find CurrentTime in ui file.");
-
                     let time = format!(
                         "{:02}:{:02}:{:03}",
                         elapsed.as_secs() / 60,
                         elapsed.as_secs() % 60,
                         elapsed.subsec_millis()
                     );
-
                     current_time.set_label(&time);
                 }
                 Err(e) => {
@@ -237,7 +235,7 @@ impl Threading {
                     .get_object::<gtk::Label>("LastTime")
                     .expect("Can't find LastTime in ui file.");
                 let time = format!(
-                    "{:02}:{:02}:{:02}",
+                    "{:02}:{:02}:{:03}",
                     last.as_secs() / 60,
                     last.as_secs() % 60,
                     last.subsec_millis()
@@ -248,7 +246,7 @@ impl Threading {
                     .get_object::<gtk::Label>("BestTime")
                     .expect("Can't find BestTime in ui file.");
                 let time = format!(
-                    "{:02}:{:02}:{:02}",
+                    "{:02}:{:02}:{:03}",
                     best.as_secs() / 60,
                     best.as_secs() % 60,
                     best.subsec_millis()
@@ -259,12 +257,29 @@ impl Threading {
                     .get_object::<gtk::Label>("WorstTime")
                     .expect("Can't find WorstTime in ui file.");
                 let time = format!(
-                    "{:02}:{:02}:{:02}",
+                    "{:02}:{:02}:{:03}",
                     worst.as_secs() / 60,
                     worst.as_secs() % 60,
                     worst.subsec_millis()
                 );
                 worst_time.set_label(&time);
+
+                // If we aren't currently driving the main time is
+                // the same as the last time. This avoids showing a small
+                // delay between the recorded end time and when this
+                // was last updated
+                if !self.on_track.lock().unwrap().get() {
+                    let current_time = builder
+                        .get_object::<gtk::Label>("CurrentTime")
+                        .expect("Can't find CurrentTime in ui file.");
+                    let time = format!(
+                        "{:02}:{:02}:{:03}",
+                        last.as_secs() / 60,
+                        last.as_secs() % 60,
+                        last.subsec_millis()
+                    );
+                    current_time.set_label(&time);
+                }
 
                 glib::source::Continue(true)
             }
