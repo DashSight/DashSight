@@ -17,6 +17,7 @@
 use crate::display::*;
 use crate::drive::display;
 use crate::drive::read_track;
+use crate::utils::genereate_polygon;
 use gtk::prelude::*;
 use std::cell::Cell;
 use std::cell::RefCell;
@@ -64,10 +65,11 @@ impl TrackSelection {
             let reader = BufReader::new(track_file.unwrap());
             let track_points = read_track::get_long_and_lat(reader);
 
-            let path_layer = champlain::path_layer::new();
             champlain::view::set_zoom_level(champlain_view, 17);
             champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
 
+            // Add the track layer
+            let path_layer = champlain::path_layer::new();
             champlain::path_layer::remove_all(path_layer);
 
             for coord in track_points.iter() {
@@ -77,6 +79,62 @@ impl TrackSelection {
                     champlain::coordinate::to_location(c_point),
                 );
             }
+
+            champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+
+            // Add the start polygon
+            let path_layer = champlain::path_layer::new();
+            champlain::path_layer::remove_all(path_layer);
+
+            let start_poly = genereate_polygon(
+                track_points.first().unwrap().lat,
+                track_points.first().unwrap().lon,
+                track_points.first().unwrap().head.unwrap_or(0.0),
+            );
+
+            for coord in start_poly.points().iter() {
+                let c_point = champlain::coordinate::new_full(coord[0], coord[1]);
+                champlain::path_layer::add_node(
+                    path_layer,
+                    champlain::coordinate::to_location(c_point),
+                );
+            }
+            // Add the first point again to create a closed shape
+            let c_point = champlain::coordinate::new_full(
+                start_poly.points()[0][0],
+                start_poly.points()[0][1],
+            );
+            champlain::path_layer::add_node(
+                path_layer,
+                champlain::coordinate::to_location(c_point),
+            );
+
+            champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+
+            // Add the end polygon
+            let path_layer = champlain::path_layer::new();
+            champlain::path_layer::remove_all(path_layer);
+
+            let end_poly = genereate_polygon(
+                track_points.last().unwrap().lat,
+                track_points.last().unwrap().lon,
+                track_points.last().unwrap().head.unwrap_or(0.0),
+            );
+
+            for coord in end_poly.points().iter() {
+                let c_point = champlain::coordinate::new_full(coord[0], coord[1]);
+                champlain::path_layer::add_node(
+                    path_layer,
+                    champlain::coordinate::to_location(c_point),
+                );
+            }
+            // Add the first point again to create a closed shape
+            let c_point =
+                champlain::coordinate::new_full(end_poly.points()[0][0], end_poly.points()[0][1]);
+            champlain::path_layer::add_node(
+                path_layer,
+                champlain::coordinate::to_location(c_point),
+            );
 
             champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
 
