@@ -15,7 +15,7 @@
  */
 
 use gpsd_proto::{get_data, ResponseData};
-use ncollide2d::shape::Polyline;
+use ncollide2d::shape::ConvexPolygon;
 use std::io;
 
 #[macro_export]
@@ -36,40 +36,50 @@ macro_rules! upgrade_weak {
 /// to generate a polygon we use to determine if we have crossed
 /// the start or end.
 /// We ignore the curvature of the Earth to simplify this.
-pub fn genereate_polygon(lat: f64, lon: f64, track: f32) -> Polyline<f64> {
+pub fn genereate_polygon(lat: f64, lon: f64, track: f32) -> ConvexPolygon<f64> {
     // Be lazy and assume
     //    - 111,111 metres is 1 degree latitude
     //    - 111,111 * cos(lat) meters is 1 degree longitude
 
-    let top_left_x = (2.0 * (track * std::f32::consts::PI / 180.0).cos())
-        - (0.5 * (track * std::f32::consts::PI / 180.0).sin());
-    let top_left_y = (2.0 * (track * std::f32::consts::PI / 180.0).sin())
-        + (0.5 * (track * std::f32::consts::PI / 180.0).cos());
+    let top_left_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
+        - (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+    let top_left_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
+        + (1.0 * (track * std::f32::consts::PI / 180.0).cos());
 
-    let bot_left_x = (2.0 * (track * std::f32::consts::PI / 180.0).cos())
-        + (0.5 * (track * std::f32::consts::PI / 180.0).sin());
-    let bot_left_y = (2.0 * (track * std::f32::consts::PI / 180.0).sin())
-        - (0.5 * (track * std::f32::consts::PI / 180.0).cos());
+    let bot_left_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
+        + (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+    let bot_left_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
+        - (1.0 * (track * std::f32::consts::PI / 180.0).cos());
+
+    let top_right_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
+        + (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+    let top_right_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
+        - (1.0 * (track * std::f32::consts::PI / 180.0).cos());
+
+    let bot_right_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
+        - (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+    let bot_right_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
+        + (1.0 * (track * std::f32::consts::PI / 180.0).cos());
 
     let top_left = nalgebra::geometry::Point2::new(
         lat + (top_left_y as f64 / 111111.0),
-        lon - (top_left_x as f64 / (111111.0 * lat.cos())),
+        lon - (top_left_x as f64 / (111111.5 * lat.cos())),
     );
     let bot_left = nalgebra::geometry::Point2::new(
         lat + (bot_left_y as f64 / 111111.0),
-        lon - (bot_left_x as f64 / (111111.0 * lat.cos())),
+        lon - (bot_left_x as f64 / (111111.5 * lat.cos())),
     );
     let top_right = nalgebra::geometry::Point2::new(
-        lat - (bot_left_y as f64 / 111111.0),
-        lon + (bot_left_x as f64 / (111111.0 * lat.cos())),
+        lat - (top_right_y as f64 / 111111.0),
+        lon + (top_right_x as f64 / (111111.5 * lat.cos())),
     );
     let bot_right = nalgebra::geometry::Point2::new(
-        lat - (top_left_y as f64 / 111111.0),
-        lon + (top_left_x as f64 / (111111.0 * lat.cos())),
+        lat - (bot_right_y as f64 / 111111.0),
+        lon + (bot_right_x as f64 / (111111.5 * lat.cos())),
     );
 
-    let poly_points = vec![top_left, bot_left, top_right, bot_right];
-    Polyline::new(poly_points, None)
+    let poly_points = vec![top_left, bot_left, bot_right, top_right];
+    ConvexPolygon::try_new(poly_points).unwrap()
 }
 
 /// Gets the relevent location/velocity data from the GPS device
@@ -142,18 +152,6 @@ mod tests {
 
         let poly = genereate_polygon(37.32447900, -121.92460133, 45.0);
 
-        assert_eq!(poly.points()[0][0], top_left.lat);
-        assert_eq!(poly.points()[0][1], top_left.lon);
-
-        assert_eq!(poly.points()[1][0], bot_left.lat);
-        assert_eq!(poly.points()[1][1], bot_left.lon);
-
-        assert_eq!(poly.points()[2][0], top_right.lat);
-        assert_eq!(poly.points()[2][1], top_right.lon);
-
-        assert_eq!(poly.points()[3][0], bot_right.lat);
-        assert_eq!(poly.points()[3][1], bot_right.lon);
-
         assert_eq!(
             poly.contains_point(
                 &nalgebra::geometry::Isometry2::identity(),
@@ -174,6 +172,27 @@ mod tests {
                 &nalgebra::geometry::Point2::new(37.32447900, -121.52460133)
             ),
             false
+        );
+    }
+
+    #[test]
+    fn test_poly2() {
+        let poly = genereate_polygon(37.3244322, -121.9245186, 109.1828);
+
+        assert_eq!(
+            poly.contains_point(
+                &nalgebra::geometry::Isometry2::identity(),
+                &nalgebra::geometry::Point2::new(37.3244386, -121.9245781)
+            ),
+            false
+        );
+
+        assert_eq!(
+            poly.contains_point(
+                &nalgebra::geometry::Isometry2::identity(),
+                &nalgebra::geometry::Point2::new(37.324432, -121.924509)
+            ),
+            true
         );
     }
 }

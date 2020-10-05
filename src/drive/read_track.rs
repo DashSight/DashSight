@@ -81,6 +81,8 @@ pub fn get_long_and_lat(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::genereate_polygon;
+    use ncollide2d::query::point_internal::point_query::PointQuery;
     use std::fs::OpenOptions;
     use std::io::BufReader;
 
@@ -101,5 +103,59 @@ mod tests {
             .open("tests/test-track-no-movement");
         let reader = BufReader::new(track_file.unwrap());
         let _track_points = get_long_and_lat(reader);
+    }
+
+    #[test]
+    fn test_file_poly_create() {
+        let top_left = Coord {
+            lat: 37.32444772194085,
+            lon: -121.92450767761272,
+            head: None,
+        };
+        let bot_left = Coord {
+            lat: 37.324450679194044,
+            lon: -121.92451681156462,
+            head: None,
+        };
+        let top_right = Coord {
+            lat: 37.32441372080595,
+            lon: -121.92452038843538,
+            head: None,
+        };
+        let bot_right = Coord {
+            lat: 37.324416678059144,
+            lon: -121.92452952238727,
+            head: None,
+        };
+
+        let track_file = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .create(false)
+            .open("tests/test-track-from-home");
+        let reader = BufReader::new(track_file.unwrap());
+        let track_points = get_long_and_lat(reader);
+
+        let start_poly = genereate_polygon(
+            track_points.first().unwrap().lat,
+            track_points.first().unwrap().lon,
+            track_points.first().unwrap().head.unwrap_or(0.0),
+        );
+
+        assert_eq!(
+            start_poly.contains_point(
+                &nalgebra::geometry::Isometry2::identity(),
+                &nalgebra::geometry::Point2::new(37.324447, -121.92451)
+            ),
+            true
+        );
+
+        assert_eq!(
+            start_poly.contains_point(
+                &nalgebra::geometry::Isometry2::identity(),
+                &nalgebra::geometry::Point2::new(37.3244272, -121.9245111)
+            ),
+            true
+        );
     }
 }
