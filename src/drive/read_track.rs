@@ -62,8 +62,9 @@ pub fn get_long_and_lat(
         } else if let Some(degrees_num) = trim_line.find("<degreesType") {
             if let Some(degrees_line) = trim_line.get((degrees_num + 1)..) {
                 let split_line: Vec<&str> = degrees_line.split('<').collect();
+                let split_line: Vec<&str> = split_line[0].split('>').collect();
 
-                head = Some(split_line[0].parse().unwrap());
+                head = Some(split_line[1].parse().unwrap());
             }
         } else if let Some(_) = trim_line.find("</trkpt") {
             // Let's assume a lat/lon of 0 is just invalid
