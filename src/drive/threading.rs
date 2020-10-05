@@ -17,7 +17,7 @@
 use crate::drive::course::{Course, MapWrapper};
 use crate::drive::obdii;
 use crate::drive::obdii::OBDIICommandType;
-use crate::utils::genereate_polygon;
+use crate::utils::{genereate_polygon, right_direction};
 use gpsd_proto::handshake;
 use gtk::prelude::*;
 use nalgebra::geometry::{Isometry2, Point2};
@@ -130,11 +130,12 @@ impl Threading {
             let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
             match msg {
-                Ok((lat, lon, _alt, _time, _speed, _track)) => {
+                Ok((lat, lon, _alt, _time, _speed, track)) => {
                     self.location_tx.send((lat, lon)).unwrap();
 
                     if !self.on_track.lock().unwrap().get()
                         && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
+                        && right_direction(course_info.start.head, track)
                     {
                         self.lap_start.replace(SystemTime::now());
                         self.on_track.lock().unwrap().set(true);
@@ -146,6 +147,7 @@ impl Threading {
                     if self.on_track.lock().unwrap().get()
                         && finish_poly
                             .contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
+                        && right_direction(course_info.finish.head, track)
                     {
                         self.on_track.lock().unwrap().set(false);
                         self.change_colour.lock().unwrap().set(true);

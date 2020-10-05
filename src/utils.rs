@@ -82,6 +82,42 @@ pub fn genereate_polygon(lat: f64, lon: f64, track: f32) -> ConvexPolygon<f64> {
     ConvexPolygon::try_new(poly_points).unwrap()
 }
 
+pub fn right_direction(recorded_heading: Option<f32>, current_heading: f32) -> bool {
+    match recorded_heading {
+        Some(rec) => {
+            if current_heading == 0.0 {
+                true
+            } else {
+                // Check overflow
+                if rec < 30.0 {
+                    if current_heading >= 0.0 && current_heading < rec + 30.0 {
+                        true
+                    } else if current_heading < 360.0 && current_heading >= 330.0 + rec {
+                        true
+                    } else {
+                        false
+                    }
+                } else if rec > 330.0 {
+                    if current_heading <= 360.0 && current_heading > rec - 30.0 {
+                        true
+                    } else if current_heading > 0.0 && current_heading <= rec - 330.0 {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    if current_heading >= rec - 30.0 && current_heading <= rec + 30.0 {
+                        true
+                    } else {
+                        false
+                    }
+                }
+            }
+        }
+        None => true,
+    }
+}
+
 /// Gets the relevent location/velocity data from the GPS device
 /// Returns latitude, longitude, altitude, time, speed and track
 pub fn get_gps_lat_lon(
@@ -173,5 +209,24 @@ mod tests {
             ),
             true
         );
+    }
+
+    #[test]
+    fn test_current_heading() {
+        // We don't have enough information, just return true
+        assert_eq!(right_direction(None, 3.14), true);
+        assert_eq!(right_direction(Some(2.79), 0.0), true);
+
+        assert_eq!(right_direction(Some(15.0), 350.0), true);
+        assert_eq!(right_direction(Some(45.0), 45.0), true);
+        assert_eq!(right_direction(Some(45.0), 75.0), true);
+        assert_eq!(right_direction(Some(110.0), 130.0), true);
+        assert_eq!(right_direction(Some(350.0), 10.0), true);
+        assert_eq!(right_direction(Some(350.0), 20.0), true);
+
+        assert_eq!(right_direction(Some(15.0), 340.0), false);
+        assert_eq!(right_direction(Some(45.0), 1.0), false);
+        assert_eq!(right_direction(Some(110.0), 79.0), false);
+        assert_eq!(right_direction(Some(350.0), 21.0), false);
     }
 }
