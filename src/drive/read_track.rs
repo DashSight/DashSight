@@ -77,3 +77,29 @@ pub fn get_long_and_lat(
 
     coord_vec
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::OpenOptions;
+    use std::io::BufReader;
+
+    #[test]
+    fn test_file_open() {
+        let track_file = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .create(false)
+            .open("tests/test-track-from-home");
+        let reader = BufReader::new(track_file.unwrap());
+        let _track_points = get_long_and_lat(reader);
+
+        let track_file = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .create(false)
+            .open("tests/test-track-no-movement");
+        let reader = BufReader::new(track_file.unwrap());
+        let _track_points = get_long_and_lat(reader);
+    }
+}
