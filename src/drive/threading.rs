@@ -109,6 +109,12 @@ impl Threading {
 
         handshake(&mut reader, &mut writer).unwrap();
 
+        println!(
+            "Creating start Poly from {}, {}, heading: {}",
+            course_info.start.lat,
+            course_info.start.lon,
+            course_info.start.head.unwrap_or(0.0)
+        );
         let start_poly = genereate_polygon(
             course_info.start.lat,
             course_info.start.lon,
@@ -133,6 +139,8 @@ impl Threading {
                         self.lap_start.replace(SystemTime::now());
                         self.on_track.lock().unwrap().set(true);
                         self.change_colour.lock().unwrap().set(true);
+                    } else {
+                        println!("Point {}, {} is not inside", lat, lon);
                     }
 
                     if self.on_track.lock().unwrap().get()
