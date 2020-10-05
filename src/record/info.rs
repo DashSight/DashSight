@@ -213,7 +213,9 @@ impl RecordInfo {
 
             match msg {
                 Ok((lat, lon, alt, time, speed, track)) => {
-                    self.location_tx.send((lat, lon)).unwrap();
+                    if self.location_tx.send((lat, lon)).is_err() {
+                        break;
+                    }
 
                     if self.save.lock().unwrap().get() && !self.toggle_save.lock().unwrap().get() {
                         if let Ok(mut fd) = track_file.as_mut() {
