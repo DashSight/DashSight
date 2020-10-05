@@ -86,8 +86,6 @@ pub fn get_gps_lat_lon(
             }
         };
 
-        println!("gpsd_message: {:?}", gpsd_message);
-
         match gpsd_message {
             ResponseData::Device(_) => {}
             ResponseData::Tpv(t) => {
