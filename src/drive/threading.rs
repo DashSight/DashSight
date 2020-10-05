@@ -109,7 +109,16 @@ impl Threading {
 
         handshake(&mut reader, &mut writer).unwrap();
 
-        let poly = genereate_polygon(course_info.start.lat, course_info.start.lon, 45.0);
+        let start_poly = genereate_polygon(
+            course_info.start.lat,
+            course_info.start.lon,
+            course_info.start.head.unwrap_or(0.0),
+        );
+        let finish_poly = genereate_polygon(
+            course_info.finish.lat,
+            course_info.finish.lon,
+            course_info.start.head.unwrap_or(0.0),
+        );
 
         while !self.close.lock().unwrap().get() {
             let msg = crate::utils::get_gps_lat_lon(&mut reader);
@@ -119,10 +128,7 @@ impl Threading {
                     self.location_tx.send((lat, lon)).unwrap();
 
                     if !self.on_track.lock().unwrap().get()
-                        && poly.contains_point(
-                            &Isometry2::identity(),
-                            &Point2::new(course_info.start.lat, course_info.start.lon),
-                        )
+                        && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                     {
                         self.lap_start.replace(SystemTime::now());
                         self.on_track.lock().unwrap().set(true);
@@ -130,10 +136,8 @@ impl Threading {
                     }
 
                     if self.on_track.lock().unwrap().get()
-                        && poly.contains_point(
-                            &Isometry2::identity(),
-                            &Point2::new(course_info.finish.lat, course_info.finish.lon),
-                        )
+                        && finish_poly
+                            .contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                     {
                         self.on_track.lock().unwrap().set(false);
                         self.change_colour.lock().unwrap().set(true);
