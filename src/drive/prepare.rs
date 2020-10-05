@@ -32,6 +32,7 @@ pub struct TrackSelection {
     pub track_file: RefCell<std::path::PathBuf>,
     pub track_points: Cell<Vec<crate::drive::read_track::Coord>>,
     pub map_widget: gtk::Widget,
+    map_layers: Cell<Vec<*mut champlain::path_layer::ChamplainPathLayer>>,
 }
 
 pub type TrackSelectionRef = Rc<TrackSelection>;
@@ -42,6 +43,7 @@ impl TrackSelection {
             track_file: RefCell::new(PathBuf::new()),
             track_points: Cell::new(Vec::new()),
             map_widget: champlain_widget,
+            map_layers: Cell::new(Vec::new()),
         })
     }
 
@@ -65,12 +67,17 @@ impl TrackSelection {
             let reader = BufReader::new(track_file.unwrap());
             let track_points = read_track::get_long_and_lat(reader);
 
+            // Remove all current layers
+            let mut new_map_layers = self.map_layers.take();
+            while !new_map_layers.is_empty() {
+                champlain::path_layer::remove_all(new_map_layers.pop().unwrap());
+            }
+
             champlain::view::set_zoom_level(champlain_view, 17);
             champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
 
             // Add the track layer
             let path_layer = champlain::path_layer::new();
-            champlain::path_layer::remove_all(path_layer);
 
             for coord in track_points.iter() {
                 let c_point = champlain::coordinate::new_full(coord.lat, coord.lon);
@@ -81,10 +88,12 @@ impl TrackSelection {
             }
 
             champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+            let mut new_map_layers = self.map_layers.take();
+            new_map_layers.push(path_layer);
+            self.map_layers.replace(new_map_layers);
 
             // Add the start polygon
             let path_layer = champlain::path_layer::new();
-            champlain::path_layer::remove_all(path_layer);
 
             let start_poly = genereate_polygon(
                 track_points.first().unwrap().lat,
@@ -110,10 +119,12 @@ impl TrackSelection {
             );
 
             champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+            let mut new_map_layers = self.map_layers.take();
+            new_map_layers.push(path_layer);
+            self.map_layers.replace(new_map_layers);
 
             // Add the end polygon
             let path_layer = champlain::path_layer::new();
-            champlain::path_layer::remove_all(path_layer);
 
             let end_poly = genereate_polygon(
                 track_points.last().unwrap().lat,
@@ -137,6 +148,9 @@ impl TrackSelection {
             );
 
             champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+            let mut new_map_layers = self.map_layers.take();
+            new_map_layers.push(path_layer);
+            self.map_layers.replace(new_map_layers);
 
             self.track_points.replace(track_points);
 
