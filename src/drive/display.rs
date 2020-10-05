@@ -115,7 +115,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let display_weak = DisplayRef::downgrade(&display);
-    gtk::timeout_add(10, move || {
+    glib::timeout_add_local(10, move || {
         let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
         let display = upgrade_weak!(display_weak, glib::source::Continue(false));
 
@@ -133,7 +133,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let obdii_data = Rc::new(RefCell::new(obdii::OBDIIGraphData::new()));
     thread_info.set_cairo_graphs(&builder, &obdii_data);
 
-    gtk::timeout_add(10, move || {
+    glib::timeout_add_local(10, move || {
         let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
         let display = upgrade_weak!(display_weak, glib::source::Continue(false));
 
@@ -144,7 +144,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let display_weak = DisplayRef::downgrade(&display);
-    gtk::timeout_add(10, move || {
+    glib::timeout_add_local(10, move || {
         let thread_info = upgrade_weak!(thread_info_weak, glib::source::Continue(false));
         let display = upgrade_weak!(display_weak, glib::source::Continue(false));
 
@@ -177,7 +177,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         thread_info.imu_draw_idle_thread(&imu_page_rx, me, ctx)
     });
 
-    gtk::timeout_add(imu::IMU_SAMPLE_FREQ as u32, move || {
+    glib::timeout_add_local(imu::IMU_SAMPLE_FREQ as u32, move || {
         imu_area.queue_draw();
         imu_page_accel_area.queue_draw();
 
@@ -257,7 +257,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     #[allow(clippy::redundant_clone)]
     let thread_info_clone = thread_info.clone();
-    gtk::timeout_add(10, move || {
+    glib::timeout_add_local(10, move || {
         let thread_info = ThreadingRef::downgrade(&thread_info_clone)
             .upgrade()
             .unwrap();

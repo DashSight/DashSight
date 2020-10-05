@@ -83,7 +83,7 @@ pub fn button_press_event(display: DisplayRef) {
     let mut first_connect = true;
 
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
-    gtk::timeout_add(10, move || {
+    glib::timeout_add_local(10, move || {
         let rec_info = upgrade_weak!(rec_info_weak, glib::source::Continue(false));
 
         if rec_info.close.lock().unwrap().get() {
