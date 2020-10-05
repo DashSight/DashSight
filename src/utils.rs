@@ -129,27 +129,6 @@ mod tests {
 
     #[test]
     fn test_poly() {
-        let top_left = Coord {
-            lat: 37.32449490991848,
-            lon: -121.92461158738175,
-            head: None,
-        };
-        let bot_left = Coord {
-            lat: 37.32448854595066,
-            lon: -121.92461842563702,
-            head: None,
-        };
-        let top_right = Coord {
-            lat: 37.324469454049336,
-            lon: -121.92458423436298,
-            head: None,
-        };
-        let bot_right = Coord {
-            lat: 37.324463090081515,
-            lon: -121.92459107261826,
-            head: None,
-        };
-
         let poly = genereate_polygon(37.32447900, -121.92460133, 45.0);
 
         assert_eq!(

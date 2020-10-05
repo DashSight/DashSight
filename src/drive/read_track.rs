@@ -107,27 +107,6 @@ mod tests {
 
     #[test]
     fn test_file_poly_create() {
-        let top_left = Coord {
-            lat: 37.32444772194085,
-            lon: -121.92450767761272,
-            head: None,
-        };
-        let bot_left = Coord {
-            lat: 37.324450679194044,
-            lon: -121.92451681156462,
-            head: None,
-        };
-        let top_right = Coord {
-            lat: 37.32441372080595,
-            lon: -121.92452038843538,
-            head: None,
-        };
-        let bot_right = Coord {
-            lat: 37.324416678059144,
-            lon: -121.92452952238727,
-            head: None,
-        };
-
         let track_file = OpenOptions::new()
             .read(true)
             .write(false)
