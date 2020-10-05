@@ -101,8 +101,8 @@ pub fn get_gps_lat_lon(
                         t.lon.unwrap(),
                         t.alt.unwrap(),
                         t.time.unwrap_or("1970-01-01T00:00:00.000Z".to_string()),
-                        t.speed.unwrap(),
-                        t.track.unwrap(),
+                        t.speed.unwrap_or(0.0),
+                        t.track.unwrap_or(0.0),
                     ));
                 }
             }
