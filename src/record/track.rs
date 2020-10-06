@@ -78,7 +78,7 @@ pub fn button_press_event(display: DisplayRef) {
     record_page.pack1(&map_frame, true, true);
 
     let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
-    let rec_info = RecordInfo::new(location_tx);
+    let rec_info = RecordInfo::new();
     let map_wrapper = MapWrapper::new(champlain_view, path_layer, point);
     let mut first_connect = true;
 
@@ -118,7 +118,7 @@ pub fn button_press_event(display: DisplayRef) {
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
     let _handler = thread::spawn(move || {
         let rec_info = rec_info_weak.upgrade().unwrap();
-        rec_info.run()
+        rec_info.run(location_tx)
     });
 
     let back_button = builder

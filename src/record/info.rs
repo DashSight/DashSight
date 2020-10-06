@@ -20,7 +20,6 @@ use gpsd_proto::handshake;
 use gtk::prelude::*;
 use gtk::ResponseType;
 use std::cell::Cell;
-use std::cell::RefCell;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
@@ -30,6 +29,7 @@ use std::path::PathBuf;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::RwLock;
 use std::time::Duration;
 
 pub struct MapWrapper {
@@ -53,28 +53,23 @@ impl MapWrapper {
 }
 
 pub struct RecordInfo {
-    track_file: RefCell<std::path::PathBuf>,
+    track_file: RwLock<std::path::PathBuf>,
     new_file: Mutex<Cell<bool>>,
     save: Mutex<Cell<bool>>,
     toggle_save: Mutex<Cell<bool>>,
     pub close: Mutex<Cell<bool>>,
-    location_tx: std::sync::mpsc::Sender<(f64, f64)>,
 }
-
-unsafe impl Send for RecordInfo {}
-unsafe impl Sync for RecordInfo {}
 
 pub type RecordInfoRef = Arc<RecordInfo>;
 
 impl RecordInfo {
-    pub fn new(location_tx: std::sync::mpsc::Sender<(f64, f64)>) -> RecordInfoRef {
+    pub fn new() -> RecordInfoRef {
         RecordInfoRef::new(Self {
-            track_file: RefCell::new(PathBuf::new()),
+            track_file: RwLock::new(PathBuf::new()),
             new_file: Mutex::new(Cell::new(false)),
             save: Mutex::new(Cell::new(false)),
             toggle_save: Mutex::new(Cell::new(false)),
             close: Mutex::new(Cell::new(false)),
-            location_tx,
         })
     }
 
@@ -97,7 +92,8 @@ impl RecordInfo {
         if response == ResponseType::Accept {
             if let Some(filepath) = file_chooser.get_filename() {
                 self.new_file.lock().unwrap().set(true);
-                self.track_file.replace(filepath);
+                let mut track_file = self.track_file.write().unwrap();
+                *track_file = filepath;
             }
         }
     }
@@ -106,7 +102,7 @@ impl RecordInfo {
         let val = self.save.lock().unwrap().get();
         self.save.lock().unwrap().set(!val);
 
-        if val && self.track_file.borrow().exists() {
+        if val && self.track_file.read().unwrap().exists() {
             self.toggle_save.lock().unwrap().set(true);
         }
     }
@@ -147,7 +143,7 @@ impl RecordInfo {
         }
     }
 
-    pub fn run(&self) {
+    pub fn run(&self, location_tx: std::sync::mpsc::Sender<(f64, f64)>) {
         let gpsd_connect;
 
         loop {
@@ -184,12 +180,12 @@ impl RecordInfo {
                     .write(true)
                     .create(true)
                     .truncate(true)
-                    .open(self.track_file.borrow().clone());
+                    .open(self.track_file.read().unwrap().clone());
 
                 if let Ok(mut fd) = track_file.as_mut() {
                     print::gpx_start(&mut fd).unwrap();
                     print::gpx_metadata(&mut fd).unwrap();
-                    if let Some(filename) = self.track_file.borrow().file_name() {
+                    if let Some(filename) = self.track_file.read().unwrap().file_name() {
                         if let Some(name) = filename.to_str() {
                             print::gpx_track_start(&mut fd, name.to_string()).unwrap();
                         }
@@ -213,7 +209,7 @@ impl RecordInfo {
 
             match msg {
                 Ok((lat, lon, alt, time, speed, track)) => {
-                    if self.location_tx.send((lat, lon)).is_err() {
+                    if location_tx.send((lat, lon)).is_err() {
                         break;
                     }
 
@@ -250,11 +246,11 @@ mod tests {
     #[test]
     fn test_run() {
         let (location_tx, _location_rx) = mpsc::channel::<(f64, f64)>();
-        let rec_info = RecordInfo::new(location_tx);
+        let rec_info = RecordInfo::new();
 
         // Tell run to exit straight away, otherwise we loop for a GPSD conection
         rec_info.close.lock().unwrap().set(true);
 
-        rec_info.run();
+        rec_info.run(location_tx);
     }
 }

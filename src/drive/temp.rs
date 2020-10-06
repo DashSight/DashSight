@@ -87,7 +87,11 @@ impl TempContext {
     }
 }
 
-pub fn temp_thread(thread_info: ThreadingRef, _file_name: &mut PathBuf) {
+pub fn temp_thread(
+    thread_info: ThreadingRef,
+    temp_tx: std::sync::mpsc::Sender<Vec<f64>>,
+    _file_name: &mut PathBuf,
+) {
     // Create the IIO context
     let ctx;
     match iio::Context::new() {
@@ -105,6 +109,6 @@ pub fn temp_thread(thread_info: ThreadingRef, _file_name: &mut PathBuf) {
     while !thread_info.close.lock().unwrap().get() && temp_context.get_num_sensors() > 0 {
         let temp = temp_context.get_temperature_celsius();
 
-        thread_info.temp_tx.send(temp).unwrap();
+        temp_tx.send(temp).unwrap();
     }
 }

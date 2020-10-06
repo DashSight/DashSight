@@ -32,58 +32,42 @@ use std::rc::Rc;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::RwLock;
 use std::time::{Duration, SystemTime};
 
 pub struct Threading {
-    pub lap_start: RefCell<std::time::SystemTime>,
+    pub lap_start: RwLock<std::time::SystemTime>,
     pub close: Mutex<Cell<bool>>,
     pub on_track: Mutex<Cell<bool>>,
     pub change_colour: Mutex<Cell<bool>>,
     pub no_track: Mutex<Cell<bool>>,
     pub serialise: Mutex<Cell<bool>>,
     pub calibrate: Mutex<Cell<bool>>,
-    pub time_file: RefCell<std::path::PathBuf>,
-    pub location_tx: std::sync::mpsc::Sender<(f64, f64)>,
-    pub times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
-    pub obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
-    pub imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
-    pub imu_page_tx: std::sync::mpsc::Sender<(f64, f64)>,
-    pub temp_tx: std::sync::mpsc::Sender<Vec<f64>>,
+    pub time_file: RwLock<std::path::PathBuf>,
 }
 
 pub type ThreadingRef = Arc<Threading>;
 
-unsafe impl Send for Threading {}
-unsafe impl Sync for Threading {}
-
 impl Threading {
-    pub fn new(
-        location_tx: std::sync::mpsc::Sender<(f64, f64)>,
-        times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
-        obdii_tx: std::sync::mpsc::Sender<obdii::OBDIIData>,
-        imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
-        imu_page_tx: std::sync::mpsc::Sender<(f64, f64)>,
-        temp_tx: std::sync::mpsc::Sender<Vec<f64>>,
-    ) -> ThreadingRef {
+    pub fn new() -> ThreadingRef {
         ThreadingRef::new(Self {
-            lap_start: RefCell::new(SystemTime::now()),
+            lap_start: RwLock::new(SystemTime::now()),
             close: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
             change_colour: Mutex::new(Cell::new(false)),
             no_track: Mutex::new(Cell::new(false)),
             serialise: Mutex::new(Cell::new(false)),
             calibrate: Mutex::new(Cell::new(false)),
-            time_file: RefCell::new(PathBuf::new()),
-            location_tx,
-            times_tx,
-            obdii_tx,
-            imu_tx,
-            imu_page_tx,
-            temp_tx,
+            time_file: RwLock::new(PathBuf::new()),
         })
     }
 
-    pub fn gpsd_thread(&self, course_info: &mut Course) {
+    pub fn gpsd_thread(
+        &self,
+        times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
+        location_tx: std::sync::mpsc::Sender<(f64, f64)>,
+        course_info: &mut Course,
+    ) {
         let gpsd_connect;
 
         loop {
@@ -131,13 +115,14 @@ impl Threading {
 
             match msg {
                 Ok((lat, lon, _alt, _time, _speed, track)) => {
-                    self.location_tx.send((lat, lon)).unwrap();
+                    location_tx.send((lat, lon)).unwrap();
 
                     if !self.on_track.lock().unwrap().get()
                         && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                         && right_direction(course_info.start.head, track)
                     {
-                        self.lap_start.replace(SystemTime::now());
+                        let mut lap_start = self.lap_start.write().unwrap();
+                        *lap_start = SystemTime::now();
                         self.on_track.lock().unwrap().set(true);
                         self.change_colour.lock().unwrap().set(true);
                     } else {
@@ -152,7 +137,7 @@ impl Threading {
                         self.on_track.lock().unwrap().set(false);
                         self.change_colour.lock().unwrap().set(true);
 
-                        match self.lap_start.borrow().elapsed() {
+                        match self.lap_start.read().unwrap().elapsed() {
                             Ok(elapsed) => {
                                 course_info.times.push(elapsed);
                                 course_info.last = elapsed;
@@ -163,7 +148,7 @@ impl Threading {
                                 if let Some(best) = course_info.times.first() {
                                     course_info.best = *best
                                 }
-                                self.times_tx
+                                times_tx
                                     .send((course_info.last, course_info.best, course_info.worst))
                                     .unwrap();
                             }
@@ -186,7 +171,7 @@ impl Threading {
                     .write(true)
                     .create(true)
                     .truncate(true)
-                    .open(self.time_file.borrow().clone());
+                    .open(self.time_file.read().unwrap().clone());
 
                 match track_file.as_mut() {
                     Ok(fd) => {
@@ -208,7 +193,7 @@ impl Threading {
         builder: gtk::Builder,
     ) -> glib::source::Continue {
         if self.on_track.lock().unwrap().get() {
-            match self.lap_start.borrow().elapsed() {
+            match self.lap_start.read().unwrap().elapsed() {
                 Ok(elapsed) => {
                     let current_time = builder
                         .get_object::<gtk::Label>("CurrentTime")
@@ -300,9 +285,10 @@ impl Threading {
             match rec {
                 Ok(data) => {
                     if data.command == OBDIICommandType::Rpm {
-                        unsafe {
-                            obdii_data.borrow_mut().rpm.push_front(data.val.float);
-                        }
+                        obdii_data
+                            .borrow_mut()
+                            .rpm
+                            .push_front(data.val_float.unwrap());
                         if obdii_data.borrow().rpm.len() > obdii::VECTOR_LEN {
                             obdii_data.borrow_mut().rpm.pop_back();
                         }
@@ -316,13 +302,12 @@ impl Threading {
                         let pbar = builder
                             .get_object::<gtk::ProgressBar>("ThrottleBar")
                             .expect("Can't find ThrottleBar in ui file.");
-                        unsafe {
-                            pbar.set_fraction(data.val.float / 100.0);
-                        }
+                        pbar.set_fraction(data.val_float.unwrap() / 100.0);
 
-                        unsafe {
-                            obdii_data.borrow_mut().throttle.push_front(data.val.float);
-                        }
+                        obdii_data
+                            .borrow_mut()
+                            .throttle
+                            .push_front(data.val_float.unwrap());
                         if obdii_data.borrow().throttle.len() > obdii::VECTOR_LEN {
                             obdii_data.borrow_mut().throttle.pop_back();
                         }
@@ -336,13 +321,12 @@ impl Threading {
                         let pbar = builder
                             .get_object::<gtk::ProgressBar>("LoadBar")
                             .expect("Can't find LoadBar in ui file.");
-                        unsafe {
-                            pbar.set_fraction(data.val.float / 100.0);
-                        }
+                        pbar.set_fraction(data.val_float.unwrap() / 100.0);
 
-                        unsafe {
-                            obdii_data.borrow_mut().load.push_front(data.val.float);
-                        }
+                        obdii_data
+                            .borrow_mut()
+                            .load
+                            .push_front(data.val_float.unwrap());
                         if obdii_data.borrow().load.len() > obdii::VECTOR_LEN {
                             obdii_data.borrow_mut().load.pop_back();
                         }
@@ -357,23 +341,20 @@ impl Threading {
                             .get_object::<gtk::Label>("TimingAdvValue")
                             .expect("Can't find TimingAdvValue in ui file.");
                         let text;
-                        unsafe {
-                            text = format!("{:3.2}", data.val.float);
-                        }
+                        text = format!("{:3.2}", data.val_float.unwrap());
                         label.set_text(&text);
                     } else if data.command == OBDIICommandType::Maf {
                         let label = builder
                             .get_object::<gtk::Label>("MAFValue")
                             .expect("Can't find MAFValue in ui file.");
                         let text;
-                        unsafe {
-                            text = format!("{:3.2}", data.val.float);
-                        }
+                        text = format!("{:3.2}", data.val_float.unwrap());
                         label.set_text(&text);
 
-                        unsafe {
-                            obdii_data.borrow_mut().maf.push_front(data.val.float);
-                        }
+                        obdii_data
+                            .borrow_mut()
+                            .maf
+                            .push_front(data.val_float.unwrap());
                         if obdii_data.borrow().maf.len() > obdii::VECTOR_LEN {
                             obdii_data.borrow_mut().maf.pop_back();
                         }
@@ -388,36 +369,28 @@ impl Threading {
                             .get_object::<gtk::Label>("CoolantTempValue")
                             .expect("Can't find CoolantTempValue in ui file.");
                         let text;
-                        unsafe {
-                            text = format!("{:3}", data.val.long);
-                        }
+                        text = format!("{:3}", data.val_long.unwrap());
                         label.set_text(&text);
                     } else if data.command == OBDIICommandType::IntakeTemp {
                         let label = builder
                             .get_object::<gtk::Label>("IntakeTempValue")
                             .expect("Can't find IntakeTempValue in ui file.");
                         let text;
-                        unsafe {
-                            text = format!("{:3}", data.val.long);
-                        }
+                        text = format!("{:3}", data.val_long.unwrap());
                         label.set_text(&text);
                     } else if data.command == OBDIICommandType::ShortFuelT1 {
                         let label = builder
                             .get_object::<gtk::Label>("ShortFuelB1Value")
                             .expect("Can't find ShortFuelB1Value in ui file.");
                         let text;
-                        unsafe {
-                            text = format!("{:3}", data.val.float);
-                        }
+                        text = format!("{:3}", data.val_float.unwrap());
                         label.set_text(&text);
                     } else if data.command == OBDIICommandType::LongFuelT1 {
                         let label = builder
                             .get_object::<gtk::Label>("LongFuelB1Value")
                             .expect("Can't find LongFuelB1Value in ui file.");
                         let text;
-                        unsafe {
-                            text = format!("{:3}", data.val.float);
-                        }
+                        text = format!("{:3}", data.val_float.unwrap());
                         label.set_text(&text);
                     } else if data.command == OBDIICommandType::FuelStatus {
                     }

@@ -60,14 +60,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let (imu_tx, imu_rx) = mpsc::channel::<(f64, f64)>();
     let (imu_page_tx, imu_page_rx) = mpsc::channel::<(f64, f64)>();
     let (temp_tx, temp_rx) = mpsc::channel::<Vec<f64>>();
-    let thread_info = Threading::new(
-        location_tx,
-        times_tx,
-        obdii_tx,
-        imu_tx,
-        imu_page_tx,
-        temp_tx,
-    );
+    let thread_info = Threading::new();
 
     let window: gtk::ApplicationWindow = builder
         .get_object("MainPage")
@@ -86,7 +79,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             (&track_points).last().unwrap().head.unwrap_or(0.0),
         );
 
-        thread_info.gpsd_thread(&mut course_info);
+        thread_info.gpsd_thread(times_tx, location_tx, &mut course_info);
     });
 
     let mut track_name = track_sel_info.track_file.borrow().clone();
@@ -94,7 +87,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let _handler_obdii = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
 
-        obdii::obdii_thread(thread_info, &mut track_name).unwrap();
+        obdii::obdii_thread(thread_info, obdii_tx, &mut track_name).unwrap();
     });
 
     let mut track_name = track_sel_info.track_file.borrow().clone();
@@ -102,7 +95,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let _handler_imu = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
 
-        imu::imu_thread(thread_info, &mut track_name);
+        imu::imu_thread(thread_info, imu_tx, imu_page_tx, &mut track_name);
     });
 
     let mut track_name = track_sel_info.track_file.borrow().clone();
@@ -110,7 +103,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let _handler_imu = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
 
-        temp::temp_thread(thread_info, &mut track_name);
+        temp::temp_thread(thread_info, temp_tx, &mut track_name);
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
@@ -215,7 +208,8 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         let response = file_chooser.run();
         if response == ResponseType::Accept {
             if let Some(filepath) = file_chooser.get_filename() {
-                thread_info.time_file.replace(filepath);
+                let mut time_file = thread_info.time_file.write().unwrap();
+                *time_file = filepath;
                 thread_info.serialise.lock().unwrap().set(true);
             }
         }

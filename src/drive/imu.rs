@@ -278,7 +278,12 @@ impl ImuContext {
     }
 }
 
-pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
+pub fn imu_thread(
+    thread_info: ThreadingRef,
+    imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    imu_page_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    file_name: &mut PathBuf,
+) {
     // Create the IIO context
     let ctx;
     match iio::Context::new() {
@@ -350,12 +355,8 @@ pub fn imu_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) {
         }
 
         // Send acceleration data to be drawn on the screen
-        thread_info
-            .imu_tx
-            .send((accel_rotated[0], accel_rotated[1]))
-            .unwrap();
-        thread_info
-            .imu_page_tx
+        imu_tx.send((accel_rotated[0], accel_rotated[1])).unwrap();
+        imu_page_tx
             .send((accel_rotated[0], accel_rotated[1]))
             .unwrap();
 

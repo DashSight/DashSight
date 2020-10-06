@@ -61,15 +61,11 @@ pub enum OBDIIFuelStatus {
     ClosedLoopFault,
 }
 
-pub union PythonValues {
-    pub float: f64,
-    pub long: u32,
-    pub fuel_status: OBDIIFuelStatus,
-}
-
 pub struct OBDIIData {
     pub command: OBDIICommandType,
-    pub val: PythonValues,
+    pub val_float: Option<f64>,
+    pub val_long: Option<u32>,
+    pub val_fuel_status: Option<OBDIIFuelStatus>,
 }
 
 pub struct OBDIIGraphData {
@@ -92,7 +88,11 @@ impl OBDIIGraphData {
     }
 }
 
-pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyResult<()> {
+pub fn obdii_thread(
+    thread_info: ThreadingRef,
+    obdii_tx: std::sync::mpsc::Sender<OBDIIData>,
+    file_name: &mut PathBuf,
+) -> PyResult<()> {
     let gli = Python::acquire_gil();
     let py = gli.python();
 
@@ -225,7 +225,9 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
 
                     data = OBDIIData {
                         command: command.command,
-                        val: PythonValues { float: ret },
+                        val_float: Some(ret),
+                        val_long: None,
+                        val_fuel_status: None,
                     };
                 } else if command.ret == PythonReturns::Long {
                     let ret_res = py_ret.extract(py);
@@ -248,7 +250,9 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
 
                     data = OBDIIData {
                         command: command.command,
-                        val: PythonValues { long: ret },
+                        val_float: None,
+                        val_long: Some(ret),
+                        val_fuel_status: None,
                     };
                 } else {
                     let ret_res = py_ret.extract(py);
@@ -285,11 +289,13 @@ pub fn obdii_thread(thread_info: ThreadingRef, file_name: &mut PathBuf) -> PyRes
 
                     data = OBDIIData {
                         command: command.command,
-                        val: PythonValues { fuel_status },
+                        val_float: None,
+                        val_long: None,
+                        val_fuel_status: Some(fuel_status),
                     };
                 }
 
-                thread_info.obdii_tx.send(data).unwrap();
+                obdii_tx.send(data).unwrap();
             }
 
             writeln!(fd).unwrap();
