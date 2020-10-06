@@ -90,28 +90,30 @@ pub fn right_direction(recorded_heading: Option<f32>, current_heading: f32) -> b
             } else {
                 // Check overflow
                 if rec < 30.0 {
-                    if current_heading >= 0.0 && current_heading < rec + 30.0 {
-                        true
-                    } else if current_heading < 360.0 && current_heading >= 330.0 + rec {
-                        true
-                    } else {
-                        false
+                    if current_heading >= 0.0 && current_heading < rec + 30.0
+                        || current_heading < 360.0 && current_heading >= 330.0 + rec
+                    {
+                        return true;
                     }
-                } else if rec > 330.0 {
-                    if current_heading <= 360.0 && current_heading > rec - 30.0 {
-                        true
-                    } else if current_heading > 0.0 && current_heading <= rec - 330.0 {
-                        true
-                    } else {
-                        false
-                    }
-                } else {
-                    if current_heading >= rec - 30.0 && current_heading <= rec + 30.0 {
-                        true
-                    } else {
-                        false
-                    }
+
+                    return false;
                 }
+
+                if rec > 330.0 {
+                    if current_heading <= 360.0 && current_heading > rec - 30.0
+                        || current_heading > 0.0 && current_heading <= rec - 330.0
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                if current_heading >= rec - 30.0 && current_heading <= rec + 30.0 {
+                    return true;
+                }
+
+                false
             }
         }
         None => true,
@@ -144,7 +146,8 @@ pub fn get_gps_lat_lon(
                         t.lat.unwrap(),
                         t.lon.unwrap(),
                         t.alt.unwrap(),
-                        t.time.unwrap_or("1970-01-01T00:00:00.000Z".to_string()),
+                        t.time
+                            .unwrap_or_else(|| "1970-01-01T00:00:00.000Z".to_string()),
                         t.speed.unwrap_or(0.0),
                         t.track.unwrap_or(0.0),
                     ));
@@ -160,7 +163,6 @@ pub fn get_gps_lat_lon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::drive::read_track::Coord;
     use ncollide2d::query::point_internal::point_query::PointQuery;
 
     #[test]
