@@ -297,7 +297,7 @@ impl Threading {
                 .caption("RPM", ("sans-serif", 30).into_font())
                 .x_label_area_size(width as u32)
                 .y_label_area_size(height as u32)
-                .build_ranged(0..100 as u32, 0f64..15000f64)
+                .build_cartesian_2d(0..100 as u32, 0f64..15000f64)
                 .unwrap();
 
             chart.configure_mesh().draw().unwrap();
@@ -337,7 +337,7 @@ impl Threading {
                 .caption("MAF (%)", ("sans-serif", 30).into_font())
                 .x_label_area_size(width as u32)
                 .y_label_area_size(height as u32)
-                .build_ranged(0..100 as u32, 0f64..100f64)
+                .build_cartesian_2d(0..100 as u32, 0f64..100f64)
                 .unwrap();
 
             chart.configure_mesh().draw().unwrap();
@@ -377,7 +377,7 @@ impl Threading {
                 .caption("Throtle (%)", ("sans-serif", 30).into_font())
                 .x_label_area_size(width as u32)
                 .y_label_area_size(height as u32)
-                .build_ranged(0..100 as u32, 0f64..100f64)
+                .build_cartesian_2d(0..100 as u32, 0f64..100f64)
                 .unwrap();
 
             chart.configure_mesh().draw().unwrap();
@@ -417,7 +417,7 @@ impl Threading {
                 .caption("Load (%)", ("sans-serif", 30).into_font())
                 .x_label_area_size(width as u32)
                 .y_label_area_size(height as u32)
-                .build_ranged(0..100 as u32, 0f64..100f64)
+                .build_cartesian_2d(0..100 as u32, 0f64..100f64)
                 .unwrap();
 
             chart.configure_mesh().draw().unwrap();
