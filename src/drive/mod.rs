@@ -16,6 +16,7 @@
 
 pub mod course;
 pub mod display;
+pub mod gps;
 pub mod imu;
 pub mod obdii;
 pub mod prepare;

@@ -16,6 +16,7 @@
 
 use crate::display::*;
 use crate::drive::course::{Course, MapWrapper};
+use crate::drive::gps;
 use crate::drive::imu;
 use crate::drive::obdii;
 use crate::drive::prepare;
@@ -79,7 +80,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             (&track_points).last().unwrap().head.unwrap_or(0.0),
         );
 
-        thread_info.gpsd_thread(times_tx, location_tx, &mut course_info);
+        gps::gpsd_thread(thread_info, times_tx, location_tx, &mut course_info);
     });
 
     let mut track_name = track_sel_info.track_file.borrow().clone();
