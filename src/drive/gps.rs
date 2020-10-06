@@ -15,8 +15,9 @@
  */
 
 use crate::drive::course::Course;
+use crate::drive::read_track::Coord;
 use crate::drive::threading::ThreadingRef;
-use crate::utils::{genereate_polygon, right_direction};
+use crate::utils::{genereate_polygon, lat_lon_comp, right_direction};
 use gpsd_proto::handshake;
 use nalgebra::geometry::{Isometry2, Point2};
 use ncollide2d::query::point_internal::point_query::PointQuery;
@@ -24,6 +25,7 @@ use std::fs::OpenOptions;
 use std::io;
 use std::net::TcpStream;
 use std::time::{Duration, SystemTime};
+use std::vec::Vec;
 
 pub fn gpsd_thread(
     thread_info: ThreadingRef,
@@ -73,6 +75,8 @@ pub fn gpsd_thread(
         course_info.start.head.unwrap_or(0.0),
     );
 
+    let mut lap_times: Vec<(Coord, Duration)> = Vec::new();
+
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
@@ -80,6 +84,7 @@ pub fn gpsd_thread(
             Ok((lat, lon, _alt, _time, _speed, track)) => {
                 location_tx.send((lat, lon)).unwrap();
 
+                // Check to see if we should start the timer
                 if !thread_info.on_track.lock().unwrap().get()
                     && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                     && right_direction(course_info.start.head, track)
@@ -88,10 +93,12 @@ pub fn gpsd_thread(
                     *lap_start = SystemTime::now();
                     thread_info.on_track.lock().unwrap().set(true);
                     thread_info.change_colour.lock().unwrap().set(true);
+                    lap_times.clear();
                 } else {
                     println!("Point {}, {} is not inside", lat, lon);
                 }
 
+                // Check to see if we should stop the timer
                 if thread_info.on_track.lock().unwrap().get()
                     && finish_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                     && right_direction(course_info.finish.head, track)
@@ -105,10 +112,12 @@ pub fn gpsd_thread(
                             course_info.last = elapsed;
                             course_info.times.sort_unstable();
                             if let Some(worst) = course_info.times.last() {
-                                course_info.worst = *worst
+                                course_info.worst = *worst;
                             }
                             if let Some(best) = course_info.times.first() {
-                                course_info.best = *best
+                                course_info.best = *best;
+                                course_info.best_times.clear();
+                                course_info.best_times.append(&mut lap_times);
                             }
                             times_tx
                                 .send((course_info.last, course_info.best, course_info.worst))
@@ -116,6 +125,45 @@ pub fn gpsd_thread(
                         }
                         Err(e) => {
                             println!("Error: {:?}", e);
+                        }
+                    }
+                }
+
+                // Save lap time data
+                if thread_info.on_track.lock().unwrap().get() {
+                    // Save the current location and time to a vector
+                    match thread_info.lap_start.read().unwrap().elapsed() {
+                        Ok(elapsed) => {
+                            lap_times.push((
+                                Coord {
+                                    lat,
+                                    lon,
+                                    head: None,
+                                },
+                                elapsed,
+                            ));
+                        }
+                        Err(e) => {
+                            println!("Error: {:?}", e);
+                        }
+                    }
+
+                    for (loc, el) in &course_info.best_times {
+                        if lat_lon_comp(loc.lat, loc.lon, lat, lon) {
+                            // This point matches a previous point
+                            match thread_info.lap_start.read().unwrap().elapsed() {
+                                Ok(elapsed) => {
+                                    println!(
+                                        "Current diff: {:?}, {:?}, {:?}",
+                                        el,
+                                        elapsed,
+                                        *el - elapsed
+                                    );
+                                }
+                                Err(e) => {
+                                    println!("Error: {:?}", e);
+                                }
+                            }
                         }
                     }
                 }

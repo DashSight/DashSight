@@ -31,6 +31,25 @@ macro_rules! upgrade_weak {
     };
 }
 
+pub fn lat_lon_comp(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> bool {
+    let earth = 6378.137; // Radius of earth in km
+    let error = 1.0; // Error range, in metres
+
+    let d_lat = (lat2 * std::f64::consts::PI / 180.0) - (lat1 * std::f64::consts::PI / 180.0);
+    let d_lon = (lon2 * std::f64::consts::PI / 180.0) - (lon1 * std::f64::consts::PI / 180.0);
+
+    let a = ((d_lat / 2.0).sin()).powi(2)
+        + (lat1 * std::f64::consts::PI / 180.0).cos()
+            * (lat2 * std::f64::consts::PI / 180.0).cos()
+            * ((d_lon / 2.0).sin()).powi(2);
+
+    let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
+
+    let d = earth * c * 1000.0;
+
+    d < error
+}
+
 /// Generate a polygon based on the information provided.
 /// This takes the start or end latitude, longitude and heading
 /// to generate a polygon we use to determine if we have crossed
