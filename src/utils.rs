@@ -157,7 +157,7 @@ pub fn get_gps_lat_lon(
             ResponseData::Device(_) => {}
             ResponseData::Tpv(t) => {
                 // Check if we have a longitude and latitude
-                if t.lat.is_some() && t.lon.is_some() {
+                if t.lat.is_some() && t.lon.is_some() && t.alt.is_some() {
                     // Return the longitude and latitude
                     // If we don't have a time (which apparently can happen)
                     // then return the Unix Epoch start time instead
