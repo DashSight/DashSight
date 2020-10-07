@@ -57,6 +57,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
+    let (time_diff_tx, time_diff_rx) = mpsc::channel::<(bool, Duration)>();
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
     let (imu_tx, imu_rx) = mpsc::channel::<(f64, f64)>();
     let (imu_page_tx, imu_page_rx) = mpsc::channel::<(f64, f64)>();
@@ -80,7 +81,13 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             (&track_points).last().unwrap().head.unwrap_or(0.0),
         );
 
-        gps::gpsd_thread(thread_info, times_tx, location_tx, &mut course_info);
+        gps::gpsd_thread(
+            thread_info,
+            times_tx,
+            time_diff_tx,
+            location_tx,
+            &mut course_info,
+        );
     });
 
     let mut track_name = track_sel_info.track_file.borrow().clone();
@@ -119,7 +126,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             return glib::source::Continue(false);
         }
 
-        thread_info.time_update_idle_thread(&times_rx, builder)
+        thread_info.time_update_idle_thread(&times_rx, &time_diff_rx, builder)
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);

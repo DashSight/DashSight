@@ -58,8 +58,11 @@ impl Threading {
     pub fn time_update_idle_thread(
         &self,
         times_rx: &std::sync::mpsc::Receiver<(Duration, Duration, Duration)>,
+        time_diff_rx: &std::sync::mpsc::Receiver<(bool, Duration)>,
         builder: gtk::Builder,
     ) -> glib::source::Continue {
+        let timeout = Duration::new(0, 100);
+
         if self.on_track.lock().unwrap().get() {
             match self.lap_start.read().unwrap().elapsed() {
                 Ok(elapsed) => {
@@ -78,9 +81,53 @@ impl Threading {
                     println!("Error: {:?}", e);
                 }
             }
+
+            let rec = time_diff_rx.recv_timeout(timeout);
+            match rec {
+                Ok((neg, diff)) => {
+                    let time_diff = builder
+                        .get_object::<gtk::Label>("BestDiff")
+                        .expect("Can't find BestDiff in ui file.");
+                    let sign = match neg {
+                        true => "-",
+                        false => "+",
+                    };
+                    let time = format!(
+                        "{}{:02}:{:02}:{:03}",
+                        sign,
+                        diff.as_secs() / 60,
+                        diff.as_secs() % 60,
+                        diff.subsec_millis()
+                    );
+                    time_diff.set_label(&time);
+
+                    if neg {
+                        let negbar = builder
+                            .get_object::<gtk::ProgressBar>("NegativeDiff")
+                            .expect("Can't find NegativeDiff in ui file.");
+                        negbar.set_fraction(diff.as_secs_f64() / 10.0);
+                        let posbar = builder
+                            .get_object::<gtk::ProgressBar>("PositiveDiff")
+                            .expect("Can't find PositiveDiff in ui file.");
+                        posbar.set_fraction(0.0);
+                    } else {
+                        let negbar = builder
+                            .get_object::<gtk::ProgressBar>("NegativeDiff")
+                            .expect("Can't find NegativeDiff in ui file.");
+                        negbar.set_fraction(0.0);
+                        let posbar = builder
+                            .get_object::<gtk::ProgressBar>("PositiveDiff")
+                            .expect("Can't find PositiveDiff in ui file.");
+                        posbar.set_fraction(diff.as_secs_f64() / 10.0);
+                    }
+                }
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+                _ => {
+                    return glib::source::Continue(false);
+                }
+            }
         }
 
-        let timeout = Duration::new(0, 100);
         let rec = times_rx.recv_timeout(timeout);
         match rec {
             Ok((last, best, worst)) => {

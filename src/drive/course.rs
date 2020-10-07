@@ -24,6 +24,7 @@ pub struct Course {
     pub last: Duration,
     pub best: Duration,
     pub best_times: Vec<(Coord, Duration)>,
+    pub last_location_time: Duration,
     pub worst: Duration,
     pub start: Coord,
     pub finish: Coord,
@@ -43,6 +44,7 @@ impl Course {
             last: Duration::new(0, 0),
             best: Duration::new(0, 0),
             best_times: Vec::new(),
+            last_location_time: Duration::new(0, 0),
             worst: Duration::new(0, 0),
             start: Coord {
                 lat: start_lat,

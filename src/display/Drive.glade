@@ -438,7 +438,7 @@
           <object class="GtkLabel" id="BestDiff">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">00:00:000</property>
+            <property name="label" translatable="yes">+00:00:000</property>
             <property name="justify">center</property>
             <property name="track_visited_links">False</property>
             <attributes>
@@ -464,7 +464,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkProgressBar">
+          <object class="GtkProgressBar" id="PositiveDiff">
             <property name="name">PositiveDiff</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
