@@ -101,6 +101,11 @@ impl TrackSelection {
                 track_points.first().unwrap().head.unwrap_or(0.0),
             );
 
+            champlain::path_layer::set_stroke_colour(
+                path_layer,
+                champlain::clutter_colour::new(255, 255, 255, 100),
+            );
+
             for coord in start_poly.points().iter() {
                 let c_point = champlain::coordinate::new_full(coord[0], coord[1]);
                 champlain::path_layer::add_node(
@@ -130,6 +135,11 @@ impl TrackSelection {
                 track_points.last().unwrap().lat,
                 track_points.last().unwrap().lon,
                 track_points.last().unwrap().head.unwrap_or(0.0),
+            );
+
+            champlain::path_layer::set_stroke_colour(
+                path_layer,
+                champlain::clutter_colour::new(0, 0, 0, 100),
             );
 
             for coord in end_poly.points().iter() {
