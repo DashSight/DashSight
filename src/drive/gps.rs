@@ -58,12 +58,6 @@ pub fn gpsd_thread(
 
     handshake(&mut reader, &mut writer).unwrap();
 
-    println!(
-        "Creating start Poly from {}, {}, heading: {}",
-        course_info.start.lat,
-        course_info.start.lon,
-        course_info.start.head.unwrap_or(0.0)
-    );
     let start_poly = genereate_polygon(
         course_info.start.lat,
         course_info.start.lon,
@@ -94,8 +88,6 @@ pub fn gpsd_thread(
                     thread_info.on_track.lock().unwrap().set(true);
                     thread_info.change_colour.lock().unwrap().set(true);
                     lap_times.clear();
-                } else {
-                    println!("Point {}, {} is not inside", lat, lon);
                 }
 
                 // Check to see if we should stop the timer
@@ -153,12 +145,17 @@ pub fn gpsd_thread(
                             // This point matches a previous point
                             match thread_info.lap_start.read().unwrap().elapsed() {
                                 Ok(elapsed) => {
-                                    println!(
-                                        "Current diff: {:?}, {:?}, {:?}",
-                                        el,
-                                        elapsed,
-                                        *el - elapsed
-                                    );
+                                    println!("Times: {:?}, {:?}", el, elapsed);
+                                    // Check if best - elapsed is greater then 0
+                                    // In this case we are quicker then previous best
+                                    if let Some(diff) = el.checked_sub(elapsed) {
+                                        println!("Current diff: +{:?}", diff);
+                                    }
+                                    // Check if elapsed - best is greater then 0
+                                    // In this case we are slower then previous best
+                                    if let Some(diff) = elapsed.checked_sub(*el) {
+                                        println!("Current diff: -{:?}", diff);
+                                    }
                                 }
                                 Err(e) => {
                                     println!("Error: {:?}", e);
