@@ -10,3 +10,11 @@ progressbar progress {
 .load_bar progress {
     background-color: #1100ff;
 }
+
+.NegativeDiff progress {
+    background-color: #CC0000;
+}
+
+.PositiveDiff progress {
+    background-color: #00994C;
+}

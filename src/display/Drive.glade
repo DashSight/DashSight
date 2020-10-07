@@ -453,6 +453,7 @@
         </child>
         <child>
           <object class="GtkProgressBar" id="NegativeDiff">
+            <property name="name">NegativeDiff</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="valign">center</property>
