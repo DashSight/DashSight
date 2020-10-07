@@ -115,6 +115,18 @@ pub fn gpsd_thread(
                             times_tx
                                 .send((course_info.last, course_info.best, course_info.worst))
                                 .unwrap();
+
+                            let (_, el) = &course_info.best_times.last().unwrap();
+
+                            // Update the diff display
+                            if let Some(diff) = el.checked_sub(elapsed) {
+                                time_diff_tx.send((false, diff)).unwrap();
+                            }
+                            // Check if elapsed - best is greater then 0
+                            // In this case we are slower then previous best
+                            if let Some(diff) = elapsed.checked_sub(*el) {
+                                time_diff_tx.send((true, diff)).unwrap();
+                            }
                         }
                         Err(e) => {
                             println!("Error: {:?}", e);
@@ -144,25 +156,31 @@ pub fn gpsd_thread(
                     for (loc, el) in &course_info.best_times {
                         if lat_lon_comp(loc.lat, loc.lon, lat, lon) {
                             // This point matches a previous point
-                            course_info.last_location_time = *el;
+                            course_info.last_location_time = Some(*el);
                         }
                     }
 
                     match thread_info.lap_start.read().unwrap().elapsed() {
                         Ok(elapsed) => {
-                            // Check if best - elapsed is greater then 0
-                            // In this case we are quicker then previous best
-                            if let Some(diff) = course_info.last_location_time.checked_sub(elapsed)
-                            {
-                                println!("Current diff: +{:?}", diff);
-                                time_diff_tx.send((false, diff)).unwrap();
-                            }
-                            // Check if elapsed - best is greater then 0
-                            // In this case we are slower then previous best
-                            if let Some(diff) = elapsed.checked_sub(course_info.last_location_time)
-                            {
-                                println!("Current diff: -{:?}", diff);
-                                time_diff_tx.send((true, diff)).unwrap();
+                            match course_info.last_location_time {
+                                Some(llt) => {
+                                    // Check if best - elapsed is greater then 0
+                                    // In this case we are quicker then previous best
+                                    if let Some(diff) = llt.checked_sub(elapsed) {
+                                        println!("Current diff: +{:?}", diff);
+                                        time_diff_tx.send((false, diff)).unwrap();
+                                    }
+                                    // Check if elapsed - best is greater then 0
+                                    // In this case we are slower then previous best
+                                    if let Some(diff) = elapsed.checked_sub(llt) {
+                                        println!("Current diff: -{:?}", diff);
+                                        time_diff_tx.send((true, diff)).unwrap();
+                                    }
+                                }
+                                None => {
+                                    // No time data, just reset to +00:00:000
+                                    time_diff_tx.send((false, Duration::new(0, 0))).unwrap();
+                                }
                             }
                         }
                         Err(e) => {
