@@ -49,7 +49,7 @@ impl TrackSelection {
 
     fn file_picker_clicked(&self, display: DisplayRef) {
         let builder = display.builder.clone();
-        let champlain_view = champlain::gtk_embed::get_view(self.map_widget.clone()).unwrap();
+        let mut champlain_view = champlain::gtk_embed::get_view(self.map_widget.clone());
 
         let file_picker_button = builder
             .get_object::<gtk::FileChooserButton>("LoadMapFileLoadButton")
@@ -73,8 +73,12 @@ impl TrackSelection {
                 champlain::path_layer::remove_all(new_map_layers.pop().unwrap());
             }
 
-            champlain::view::set_zoom_level(champlain_view, 17);
-            champlain::view::center_on(champlain_view, track_points[0].lat, track_points[0].lon);
+            champlain::view::set_zoom_level(&mut champlain_view, 17);
+            champlain::view::center_on(
+                &mut champlain_view,
+                track_points[0].lat,
+                track_points[0].lon,
+            );
 
             // Add the track layer
             let path_layer = champlain::path_layer::new();
@@ -87,7 +91,10 @@ impl TrackSelection {
                 );
             }
 
-            champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+            champlain::view::add_layer(
+                &mut champlain_view,
+                champlain::path_layer::to_layer(path_layer),
+            );
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -123,7 +130,10 @@ impl TrackSelection {
                 champlain::coordinate::to_location(c_point),
             );
 
-            champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+            champlain::view::add_layer(
+                &mut champlain_view,
+                champlain::path_layer::to_layer(path_layer),
+            );
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -157,7 +167,10 @@ impl TrackSelection {
                 champlain::coordinate::to_location(c_point),
             );
 
-            champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+            champlain::view::add_layer(
+                &mut champlain_view,
+                champlain::path_layer::to_layer(path_layer),
+            );
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -193,13 +206,12 @@ pub fn button_press_event(display: DisplayRef) {
     }
 
     let champlain_widget = champlain::gtk_embed::new();
-    let champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
-        .expect("Unable to get ChamplainView");
-    let champlain_actor = champlain::view::to_clutter_actor(champlain_view);
+    let mut champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone());
+    let champlain_actor = champlain::view::to_clutter_actor(&mut champlain_view);
 
-    champlain::view::set_kinetic_mode(champlain_view, true);
-    champlain::view::set_zoom_on_double_click(champlain_view, true);
-    champlain::view::set_zoom_level(champlain_view, 5);
+    champlain::view::set_kinetic_mode(&mut champlain_view, true);
+    champlain::view::set_zoom_on_double_click(&mut champlain_view, true);
+    champlain::view::set_zoom_level(&mut champlain_view, 5);
     champlain::clutter_actor::set_reactive(champlain_actor, true);
 
     let map_frame = builder

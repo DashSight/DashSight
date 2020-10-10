@@ -33,14 +33,14 @@ use std::sync::RwLock;
 use std::time::Duration;
 
 pub struct MapWrapper {
-    champlain_view: *mut champlain::view::ChamplainView,
+    champlain_view: champlain::view::ChamplainView,
     path_layer: *mut champlain::path_layer::ChamplainPathLayer,
     point: *mut champlain::clutter::ClutterActor,
 }
 
 impl MapWrapper {
     pub fn new(
-        champlain_view: *mut champlain::view::ChamplainView,
+        champlain_view: champlain::view::ChamplainView,
         path_layer: *mut champlain::path_layer::ChamplainPathLayer,
         champlain_point: *mut champlain::clutter::ClutterActor,
     ) -> MapWrapper {
@@ -110,7 +110,7 @@ impl RecordInfo {
     pub fn idle_thread(
         &self,
         location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
-        map_wrapper: &MapWrapper,
+        map_wrapper: &mut MapWrapper,
         first_connect: &mut bool,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
@@ -124,8 +124,8 @@ impl RecordInfo {
                 );
 
                 if *first_connect {
-                    champlain::view::set_zoom_level(map_wrapper.champlain_view, 17);
-                    champlain::view::center_on(map_wrapper.champlain_view, lat, lon);
+                    champlain::view::set_zoom_level(&mut map_wrapper.champlain_view, 17);
+                    champlain::view::center_on(&mut map_wrapper.champlain_view, lat, lon);
                     *first_connect = false;
                 }
 

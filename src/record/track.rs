@@ -43,20 +43,22 @@ pub fn button_press_event(display: DisplayRef) {
     }
 
     let champlain_widget = champlain::gtk_embed::new();
-    let champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone())
-        .expect("Unable to get ChamplainView");
-    let champlain_actor = champlain::view::to_clutter_actor(champlain_view);
+    let mut champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone());
+    let champlain_actor = champlain::view::to_clutter_actor(&mut champlain_view);
 
-    champlain::view::set_kinetic_mode(champlain_view, true);
-    champlain::view::set_zoom_on_double_click(champlain_view, true);
-    champlain::view::set_zoom_level(champlain_view, 5);
+    champlain::view::set_kinetic_mode(&mut champlain_view, true);
+    champlain::view::set_zoom_on_double_click(&mut champlain_view, true);
+    champlain::view::set_zoom_level(&mut champlain_view, 5);
     champlain::clutter_actor::set_reactive(champlain_actor, true);
 
     let layer = champlain::marker_layer::new();
     champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
         champlain::marker_layer::to_layer(layer),
     ));
-    champlain::view::add_layer(champlain_view, champlain::marker_layer::to_layer(layer));
+    champlain::view::add_layer(
+        &mut champlain_view,
+        champlain::marker_layer::to_layer(layer),
+    );
 
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
@@ -67,7 +69,10 @@ pub fn button_press_event(display: DisplayRef) {
     );
 
     let path_layer = champlain::path_layer::new();
-    champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+    champlain::view::add_layer(
+        &mut champlain_view,
+        champlain::path_layer::to_layer(path_layer),
+    );
 
     let map_frame = builder
         .get_object::<gtk::Frame>("RecordPageMapFrame")
@@ -79,7 +84,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
     let rec_info = RecordInfo::new();
-    let map_wrapper = MapWrapper::new(champlain_view, path_layer, point);
+    let mut map_wrapper = MapWrapper::new(champlain_view, path_layer, point);
     let mut first_connect = true;
 
     let rec_info_weak = RecordInfoRef::downgrade(&rec_info);
@@ -90,7 +95,7 @@ pub fn button_press_event(display: DisplayRef) {
             return glib::source::Continue(false);
         }
 
-        rec_info.idle_thread(&location_rx, &map_wrapper, &mut first_connect)
+        rec_info.idle_thread(&location_rx, &mut map_wrapper, &mut first_connect)
     });
 
     let file_picker_button = builder

@@ -50,8 +50,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         .expect("Can't find DriveMapFrame in ui file.");
     map_frame.add(&track_sel_info.map_widget);
 
-    let champlain_view = champlain::gtk_embed::get_view(track_sel_info.map_widget.clone())
-        .expect("Unable to get ChamplainView");
+    let mut champlain_view = champlain::gtk_embed::get_view(track_sel_info.map_widget.clone());
 
     let track_points = track_sel_info.track_points.take();
 
@@ -239,7 +238,10 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
         champlain::marker_layer::to_layer(layer),
     ));
-    champlain::view::add_layer(champlain_view, champlain::marker_layer::to_layer(layer));
+    champlain::view::add_layer(
+        &mut champlain_view,
+        champlain::marker_layer::to_layer(layer),
+    );
 
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
@@ -250,7 +252,10 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     );
 
     let path_layer = champlain::path_layer::new();
-    champlain::view::add_layer(champlain_view, champlain::path_layer::to_layer(path_layer));
+    champlain::view::add_layer(
+        &mut champlain_view,
+        champlain::path_layer::to_layer(path_layer),
+    );
     champlain::path_layer::set_visible(path_layer, true);
 
     champlain::marker_layer::show_all_markers(layer);
@@ -265,6 +270,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             .unwrap();
 
         if thread_info.close.lock().unwrap().get() {
+            champlain::marker_layer::remove_all(layer);
             return glib::source::Continue(false);
         }
 
