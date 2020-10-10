@@ -103,7 +103,7 @@ impl TrackSelection {
 
             champlain::path_layer::set_stroke_colour(
                 path_layer,
-                champlain::clutter_colour::new(255, 255, 255, 100),
+                champlain::clutter_colour::new(255, 255, 255, 150),
             );
 
             for coord in start_poly.points().iter() {
@@ -139,7 +139,7 @@ impl TrackSelection {
 
             champlain::path_layer::set_stroke_colour(
                 path_layer,
-                champlain::clutter_colour::new(0, 0, 0, 100),
+                champlain::clutter_colour::new(0, 0, 0, 150),
             );
 
             for coord in end_poly.points().iter() {
