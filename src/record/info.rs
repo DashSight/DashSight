@@ -35,14 +35,14 @@ use std::time::Duration;
 pub struct MapWrapper {
     champlain_view: champlain::view::ChamplainView,
     path_layer: *mut champlain::path_layer::ChamplainPathLayer,
-    point: *mut champlain::clutter::ClutterActor,
+    point: champlain::clutter::ClutterActor,
 }
 
 impl MapWrapper {
     pub fn new(
         champlain_view: champlain::view::ChamplainView,
         path_layer: *mut champlain::path_layer::ChamplainPathLayer,
-        champlain_point: *mut champlain::clutter::ClutterActor,
+        champlain_point: champlain::clutter::ClutterActor,
     ) -> MapWrapper {
         MapWrapper {
             champlain_view,
@@ -117,11 +117,7 @@ impl RecordInfo {
         let rec = location_rx.recv_timeout(timeout);
         match rec {
             Ok((lat, lon)) => {
-                champlain::location::set_location(
-                    champlain::clutter_actor::to_location(map_wrapper.point),
-                    lat,
-                    lon,
-                );
+                champlain::location::set_location(map_wrapper.point.to_location(), lat, lon);
 
                 if *first_connect {
                     champlain::view::set_zoom_level(&mut map_wrapper.champlain_view, 17);

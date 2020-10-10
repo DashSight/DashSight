@@ -326,23 +326,19 @@ impl Threading {
         let rec = location_rx.recv_timeout(timeout);
         match rec {
             Ok((lat, lon)) => {
-                champlain::location::set_location(
-                    champlain::clutter_actor::to_location(map_wrapper.point),
-                    lat,
-                    lon,
-                );
+                champlain::location::set_location(map_wrapper.point.to_location(), lat, lon);
 
                 if self.change_colour.lock().unwrap().get() {
                     if self.on_track.lock().unwrap().get() {
                         let point_colour = champlain::clutter_colour::new(255, 120, 0, 255);
                         champlain::point::set_colour(
-                            champlain::clutter_actor::to_point(map_wrapper.point),
+                            &mut map_wrapper.point.to_point(),
                             point_colour,
                         );
                     } else {
                         let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
                         champlain::point::set_colour(
-                            champlain::clutter_actor::to_point(map_wrapper.point),
+                            &mut map_wrapper.point.to_point(),
                             point_colour,
                         );
                     }

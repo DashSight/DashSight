@@ -207,12 +207,11 @@ pub fn button_press_event(display: DisplayRef) {
 
     let champlain_widget = champlain::gtk_embed::new();
     let mut champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone());
-    let champlain_actor = champlain::view::to_clutter_actor(&mut champlain_view);
 
     champlain::view::set_kinetic_mode(&mut champlain_view, true);
     champlain::view::set_zoom_on_double_click(&mut champlain_view, true);
     champlain::view::set_zoom_level(&mut champlain_view, 5);
-    champlain::clutter_actor::set_reactive(champlain_actor, true);
+    champlain::clutter_actor::set_reactive(&mut champlain_view.to_clutter_actor(), true);
 
     let map_frame = builder
         .get_object::<gtk::Frame>("LoadMapPageMapFrame")

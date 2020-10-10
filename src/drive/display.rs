@@ -235,7 +235,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     });
 
     let layer = champlain::marker_layer::new();
-    champlain::clutter_actor::show(champlain::layer::to_clutter_actor(
+    champlain::clutter_actor::show(&mut champlain::layer::to_clutter_actor(
         champlain::marker_layer::to_layer(layer),
     ));
     champlain::view::add_layer(
@@ -246,10 +246,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
     let point = champlain::point::new_full(12.0, point_colour);
-    champlain::marker_layer::add_marker(
-        layer,
-        champlain::clutter_actor::to_champlain_marker(point),
-    );
+    champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
 
     let path_layer = champlain::path_layer::new();
     champlain::view::add_layer(
