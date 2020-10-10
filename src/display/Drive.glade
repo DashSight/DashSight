@@ -456,7 +456,7 @@
             <property name="name">NegativeDiff</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="valign">center</property>
+            <property name="inverted">True</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -469,7 +469,6 @@
             <property name="name">PositiveDiff</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="valign">center</property>
           </object>
           <packing>
             <property name="left_attach">6</property>

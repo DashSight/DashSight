@@ -109,8 +109,12 @@ pub fn gpsd_thread(
                             }
                             if let Some(best) = course_info.times.first() {
                                 course_info.best = *best;
-                                course_info.best_times.clear();
-                                course_info.best_times.append(&mut lap_times);
+                                // If we just set the best time, update the
+                                // best_times vector
+                                if *best == elapsed {
+                                    course_info.best_times.clear();
+                                    course_info.best_times.append(&mut lap_times);
+                                }
                             }
                             times_tx
                                 .send((course_info.last, course_info.best, course_info.worst))
@@ -120,12 +124,12 @@ pub fn gpsd_thread(
 
                             // Update the diff display
                             if let Some(diff) = el.checked_sub(elapsed) {
-                                time_diff_tx.send((false, diff)).unwrap();
+                                time_diff_tx.send((true, diff)).unwrap();
                             }
                             // Check if elapsed - best is greater then 0
                             // In this case we are slower then previous best
                             if let Some(diff) = elapsed.checked_sub(*el) {
-                                time_diff_tx.send((true, diff)).unwrap();
+                                time_diff_tx.send((false, diff)).unwrap();
                             }
                         }
                         Err(e) => {
@@ -167,14 +171,12 @@ pub fn gpsd_thread(
                                     // Check if best - elapsed is greater then 0
                                     // In this case we are quicker then previous best
                                     if let Some(diff) = llt.checked_sub(elapsed) {
-                                        println!("Current diff: +{:?}", diff);
-                                        time_diff_tx.send((false, diff)).unwrap();
+                                        time_diff_tx.send((true, diff)).unwrap();
                                     }
                                     // Check if elapsed - best is greater then 0
                                     // In this case we are slower then previous best
                                     if let Some(diff) = elapsed.checked_sub(llt) {
-                                        println!("Current diff: -{:?}", diff);
-                                        time_diff_tx.send((true, diff)).unwrap();
+                                        time_diff_tx.send((false, diff)).unwrap();
                                     }
                                 }
                                 None => {

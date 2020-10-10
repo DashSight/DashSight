@@ -15,6 +15,10 @@ progressbar progress {
     background-color: #CC0000;
 }
 
+.negative_diff progress {
+    background-color: #CC0000;
+}
+
 .PositiveDiff progress {
     background-color: #00994C;
 }
