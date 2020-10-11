@@ -58,7 +58,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
-    let point = champlain::point::new_full(12.0, point_colour);
+    let point = champlain::point::ChamplainPoint::new_full(12.0, point_colour);
     champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
 
     let path_layer = champlain::path_layer::new();

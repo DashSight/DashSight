@@ -35,14 +35,14 @@ use std::time::Duration;
 pub struct MapWrapper {
     champlain_view: champlain::view::ChamplainView,
     path_layer: champlain::path_layer::ChamplainPathLayer,
-    point: champlain::clutter::ClutterActor,
+    point: champlain::point::ChamplainPoint,
 }
 
 impl MapWrapper {
     pub fn new(
         champlain_view: champlain::view::ChamplainView,
         path_layer: champlain::path_layer::ChamplainPathLayer,
-        champlain_point: champlain::clutter::ClutterActor,
+        champlain_point: champlain::point::ChamplainPoint,
     ) -> MapWrapper {
         MapWrapper {
             champlain_view,
