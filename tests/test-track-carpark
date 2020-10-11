@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gpx version="1.1" creator="DashSight"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.topografix.com/GPX/1.1"
+        xsi:schemaLocation="http://www.topografix.com/GPS/1/1
+        http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <link href="https://github.com/DashSight/DashSight">
+      <text>DashSight</text>
+    </link>
+  </metadata>
+  <trk>
+    <name>test-track-from-home</name>
+      <trkpt lat="37.3295745" lon="-121.9236648">
+        <ele>27.645</ele>
+        <time>2020-10-11T23:17:30.000Z</time>
+        <degreesType>106.2139</degreesType>
+      </trkpt>
+      <trkpt lat="37.3295745" lon="-121.923664833">
+        <ele>27.6</ele>
+        <time>2020-10-11T23:17:30.000Z</time>
+        <degreesType>106.21</degreesType>
+      </trkpt>
+      <trkpt lat="37.3295811" lon="-121.9236349">
+        <ele>26.272</ele>
+        <time>2020-10-11T23:17:31.000Z</time>
+        <degreesType>77.55</degreesType>
+      </trkpt>
+      <trkpt lat="37.329581167" lon="-121.923634833">
+        <ele>26.3</ele>
+        <time>2020-10-11T23:17:31.000Z</time>
+        <degreesType>77.55</degreesType>
+      </trkpt>
+      <trkpt lat="37.3295986" lon="-121.9235933">
+        <ele>27.241</ele>
+        <time>2020-10-11T23:17:32.000Z</time>
+        <degreesType>67.4009</degreesType>
+      </trkpt>
+      <trkpt lat="37.329598667" lon="-121.923593333">
+        <ele>27.2</ele>
+        <time>2020-10-11T23:17:32.000Z</time>
+        <degreesType>67.4</degreesType>
+      </trkpt>
+      <trkpt lat="37.3296206" lon="-121.9235575">
+        <ele>27.965</ele>
+        <time>2020-10-11T23:17:33.000Z</time>
+        <degreesType>54.3985</degreesType>
+      </trkpt>
+      <trkpt lat="37.329620667" lon="-121.9235575">
+        <ele>28</ele>
+        <time>2020-10-11T23:17:33.000Z</time>
+        <degreesType>54.4</degreesType>
+      </trkpt>
+      <trkpt lat="37.329645" lon="-121.9235205">
+        <ele>28.43</ele>
+        <time>2020-10-11T23:17:34.000Z</time>
+        <degreesType>52.7616</degreesType>
+      </trkpt>
+      <trkpt lat="37.329645" lon="-121.9235205">
+        <ele>28.4</ele>
+        <time>2020-10-11T23:17:34.000Z</time>
+        <degreesType>52.76</degreesType>
+      </trkpt>
+      <trkpt lat="37.3296716" lon="-121.923482">
+        <ele>28.379</ele>
+        <time>2020-10-11T23:17:35.000Z</time>
+        <degreesType>49.8227</degreesType>
+      </trkpt>
+      <trkpt lat="37.329671667" lon="-121.923482">
+        <ele>28.4</ele>
+        <time>2020-10-11T23:17:35.000Z</time>
+        <degreesType>49.82</degreesType>
+      </trkpt>
+      <trkpt lat="37.3296996" lon="-121.9234449">
+        <ele>28.426</ele>
+        <time>2020-10-11T23:17:36.000Z</time>
+        <degreesType>47.8679</degreesType>
+      </trkpt>
+      <trkpt lat="37.329699667" lon="-121.923444833">
+        <ele>28.4</ele>
+        <time>2020-10-11T23:17:36.000Z</time>
+        <degreesType>47.87</degreesType>
+      </trkpt>
+      <trkpt lat="37.3297271" lon="-121.9234102">
+        <ele>28.248</ele>
+        <time>2020-10-11T23:17:37.000Z</time>
+        <degreesType>46.5384</degreesType>
+      </trkpt>
+      <trkpt lat="37.329727167" lon="-121.923410167">
+        <ele>28.2</ele>
+        <time>2020-10-11T23:17:37.000Z</time>
+        <degreesType>46.54</degreesType>
+      </trkpt>
+      <trkpt lat="37.3297517" lon="-121.9233774">
+        <ele>28.051</ele>
+        <time>2020-10-11T23:17:38.000Z</time>
+        <degreesType>47.5222</degreesType>
+      </trkpt>
+      <trkpt lat="37.329751667" lon="-121.923377333">
+        <ele>28.1</ele>
+        <time>2020-10-11T23:17:38.000Z</time>
+        <degreesType>47.52</degreesType>
+      </trkpt>
+      <trkpt lat="37.3297737" lon="-121.9233478">
+        <ele>27.942</ele>
+        <time>2020-10-11T23:17:39.000Z</time>
+        <degreesType>44.8823</degreesType>
+      </trkpt>
+      <trkpt lat="37.329773667" lon="-121.923347833">
+        <ele>27.9</ele>
+        <time>2020-10-11T23:17:39.000Z</time>
+        <degreesType>44.88</degreesType>
+      </trkpt>
+      <trkpt lat="37.3297972" lon="-121.9233239">
+        <ele>27.786</ele>
+        <time>2020-10-11T23:17:40.000Z</time>
+        <degreesType>34.7131</degreesType>
+      </trkpt>
+      <trkpt lat="37.329797167" lon="-121.923323833">
+        <ele>27.8</ele>
+        <time>2020-10-11T23:17:40.000Z</time>
+        <degreesType>34.71</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298236" lon="-121.9233095">
+        <ele>27.899</ele>
+        <time>2020-10-11T23:17:41.000Z</time>
+        <degreesType>25.1703</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298235" lon="-121.9233095">
+        <ele>27.9</ele>
+        <time>2020-10-11T23:17:41.000Z</time>
+        <degreesType>25.17</degreesType>
+      </trkpt>
+      <trkpt lat="37.329849" lon="-121.9233024">
+        <ele>28.023</ele>
+        <time>2020-10-11T23:17:42.000Z</time>
+        <degreesType>7.3115</degreesType>
+      </trkpt>
+      <trkpt lat="37.329849" lon="-121.923302333">
+        <ele>28</ele>
+        <time>2020-10-11T23:17:42.000Z</time>
+        <degreesType>7.31</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298733" lon="-121.923305">
+        <ele>28.099</ele>
+        <time>2020-10-11T23:17:43.000Z</time>
+        <degreesType>349.9827</degreesType>
+      </trkpt>
+      <trkpt lat="37.329873333" lon="-121.923305">
+        <ele>28.1</ele>
+        <time>2020-10-11T23:17:43.000Z</time>
+        <degreesType>349.98</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298957" lon="-121.9233179">
+        <ele>28.049</ele>
+        <time>2020-10-11T23:17:44.000Z</time>
+        <degreesType>333.3635</degreesType>
+      </trkpt>
+      <trkpt lat="37.329895667" lon="-121.923318">
+        <ele>28</ele>
+        <time>2020-10-11T23:17:44.000Z</time>
+        <degreesType>333.36</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299148" lon="-121.9233379">
+        <ele>27.843</ele>
+        <time>2020-10-11T23:17:45.000Z</time>
+        <degreesType>320.0013</degreesType>
+      </trkpt>
+      <trkpt lat="37.329914833" lon="-121.923337833">
+        <ele>27.8</ele>
+        <time>2020-10-11T23:17:45.000Z</time>
+        <degreesType>320</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299295" lon="-121.9233584">
+        <ele>27.749</ele>
+        <time>2020-10-11T23:17:46.000Z</time>
+        <degreesType>314.3581</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299295" lon="-121.9233585">
+        <ele>27.7</ele>
+        <time>2020-10-11T23:17:46.000Z</time>
+        <degreesType>314.36</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299455" lon="-121.9233798">
+        <ele>27.698</ele>
+        <time>2020-10-11T23:17:47.000Z</time>
+        <degreesType>314.1292</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299455" lon="-121.923379833">
+        <ele>27.7</ele>
+        <time>2020-10-11T23:17:47.000Z</time>
+        <degreesType>314.13</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299646" lon="-121.9234013">
+        <ele>27.715</ele>
+        <time>2020-10-11T23:17:48.000Z</time>
+        <degreesType>317.3185</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299645" lon="-121.923401333">
+        <ele>27.7</ele>
+        <time>2020-10-11T23:17:48.000Z</time>
+        <degreesType>317.32</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299825" lon="-121.923422">
+        <ele>27.609</ele>
+        <time>2020-10-11T23:17:49.000Z</time>
+        <degreesType>315.2966</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299825" lon="-121.923422">
+        <ele>27.6</ele>
+        <time>2020-10-11T23:17:49.000Z</time>
+        <degreesType>315.3</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299957" lon="-121.9234439">
+        <ele>27.554</ele>
+        <time>2020-10-11T23:17:50.000Z</time>
+        <degreesType>309.7303</degreesType>
+      </trkpt>
+      <trkpt lat="37.329995667" lon="-121.923444">
+        <ele>27.6</ele>
+        <time>2020-10-11T23:17:50.000Z</time>
+        <degreesType>309.73</degreesType>
+      </trkpt>
+      <trkpt lat="37.3300021" lon="-121.923466">
+        <ele>27.112</ele>
+        <time>2020-10-11T23:17:51.000Z</time>
+        <degreesType>284.0563</degreesType>
+      </trkpt>
+      <trkpt lat="37.330002167" lon="-121.923466">
+        <ele>27.1</ele>
+        <time>2020-10-11T23:17:51.000Z</time>
+        <degreesType>284.06</degreesType>
+      </trkpt>
+      <trkpt lat="37.329999" lon="-121.9234926">
+        <ele>27.092</ele>
+        <time>2020-10-11T23:17:52.000Z</time>
+        <degreesType>276.8032</degreesType>
+      </trkpt>
+      <trkpt lat="37.329999" lon="-121.9234925">
+        <ele>27.1</ele>
+        <time>2020-10-11T23:17:52.000Z</time>
+        <degreesType>276.8</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299854" lon="-121.9235177">
+        <ele>26.71</ele>
+        <time>2020-10-11T23:17:53.000Z</time>
+        <degreesType>242.0529</degreesType>
+      </trkpt>
+      <trkpt lat="37.329985333" lon="-121.923517667">
+        <ele>26.7</ele>
+        <time>2020-10-11T23:17:53.000Z</time>
+        <degreesType>242.05</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299656" lon="-121.9235423">
+        <ele>26.555</ele>
+        <time>2020-10-11T23:17:54.000Z</time>
+        <degreesType>233.804</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299655" lon="-121.923542333">
+        <ele>26.6</ele>
+        <time>2020-10-11T23:17:54.000Z</time>
+        <degreesType>233.8</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299433" lon="-121.9235672">
+        <ele>26.514</ele>
+        <time>2020-10-11T23:17:55.000Z</time>
+        <degreesType>227.8031</degreesType>
+      </trkpt>
+      <trkpt lat="37.329943333" lon="-121.923567167">
+        <ele>26.5</ele>
+        <time>2020-10-11T23:17:55.000Z</time>
+        <degreesType>227.8</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299322" lon="-121.9235957">
+        <ele>25.304</ele>
+        <time>2020-10-11T23:17:56.000Z</time>
+        <degreesType>236.9447</degreesType>
+      </trkpt>
+      <trkpt lat="37.329932167" lon="-121.923595667">
+        <ele>25.3</ele>
+        <time>2020-10-11T23:17:56.000Z</time>
+        <degreesType>236.94</degreesType>
+      </trkpt>
+      <trkpt lat="37.329924" lon="-121.9236297">
+        <ele>24.346</ele>
+        <time>2020-10-11T23:17:57.000Z</time>
+        <degreesType>247.312</degreesType>
+      </trkpt>
+      <trkpt lat="37.329924" lon="-121.923629667">
+        <ele>24.3</ele>
+        <time>2020-10-11T23:17:57.000Z</time>
+        <degreesType>247.31</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299135" lon="-121.9236664">
+        <ele>23.749</ele>
+        <time>2020-10-11T23:17:58.000Z</time>
+        <degreesType>248.2857</degreesType>
+      </trkpt>
+      <trkpt lat="37.3299135" lon="-121.9236665">
+        <ele>23.7</ele>
+        <time>2020-10-11T23:17:58.000Z</time>
+        <degreesType>248.29</degreesType>
+      </trkpt>
+      <trkpt lat="37.329907" lon="-121.9237074">
+        <ele>23.036</ele>
+        <time>2020-10-11T23:17:59.000Z</time>
+        <degreesType>255.6178</degreesType>
+      </trkpt>
+      <trkpt lat="37.329907" lon="-121.923707333">
+        <ele>23</ele>
+        <time>2020-10-11T23:17:59.000Z</time>
+        <degreesType>255.62</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298977" lon="-121.923747">
+        <ele>22.625</ele>
+        <time>2020-10-11T23:18:00.000Z</time>
+        <degreesType>250.7097</degreesType>
+      </trkpt>
+      <trkpt lat="37.329897667" lon="-121.923747">
+        <ele>22.6</ele>
+        <time>2020-10-11T23:18:00.000Z</time>
+        <degreesType>250.71</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298817" lon="-121.9237862">
+        <ele>22.913</ele>
+        <time>2020-10-11T23:18:01.000Z</time>
+        <degreesType>244.5589</degreesType>
+      </trkpt>
+      <trkpt lat="37.329881667" lon="-121.923786167">
+        <ele>22.9</ele>
+        <time>2020-10-11T23:18:01.000Z</time>
+        <degreesType>244.56</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298683" lon="-121.9238169">
+        <ele>22.718</ele>
+        <time>2020-10-11T23:18:02.000Z</time>
+        <degreesType>239.5816</degreesType>
+      </trkpt>
+      <trkpt lat="37.329868333" lon="-121.923816833">
+        <ele>22.7</ele>
+        <time>2020-10-11T23:18:02.000Z</time>
+        <degreesType>239.58</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298577" lon="-121.9238429">
+        <ele>22.379</ele>
+        <time>2020-10-11T23:18:03.000Z</time>
+        <degreesType>240.2896</degreesType>
+      </trkpt>
+      <trkpt lat="37.329857667" lon="-121.923842833">
+        <ele>22.4</ele>
+        <time>2020-10-11T23:18:03.000Z</time>
+        <degreesType>240.29</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298453" lon="-121.9238638">
+        <ele>23.1</ele>
+        <time>2020-10-11T23:18:04.000Z</time>
+        <degreesType>238.1385</degreesType>
+      </trkpt>
+      <trkpt lat="37.329845333" lon="-121.923863833">
+        <ele>23.1</ele>
+        <time>2020-10-11T23:18:04.000Z</time>
+        <degreesType>238.14</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298306" lon="-121.9238844">
+        <ele>23.188</ele>
+        <time>2020-10-11T23:18:05.000Z</time>
+        <degreesType>233.602</degreesType>
+      </trkpt>
+      <trkpt lat="37.329830667" lon="-121.923884333">
+        <ele>23.2</ele>
+        <time>2020-10-11T23:18:05.000Z</time>
+        <degreesType>233.6</degreesType>
+      </trkpt>
+      <trkpt lat="37.3298142" lon="-121.9239046">
+        <ele>23.26</ele>
+        <time>2020-10-11T23:18:06.000Z</time>
+        <degreesType>229.2463</degreesType>
+      </trkpt>
+      <trkpt lat="37.329814167" lon="-121.923904667">
+        <ele>23.3</ele>
+        <time>2020-10-11T23:18:06.000Z</time>
+        <degreesType>229.25</degreesType>
+      </trkpt>
+      <trkpt lat="37.3297995" lon="-121.9239215">
+        <ele>23.547</ele>
+        <time>2020-10-11T23:18:07.000Z</time>
+        <degreesType>227.1672</degreesType>
+      </trkpt>
+      <trkpt lat="37.3297995" lon="-121.9239215">
+        <ele>23.5</ele>
+        <time>2020-10-11T23:18:07.000Z</time>
+        <degreesType>227.17</degreesType>
+      </trkpt>
+      <trkpt lat="37.3297888" lon="-121.9239323">
+        <ele>24.273</ele>
+        <time>2020-10-11T23:18:08.000Z</time>
+        <degreesType>225.027</degreesType>
+      </trkpt>
+      <trkpt lat="37.329788833" lon="-121.923932333">
+        <ele>24.3</ele>
+        <time>2020-10-11T23:18:08.000Z</time>
+        <degreesType>225.03</degreesType>
+      </trkpt>
+    </trkseg>
+    </trkseg>
+  </trk>
+</gpx>
