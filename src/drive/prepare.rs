@@ -73,12 +73,8 @@ impl TrackSelection {
                 champlain::path_layer::remove_all(&mut new_map_layers.pop().unwrap());
             }
 
-            champlain::view::set_zoom_level(&mut champlain_view, 17);
-            champlain::view::center_on(
-                &mut champlain_view,
-                track_points[0].lat,
-                track_points[0].lon,
-            );
+            champlain_view.set_zoom_level(17);
+            champlain_view.center_on(track_points[0].lat, track_points[0].lon);
 
             // Add the track layer
             let mut path_layer = champlain::path_layer::new();
@@ -91,7 +87,7 @@ impl TrackSelection {
                 );
             }
 
-            champlain::view::add_layer(&mut champlain_view, &mut path_layer.to_layer());
+            champlain_view.add_layer(&mut path_layer.to_layer());
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -127,7 +123,7 @@ impl TrackSelection {
                 &mut champlain::coordinate::to_location(c_point),
             );
 
-            champlain::view::add_layer(&mut champlain_view, &mut path_layer.to_layer());
+            champlain_view.add_layer(&mut path_layer.to_layer());
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -161,7 +157,7 @@ impl TrackSelection {
                 &mut champlain::coordinate::to_location(c_point),
             );
 
-            champlain::view::add_layer(&mut champlain_view, &mut path_layer.to_layer());
+            champlain_view.add_layer(&mut path_layer.to_layer());
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -199,10 +195,10 @@ pub fn button_press_event(display: DisplayRef) {
     let champlain_widget = champlain::gtk_embed::new();
     let mut champlain_view = champlain::gtk_embed::get_view(champlain_widget.clone());
 
-    champlain::view::set_kinetic_mode(&mut champlain_view, true);
-    champlain::view::set_zoom_on_double_click(&mut champlain_view, true);
-    champlain::view::set_zoom_level(&mut champlain_view, 5);
-    champlain::clutter_actor::set_reactive(&mut champlain_view.to_clutter_actor(), true);
+    champlain_view.set_kinetic_mode(true);
+    champlain_view.set_zoom_on_double_click(true);
+    champlain_view.set_zoom_level(5);
+    champlain_view.set_reactive(true);
 
     let map_frame = builder
         .get_object::<gtk::Frame>("LoadMapPageMapFrame")

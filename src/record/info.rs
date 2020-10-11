@@ -120,8 +120,8 @@ impl RecordInfo {
                 champlain::location::set_location(&mut map_wrapper.point.to_location(), lat, lon);
 
                 if *first_connect {
-                    champlain::view::set_zoom_level(&mut map_wrapper.champlain_view, 17);
-                    champlain::view::center_on(&mut map_wrapper.champlain_view, lat, lon);
+                    map_wrapper.champlain_view.set_zoom_level(17);
+                    map_wrapper.champlain_view.center_on(lat, lon);
                     *first_connect = false;
                 }
 

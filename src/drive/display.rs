@@ -235,13 +235,10 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     });
 
     let layer = champlain::marker_layer::new();
-    champlain::clutter_actor::show(
-        &mut champlain::marker_layer::to_layer(layer).to_clutter_actor(),
-    );
-    champlain::view::add_layer(
-        &mut champlain_view,
-        &mut champlain::marker_layer::to_layer(layer),
-    );
+    champlain::marker_layer::to_layer(layer)
+        .to_clutter_actor()
+        .show();
+    champlain_view.add_layer(&mut champlain::marker_layer::to_layer(layer));
 
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
 
@@ -249,7 +246,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
 
     let mut path_layer = champlain::path_layer::new();
-    champlain::view::add_layer(&mut champlain_view, &mut path_layer.to_layer());
+    champlain_view.add_layer(&mut path_layer.to_layer());
     champlain::path_layer::set_visible(&mut path_layer, true);
 
     champlain::marker_layer::show_all_markers(layer);
