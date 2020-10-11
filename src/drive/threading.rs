@@ -330,20 +330,20 @@ impl Threading {
 
                 if self.change_colour.lock().unwrap().get() {
                     if self.on_track.lock().unwrap().get() {
-                        let point_colour = champlain::clutter_colour::new(255, 120, 0, 255);
+                        let point_colour =
+                            champlain::clutter_colour::ClutterColor::new(255, 120, 0, 255);
                         map_wrapper.point.set_colour(point_colour);
                     } else {
-                        let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
+                        let point_colour =
+                            champlain::clutter_colour::ClutterColor::new(100, 200, 255, 255);
                         map_wrapper.point.set_colour(point_colour);
                     }
                     self.change_colour.lock().unwrap().set(false);
                 }
 
                 if self.no_track.lock().unwrap().get() {
-                    let coord = champlain::coordinate::new_full(lon, lat);
-                    map_wrapper
-                        .path_layer
-                        .add_node(&mut champlain::coordinate::to_location(coord));
+                    let mut coord = champlain::coordinate::ChamplainCoordinate::new_full(lon, lat);
+                    map_wrapper.path_layer.add_node(coord.borrow_mut_location());
                 }
                 glib::source::Continue(true)
             }

@@ -117,7 +117,10 @@ impl RecordInfo {
         let rec = location_rx.recv_timeout(timeout);
         match rec {
             Ok((lat, lon)) => {
-                champlain::location::set_location(&mut map_wrapper.point.to_location(), lat, lon);
+                map_wrapper
+                    .point
+                    .borrow_mut_location()
+                    .set_location(lat, lon);
 
                 if *first_connect {
                     map_wrapper.champlain_view.set_zoom_level(17);
@@ -126,10 +129,8 @@ impl RecordInfo {
                 }
 
                 if self.save.lock().unwrap().get() {
-                    let coord = champlain::coordinate::new_full(lat, lon);
-                    map_wrapper
-                        .path_layer
-                        .add_node(&mut champlain::coordinate::to_location(coord));
+                    let mut coord = champlain::coordinate::ChamplainCoordinate::new_full(lat, lon);
+                    map_wrapper.path_layer.add_node(coord.borrow_mut_location());
                 }
                 glib::source::Continue(true)
             }

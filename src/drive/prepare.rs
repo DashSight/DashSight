@@ -80,11 +80,12 @@ impl TrackSelection {
             let mut path_layer = champlain::path_layer::ChamplainPathLayer::new();
 
             for coord in track_points.iter() {
-                let c_point = champlain::coordinate::new_full(coord.lat, coord.lon);
-                path_layer.add_node(&mut champlain::coordinate::to_location(c_point));
+                let mut c_point =
+                    champlain::coordinate::ChamplainCoordinate::new_full(coord.lat, coord.lon);
+                path_layer.add_node(c_point.borrow_mut_location());
             }
 
-            champlain_view.add_layer(&mut path_layer.to_layer());
+            champlain_view.add_layer(path_layer.borrow_mut_layer());
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -98,20 +99,23 @@ impl TrackSelection {
                 track_points.first().unwrap().head.unwrap_or(0.0),
             );
 
-            path_layer.set_stroke_colour(champlain::clutter_colour::new(255, 255, 255, 150));
+            path_layer.set_stroke_colour(champlain::clutter_colour::ClutterColor::new(
+                255, 255, 255, 150,
+            ));
 
             for coord in start_poly.points().iter() {
-                let c_point = champlain::coordinate::new_full(coord[0], coord[1]);
-                path_layer.add_node(&mut champlain::coordinate::to_location(c_point));
+                let mut c_point =
+                    champlain::coordinate::ChamplainCoordinate::new_full(coord[0], coord[1]);
+                path_layer.add_node(c_point.borrow_mut_location());
             }
             // Add the first point again to create a closed shape
-            let c_point = champlain::coordinate::new_full(
+            let mut c_point = champlain::coordinate::ChamplainCoordinate::new_full(
                 start_poly.points()[0][0],
                 start_poly.points()[0][1],
             );
-            path_layer.add_node(&mut champlain::coordinate::to_location(c_point));
+            path_layer.add_node(c_point.borrow_mut_location());
 
-            champlain_view.add_layer(&mut path_layer.to_layer());
+            champlain_view.add_layer(path_layer.borrow_mut_layer());
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);
@@ -125,18 +129,22 @@ impl TrackSelection {
                 track_points.last().unwrap().head.unwrap_or(0.0),
             );
 
-            path_layer.set_stroke_colour(champlain::clutter_colour::new(0, 0, 0, 150));
+            path_layer
+                .set_stroke_colour(champlain::clutter_colour::ClutterColor::new(0, 0, 0, 150));
 
             for coord in end_poly.points().iter() {
-                let c_point = champlain::coordinate::new_full(coord[0], coord[1]);
-                path_layer.add_node(&mut champlain::coordinate::to_location(c_point));
+                let mut c_point =
+                    champlain::coordinate::ChamplainCoordinate::new_full(coord[0], coord[1]);
+                path_layer.add_node(c_point.borrow_mut_location());
             }
             // Add the first point again to create a closed shape
-            let c_point =
-                champlain::coordinate::new_full(end_poly.points()[0][0], end_poly.points()[0][1]);
-            path_layer.add_node(&mut champlain::coordinate::to_location(c_point));
+            let mut c_point = champlain::coordinate::ChamplainCoordinate::new_full(
+                end_poly.points()[0][0],
+                end_poly.points()[0][1],
+            );
+            path_layer.add_node(c_point.borrow_mut_location());
 
-            champlain_view.add_layer(&mut path_layer.to_layer());
+            champlain_view.add_layer(path_layer.borrow_mut_layer());
             let mut new_map_layers = self.map_layers.take();
             new_map_layers.push(path_layer);
             self.map_layers.replace(new_map_layers);

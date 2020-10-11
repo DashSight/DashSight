@@ -50,19 +50,17 @@ pub fn button_press_event(display: DisplayRef) {
     champlain_view.set_zoom_level(5);
     champlain_view.set_reactive(true);
 
-    let layer = champlain::marker_layer::new();
-    champlain::marker_layer::to_layer(layer)
-        .to_clutter_actor()
-        .show();
-    champlain_view.add_layer(&mut champlain::marker_layer::to_layer(layer));
+    let mut layer = champlain::marker_layer::ChamplainMarkerLayer::new();
+    layer.borrow_mut_actor().show();
+    champlain_view.add_layer(layer.borrow_mut_layer());
 
-    let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
+    let point_colour = champlain::clutter_colour::ClutterColor::new(100, 200, 255, 255);
 
-    let point = champlain::point::ChamplainPoint::new_full(12.0, point_colour);
-    champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
+    let mut point = champlain::point::ChamplainPoint::new_full(12.0, point_colour);
+    layer.add_marker(point.borrow_mut_marker());
 
-    let path_layer = champlain::path_layer::ChamplainPathLayer::new();
-    champlain_view.add_layer(&mut path_layer.to_layer());
+    let mut path_layer = champlain::path_layer::ChamplainPathLayer::new();
+    champlain_view.add_layer(path_layer.borrow_mut_layer());
 
     let map_frame = builder
         .get_object::<gtk::Frame>("RecordPageMapFrame")
