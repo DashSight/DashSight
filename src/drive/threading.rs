@@ -320,13 +320,13 @@ impl Threading {
     pub fn map_update_idle_thread(
         &self,
         location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
-        map_wrapper: &MapWrapper,
+        map_wrapper: &mut MapWrapper,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
         let rec = location_rx.recv_timeout(timeout);
         match rec {
             Ok((lat, lon)) => {
-                champlain::location::set_location(map_wrapper.point.to_location(), lat, lon);
+                champlain::location::set_location(&mut map_wrapper.point.to_location(), lat, lon);
 
                 if self.change_colour.lock().unwrap().get() {
                     if self.on_track.lock().unwrap().get() {
@@ -348,8 +348,8 @@ impl Threading {
                 if self.no_track.lock().unwrap().get() {
                     let coord = champlain::coordinate::new_full(lon, lat);
                     champlain::path_layer::add_node(
-                        map_wrapper.path_layer,
-                        champlain::coordinate::to_location(coord),
+                        &mut map_wrapper.path_layer,
+                        &mut champlain::coordinate::to_location(coord),
                     );
                 }
                 glib::source::Continue(true)

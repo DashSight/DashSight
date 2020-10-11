@@ -235,12 +235,12 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     });
 
     let layer = champlain::marker_layer::new();
-    champlain::clutter_actor::show(&mut champlain::layer::to_clutter_actor(
-        champlain::marker_layer::to_layer(layer),
-    ));
+    champlain::clutter_actor::show(
+        &mut champlain::marker_layer::to_layer(layer).to_clutter_actor(),
+    );
     champlain::view::add_layer(
         &mut champlain_view,
-        champlain::marker_layer::to_layer(layer),
+        &mut champlain::marker_layer::to_layer(layer),
     );
 
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
@@ -248,16 +248,13 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let point = champlain::point::new_full(12.0, point_colour);
     champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
 
-    let path_layer = champlain::path_layer::new();
-    champlain::view::add_layer(
-        &mut champlain_view,
-        champlain::path_layer::to_layer(path_layer),
-    );
-    champlain::path_layer::set_visible(path_layer, true);
+    let mut path_layer = champlain::path_layer::new();
+    champlain::view::add_layer(&mut champlain_view, &mut path_layer.to_layer());
+    champlain::path_layer::set_visible(&mut path_layer, true);
 
     champlain::marker_layer::show_all_markers(layer);
 
-    let map_wrapper = MapWrapper::new(path_layer, point);
+    let mut map_wrapper = MapWrapper::new(path_layer, point);
 
     #[allow(clippy::redundant_clone)]
     let thread_info_clone = thread_info.clone();
@@ -271,7 +268,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             return glib::source::Continue(false);
         }
 
-        thread_info.map_update_idle_thread(&location_rx, &map_wrapper)
+        thread_info.map_update_idle_thread(&location_rx, &mut map_wrapper)
     });
 
     drive_page.show_all();

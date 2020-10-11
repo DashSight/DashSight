@@ -61,13 +61,13 @@ impl Course {
 }
 
 pub struct MapWrapper {
-    pub path_layer: *mut champlain::path_layer::ChamplainPathLayer,
+    pub path_layer: champlain::path_layer::ChamplainPathLayer,
     pub point: champlain::clutter::ClutterActor,
 }
 
 impl MapWrapper {
     pub fn new(
-        path_layer: *mut champlain::path_layer::ChamplainPathLayer,
+        path_layer: champlain::path_layer::ChamplainPathLayer,
         champlain_point: champlain::clutter::ClutterActor,
     ) -> MapWrapper {
         MapWrapper {

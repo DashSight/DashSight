@@ -51,12 +51,12 @@ pub fn button_press_event(display: DisplayRef) {
     champlain::clutter_actor::set_reactive(&mut champlain_view.to_clutter_actor(), true);
 
     let layer = champlain::marker_layer::new();
-    champlain::clutter_actor::show(&mut champlain::layer::to_clutter_actor(
-        champlain::marker_layer::to_layer(layer),
-    ));
+    champlain::clutter_actor::show(
+        &mut champlain::marker_layer::to_layer(layer).to_clutter_actor(),
+    );
     champlain::view::add_layer(
         &mut champlain_view,
-        champlain::marker_layer::to_layer(layer),
+        &mut champlain::marker_layer::to_layer(layer),
     );
 
     let point_colour = champlain::clutter_colour::new(100, 200, 255, 255);
@@ -65,10 +65,7 @@ pub fn button_press_event(display: DisplayRef) {
     champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
 
     let path_layer = champlain::path_layer::new();
-    champlain::view::add_layer(
-        &mut champlain_view,
-        champlain::path_layer::to_layer(path_layer),
-    );
+    champlain::view::add_layer(&mut champlain_view, &mut path_layer.to_layer());
 
     let map_frame = builder
         .get_object::<gtk::Frame>("RecordPageMapFrame")
