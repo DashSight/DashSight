@@ -127,10 +127,9 @@ impl RecordInfo {
 
                 if self.save.lock().unwrap().get() {
                     let coord = champlain::coordinate::new_full(lat, lon);
-                    champlain::path_layer::add_node(
-                        &mut map_wrapper.path_layer,
-                        &mut champlain::coordinate::to_location(coord),
-                    );
+                    map_wrapper
+                        .path_layer
+                        .add_node(&mut champlain::coordinate::to_location(coord));
                 }
                 glib::source::Continue(true)
             }

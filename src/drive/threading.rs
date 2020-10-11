@@ -341,10 +341,9 @@ impl Threading {
 
                 if self.no_track.lock().unwrap().get() {
                     let coord = champlain::coordinate::new_full(lon, lat);
-                    champlain::path_layer::add_node(
-                        &mut map_wrapper.path_layer,
-                        &mut champlain::coordinate::to_location(coord),
-                    );
+                    map_wrapper
+                        .path_layer
+                        .add_node(&mut champlain::coordinate::to_location(coord));
                 }
                 glib::source::Continue(true)
             }

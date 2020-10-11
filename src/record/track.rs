@@ -61,7 +61,7 @@ pub fn button_press_event(display: DisplayRef) {
     let point = champlain::point::ChamplainPoint::new_full(12.0, point_colour);
     champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
 
-    let path_layer = champlain::path_layer::new();
+    let path_layer = champlain::path_layer::ChamplainPathLayer::new();
     champlain_view.add_layer(&mut path_layer.to_layer());
 
     let map_frame = builder

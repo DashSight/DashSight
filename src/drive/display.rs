@@ -245,9 +245,9 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let point = champlain::point::ChamplainPoint::new_full(12.0, point_colour);
     champlain::marker_layer::add_marker(layer, point.to_champlain_marker());
 
-    let mut path_layer = champlain::path_layer::new();
+    let mut path_layer = champlain::path_layer::ChamplainPathLayer::new();
     champlain_view.add_layer(&mut path_layer.to_layer());
-    champlain::path_layer::set_visible(&mut path_layer, true);
+    path_layer.set_visible(true);
 
     champlain::marker_layer::show_all_markers(layer);
 
