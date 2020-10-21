@@ -32,7 +32,6 @@ pub struct Threading {
     pub lap_start: RwLock<std::time::SystemTime>,
     pub close: Mutex<Cell<bool>>,
     pub on_track: Mutex<Cell<bool>>,
-    pub change_colour: Mutex<Cell<bool>>,
     pub no_track: Mutex<Cell<bool>>,
     pub serialise: Mutex<Cell<bool>>,
     pub calibrate: Mutex<Cell<bool>>,
@@ -47,7 +46,6 @@ impl Threading {
             lap_start: RwLock::new(SystemTime::now()),
             close: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
-            change_colour: Mutex::new(Cell::new(false)),
             no_track: Mutex::new(Cell::new(false)),
             serialise: Mutex::new(Cell::new(false)),
             calibrate: Mutex::new(Cell::new(false)),
@@ -328,15 +326,12 @@ impl Threading {
             Ok((lat, lon, status)) => {
                 map_wrapper.point.set_location(lat, lon);
 
-                if self.change_colour.lock().unwrap().get() {
-                    if self.on_track.lock().unwrap().get() {
-                        let point_colour =
-                            champlain::clutter_colour::ClutterColor::new(255, 60, 0, 255);
-                        map_wrapper.point.set_colour(point_colour);
-                    } else {
-                        crate::utils::set_point_colour(&mut map_wrapper.point, status);
-                    }
-                    self.change_colour.lock().unwrap().set(false);
+                if self.on_track.lock().unwrap().get() {
+                    let point_colour =
+                        champlain::clutter_colour::ClutterColor::new(255, 60, 0, 255);
+                    map_wrapper.point.set_colour(point_colour);
+                } else {
+                    crate::utils::set_point_colour(&mut map_wrapper.point, status);
                 }
 
                 if self.no_track.lock().unwrap().get() {

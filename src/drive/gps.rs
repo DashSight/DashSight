@@ -87,7 +87,6 @@ pub fn gpsd_thread(
                     let mut lap_start = thread_info.lap_start.write().unwrap();
                     *lap_start = SystemTime::now();
                     thread_info.on_track.lock().unwrap().set(true);
-                    thread_info.change_colour.lock().unwrap().set(true);
                     lap_times.clear();
                 }
 
@@ -97,7 +96,6 @@ pub fn gpsd_thread(
                     && right_direction(course_info.finish.head, track)
                 {
                     thread_info.on_track.lock().unwrap().set(false);
-                    thread_info.change_colour.lock().unwrap().set(true);
 
                     match thread_info.lap_start.read().unwrap().elapsed() {
                         Ok(elapsed) => {
