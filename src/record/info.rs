@@ -109,14 +109,16 @@ impl RecordInfo {
 
     pub fn idle_thread(
         &self,
-        location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+        location_rx: &std::sync::mpsc::Receiver<(f64, f64, i32)>,
         map_wrapper: &mut MapWrapper,
         first_connect: &mut bool,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
         let rec = location_rx.recv_timeout(timeout);
         match rec {
-            Ok((lat, lon)) => {
+            Ok((lat, lon, status)) => {
+                crate::utils::set_point_colour(&mut map_wrapper.point, status);
+
                 map_wrapper
                     .point
                     .borrow_mut_location()
@@ -139,7 +141,7 @@ impl RecordInfo {
         }
     }
 
-    pub fn run(&self, location_tx: std::sync::mpsc::Sender<(f64, f64)>) {
+    pub fn run(&self, location_tx: std::sync::mpsc::Sender<(f64, f64, i32)>) {
         let gpsd_connect;
 
         loop {
@@ -204,8 +206,8 @@ impl RecordInfo {
             let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
             match msg {
-                Ok((lat, lon, alt, time, speed, track)) => {
-                    if location_tx.send((lat, lon)).is_err() {
+                Ok((lat, lon, alt, status, time, speed, track)) => {
+                    if location_tx.send((lat, lon, status)).is_err() {
                         break;
                     }
 
@@ -241,7 +243,7 @@ mod tests {
 
     #[test]
     fn test_run() {
-        let (location_tx, _location_rx) = mpsc::channel::<(f64, f64)>();
+        let (location_tx, _location_rx) = mpsc::channel::<(f64, f64, i32)>();
         let rec_info = RecordInfo::new();
 
         // Tell run to exit straight away, otherwise we loop for a GPSD conection

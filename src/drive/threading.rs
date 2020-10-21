@@ -319,24 +319,22 @@ impl Threading {
 
     pub fn map_update_idle_thread(
         &self,
-        location_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+        location_rx: &std::sync::mpsc::Receiver<(f64, f64, i32)>,
         map_wrapper: &mut MapWrapper,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
         let rec = location_rx.recv_timeout(timeout);
         match rec {
-            Ok((lat, lon)) => {
+            Ok((lat, lon, status)) => {
                 map_wrapper.point.set_location(lat, lon);
 
                 if self.change_colour.lock().unwrap().get() {
                     if self.on_track.lock().unwrap().get() {
                         let point_colour =
-                            champlain::clutter_colour::ClutterColor::new(255, 120, 0, 255);
+                            champlain::clutter_colour::ClutterColor::new(255, 60, 0, 255);
                         map_wrapper.point.set_colour(point_colour);
                     } else {
-                        let point_colour =
-                            champlain::clutter_colour::ClutterColor::new(100, 200, 255, 255);
-                        map_wrapper.point.set_colour(point_colour);
+                        crate::utils::set_point_colour(&mut map_wrapper.point, status);
                     }
                     self.change_colour.lock().unwrap().set(false);
                 }

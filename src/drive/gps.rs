@@ -31,7 +31,7 @@ pub fn gpsd_thread(
     thread_info: ThreadingRef,
     times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     time_diff_tx: std::sync::mpsc::Sender<(bool, Duration)>,
-    location_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    location_tx: std::sync::mpsc::Sender<(f64, f64, i32)>,
     course_info: &mut Course,
 ) {
     let gpsd_connect;
@@ -76,8 +76,8 @@ pub fn gpsd_thread(
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
         match msg {
-            Ok((lat, lon, _alt, _time, _speed, track)) => {
-                location_tx.send((lat, lon)).unwrap();
+            Ok((lat, lon, _alt, status, _time, _speed, track)) => {
+                location_tx.send((lat, lon, status)).unwrap();
 
                 // Check to see if we should start the timer
                 if !thread_info.on_track.lock().unwrap().get()

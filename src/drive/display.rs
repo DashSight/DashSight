@@ -54,7 +54,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let track_points = track_sel_info.track_points.take();
 
-    let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
+    let (location_tx, location_rx) = mpsc::channel::<(f64, f64, i32)>();
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
     let (time_diff_tx, time_diff_rx) = mpsc::channel::<(bool, Duration)>();
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();

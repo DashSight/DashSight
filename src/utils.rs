@@ -139,11 +139,13 @@ pub fn right_direction(recorded_heading: Option<f32>, current_heading: f32) -> b
     }
 }
 
+/// The GPS data
+/// (lat, lon, alt, status, time, speed, track (heading))
+type GpsData = (f64, f64, f32, i32, String, f32, f32);
+
 /// Gets the relevent location/velocity data from the GPS device
 /// Returns latitude, longitude, altitude, time, speed and track
-pub fn get_gps_lat_lon(
-    reader: &mut dyn io::BufRead,
-) -> Result<(f64, f64, f32, String, f32, f32), ()> {
+pub fn get_gps_lat_lon(reader: &mut dyn io::BufRead) -> Result<GpsData, ()> {
     loop {
         let msg = get_data(reader);
         let gpsd_message = match msg {
@@ -165,6 +167,7 @@ pub fn get_gps_lat_lon(
                         t.lat.unwrap(),
                         t.lon.unwrap(),
                         t.alt.unwrap(),
+                        t.status.unwrap_or(0),
                         t.time
                             .unwrap_or_else(|| "1970-01-01T00:00:00.000Z".to_string()),
                         t.speed.unwrap_or(0.0),
@@ -175,6 +178,26 @@ pub fn get_gps_lat_lon(
             ResponseData::Sky(_) => {}
             ResponseData::Pps(_) => {}
             ResponseData::Gst(_) => {}
+        }
+    }
+}
+
+pub fn set_point_colour(point: &mut champlain::point::ChamplainPoint, status: i32) {
+    match status {
+        0 => {
+            // No fix, blue
+            let point_colour = champlain::clutter_colour::ClutterColor::new(0, 0, 205, 255);
+            point.set_colour(point_colour);
+        }
+        1 => {
+            // Got a fix, yellow
+            let point_colour = champlain::clutter_colour::ClutterColor::new(255, 255, 0, 255);
+            point.set_colour(point_colour);
+        }
+        _ => {
+            // Got a DGPS or better fix, green
+            let point_colour = champlain::clutter_colour::ClutterColor::new(5, 105, 25, 255);
+            point.set_colour(point_colour);
         }
     }
 }

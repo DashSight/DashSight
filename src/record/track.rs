@@ -70,7 +70,7 @@ pub fn button_press_event(display: DisplayRef) {
 
     record_page.pack1(&map_frame, true, true);
 
-    let (location_tx, location_rx) = mpsc::channel::<(f64, f64)>();
+    let (location_tx, location_rx) = mpsc::channel::<(f64, f64, i32)>();
     let rec_info = RecordInfo::new();
     let mut map_wrapper = MapWrapper::new(champlain_view, path_layer, point);
     let mut first_connect = true;
