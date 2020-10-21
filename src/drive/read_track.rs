@@ -95,7 +95,7 @@ mod tests {
             .read(true)
             .write(false)
             .create(false)
-            .open("tests/test-track-from-home");
+            .open("tests/test-track-carpark");
         let reader = BufReader::new(track_file.unwrap());
         let _track_points = get_long_and_lat(reader);
 
@@ -103,7 +103,7 @@ mod tests {
             .read(true)
             .write(false)
             .create(false)
-            .open("tests/test-track-no-movement");
+            .open("tests/test-track-cowpalace");
         let reader = BufReader::new(track_file.unwrap());
         let _track_points = get_long_and_lat(reader);
     }
@@ -114,7 +114,7 @@ mod tests {
             .read(true)
             .write(false)
             .create(false)
-            .open("tests/test-track-from-home");
+            .open("tests/test-track-cowpalace");
         let reader = BufReader::new(track_file.unwrap());
         let track_points = get_long_and_lat(reader);
 
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(
             start_poly.contains_point(
                 &nalgebra::geometry::Isometry2::identity(),
-                &nalgebra::geometry::Point2::new(37.324447, -121.92451)
+                &nalgebra::geometry::Point2::new(37.7060849, -122.4209836)
             ),
             true
         );
@@ -135,9 +135,17 @@ mod tests {
         assert_eq!(
             start_poly.contains_point(
                 &nalgebra::geometry::Isometry2::identity(),
-                &nalgebra::geometry::Point2::new(37.3244272, -121.9245111)
+                &nalgebra::geometry::Point2::new(37.706084, -122.420983)
             ),
             true
+        );
+
+        assert_eq!(
+            start_poly.contains_point(
+                &nalgebra::geometry::Isometry2::identity(),
+                &nalgebra::geometry::Point2::new(37.7060437, -122.4209761)
+            ),
+            false
         );
     }
 }
