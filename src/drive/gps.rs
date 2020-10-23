@@ -31,7 +31,7 @@ pub fn gpsd_thread(
     thread_info: ThreadingRef,
     times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     time_diff_tx: std::sync::mpsc::Sender<(bool, Duration)>,
-    location_tx: std::sync::mpsc::Sender<(f64, f64, i32)>,
+    location_tx: std::sync::mpsc::Sender<(f64, f64, i32, Option<bool>)>,
     course_info: &mut Course,
 ) {
     let gpsd_connect;
@@ -77,8 +77,6 @@ pub fn gpsd_thread(
 
         match msg {
             Ok((lat, lon, _alt, status, _time, _speed, track)) => {
-                location_tx.send((lat, lon, status)).unwrap();
-
                 // Check to see if we should start the timer
                 if !thread_info.on_track.lock().unwrap().get()
                     && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
@@ -137,6 +135,7 @@ pub fn gpsd_thread(
                 }
 
                 // Save lap time data
+                let mut time_delta_diff: Option<bool> = None;
                 if thread_info.on_track.lock().unwrap().get() {
                     // Save the current location and time to a vector
                     match thread_info.lap_start.read().unwrap().elapsed() {
@@ -169,16 +168,19 @@ pub fn gpsd_thread(
                                     // Check if best - elapsed is greater then 0
                                     // In this case we are quicker then previous best
                                     if let Some(diff) = llt.checked_sub(elapsed) {
+                                        time_delta_diff = Some(true);
                                         time_diff_tx.send((true, diff)).unwrap();
                                     }
                                     // Check if elapsed - best is greater then 0
                                     // In this case we are slower then previous best
                                     if let Some(diff) = elapsed.checked_sub(llt) {
+                                        time_delta_diff = Some(false);
                                         time_diff_tx.send((false, diff)).unwrap();
                                     }
                                 }
                                 None => {
                                     // No time data, just reset to +00:00:000
+                                    time_delta_diff = None;
                                     time_diff_tx.send((false, Duration::new(0, 0))).unwrap();
                                 }
                             }
@@ -188,6 +190,10 @@ pub fn gpsd_thread(
                         }
                     }
                 }
+
+                location_tx
+                    .send((lat, lon, status, time_delta_diff))
+                    .unwrap();
             }
             Err(err) => {
                 println!("Failed to get a message from GPSD: {:?}", err);

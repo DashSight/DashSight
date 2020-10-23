@@ -32,7 +32,6 @@ pub struct Threading {
     pub lap_start: RwLock<std::time::SystemTime>,
     pub close: Mutex<Cell<bool>>,
     pub on_track: Mutex<Cell<bool>>,
-    pub no_track: Mutex<Cell<bool>>,
     pub serialise: Mutex<Cell<bool>>,
     pub calibrate: Mutex<Cell<bool>>,
     pub time_file: RwLock<std::path::PathBuf>,
@@ -46,7 +45,6 @@ impl Threading {
             lap_start: RwLock::new(SystemTime::now()),
             close: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
-            no_track: Mutex::new(Cell::new(false)),
             serialise: Mutex::new(Cell::new(false)),
             calibrate: Mutex::new(Cell::new(false)),
             time_file: RwLock::new(PathBuf::new()),
@@ -317,27 +315,41 @@ impl Threading {
 
     pub fn map_update_idle_thread(
         &self,
-        location_rx: &std::sync::mpsc::Receiver<(f64, f64, i32)>,
+        location_rx: &std::sync::mpsc::Receiver<(f64, f64, i32, Option<bool>)>,
         map_wrapper: &mut MapWrapper,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
         let rec = location_rx.recv_timeout(timeout);
         match rec {
-            Ok((lat, lon, status)) => {
+            Ok((lat, lon, status, neg)) => {
                 map_wrapper.point.set_location(lat, lon);
 
                 if self.on_track.lock().unwrap().get() {
                     let point_colour =
                         champlain::clutter_colour::ClutterColor::new(255, 60, 0, 255);
                     map_wrapper.point.set_colour(point_colour);
-                } else {
-                    crate::utils::set_point_colour(&mut map_wrapper.point, status);
-                }
 
-                if self.no_track.lock().unwrap().get() {
+                    let colour = match neg {
+                        Some(n) => {
+                            if n {
+                                champlain::clutter_colour::ClutterColor::new(204, 60, 0, 255)
+                            } else {
+                                champlain::clutter_colour::ClutterColor::new(0, 153, 76, 255)
+                            }
+                        }
+                        None => champlain::clutter_colour::ClutterColor::new(0, 0, 255, 255),
+                    };
+
+                    map_wrapper.path_layer.set_stroke_colour(colour);
+
                     let mut coord = champlain::coordinate::ChamplainCoordinate::new_full(lon, lat);
                     map_wrapper.path_layer.add_node(coord.borrow_mut_location());
+                } else {
+                    crate::utils::set_point_colour(&mut map_wrapper.point, status);
+
+                    map_wrapper.path_layer.remove_all();
                 }
+
                 glib::source::Continue(true)
             }
             Err(mpsc::RecvTimeoutError::Timeout) => glib::source::Continue(true),
