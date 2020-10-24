@@ -29,12 +29,13 @@ use std::sync::RwLock;
 use std::time::{Duration, SystemTime};
 
 pub struct Threading {
-    pub lap_start: RwLock<std::time::SystemTime>,
-    pub close: Mutex<Cell<bool>>,
-    pub on_track: Mutex<Cell<bool>>,
-    pub serialise: Mutex<Cell<bool>>,
-    pub calibrate: Mutex<Cell<bool>>,
-    pub time_file: RwLock<std::path::PathBuf>,
+    pub(crate) lap_start: RwLock<std::time::SystemTime>,
+    pub(crate) close: Mutex<Cell<bool>>,
+    pub(crate) start_on_track: Mutex<Cell<bool>>,
+    pub(crate) on_track: Mutex<Cell<bool>>,
+    pub(crate) serialise: Mutex<Cell<bool>>,
+    pub(crate) calibrate: Mutex<Cell<bool>>,
+    pub(crate) time_file: RwLock<std::path::PathBuf>,
 }
 
 pub type ThreadingRef = Arc<Threading>;
@@ -44,6 +45,7 @@ impl Threading {
         ThreadingRef::new(Self {
             lap_start: RwLock::new(SystemTime::now()),
             close: Mutex::new(Cell::new(false)),
+            start_on_track: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
             serialise: Mutex::new(Cell::new(false)),
             calibrate: Mutex::new(Cell::new(false)),
@@ -324,6 +326,11 @@ impl Threading {
             Ok((lat, lon, status, neg)) => {
                 map_wrapper.point.set_location(lat, lon);
 
+                if self.start_on_track.lock().unwrap().get() {
+                    map_wrapper.path_layer.remove_all();
+                    self.start_on_track.lock().unwrap().set(false);
+                }
+
                 if self.on_track.lock().unwrap().get() {
                     let point_colour =
                         champlain::clutter_colour::ClutterColor::new(255, 60, 0, 255);
@@ -346,8 +353,6 @@ impl Threading {
                     map_wrapper.path_layer.add_node(coord.borrow_mut_location());
                 } else {
                     crate::utils::set_point_colour(&mut map_wrapper.point, status);
-
-                    map_wrapper.path_layer.remove_all();
                 }
 
                 glib::source::Continue(true)

@@ -85,6 +85,7 @@ pub fn gpsd_thread(
                     let mut lap_start = thread_info.lap_start.write().unwrap();
                     *lap_start = SystemTime::now();
                     thread_info.on_track.lock().unwrap().set(true);
+                    thread_info.start_on_track.lock().unwrap().set(true);
                     lap_times.clear();
                 }
 
