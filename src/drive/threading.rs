@@ -327,7 +327,8 @@ impl Threading {
                 map_wrapper.point.set_location(lat, lon);
 
                 if self.start_on_track.lock().unwrap().get() {
-                    map_wrapper.path_layer.remove_all();
+                    map_wrapper.pos_path_layer.remove_all();
+                    map_wrapper.neg_path_layer.remove_all();
                     self.start_on_track.lock().unwrap().set(false);
                 }
 
@@ -336,23 +337,19 @@ impl Threading {
                         champlain::clutter_colour::ClutterColor::new(255, 60, 0, 255);
                     map_wrapper.point.set_colour(point_colour);
 
-                    let colour = match neg {
-                        Some(n) => {
-                            if n {
-                                println!("NegativeDiff");
-                                champlain::clutter_colour::ClutterColor::new(204, 60, 0, 255)
-                            } else {
-                                println!("PositiveDiff");
-                                champlain::clutter_colour::ClutterColor::new(0, 153, 76, 255)
-                            }
-                        }
-                        None => champlain::clutter_colour::ClutterColor::new(0, 0, 255, 255),
-                    };
-
-                    map_wrapper.path_layer.set_stroke_colour(colour);
-
                     let mut coord = champlain::coordinate::ChamplainCoordinate::new_full(lat, lon);
-                    map_wrapper.path_layer.add_node(coord.borrow_mut_location());
+
+                    if neg.is_some() && !neg.unwrap() {
+                        // There is a positive difference, which is bad
+                        map_wrapper
+                            .pos_path_layer
+                            .add_node(coord.borrow_mut_location());
+                    } else {
+                        // There is a negative difference, which is good or no diff
+                        map_wrapper
+                            .neg_path_layer
+                            .add_node(coord.borrow_mut_location());
+                    }
                 } else {
                     crate::utils::set_point_colour(&mut map_wrapper.point, status);
                 }

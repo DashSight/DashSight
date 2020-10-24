@@ -243,13 +243,21 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let mut point = champlain::point::ChamplainPoint::new_full(12.0, point_colour);
     layer.add_marker(point.borrow_mut_marker());
 
-    let mut path_layer = champlain::path_layer::ChamplainPathLayer::new();
-    champlain_view.add_layer(path_layer.borrow_mut_layer());
-    path_layer.set_visible(true);
+    let mut pos_path_layer = champlain::path_layer::ChamplainPathLayer::new();
+    champlain_view.add_layer(pos_path_layer.borrow_mut_layer());
+    let colour = champlain::clutter_colour::ClutterColor::new(0, 153, 76, 255);
+    pos_path_layer.set_stroke_colour(colour);
+    pos_path_layer.set_visible(true);
+
+    let mut neg_path_layer = champlain::path_layer::ChamplainPathLayer::new();
+    champlain_view.add_layer(neg_path_layer.borrow_mut_layer());
+    let colour = champlain::clutter_colour::ClutterColor::new(204, 60, 0, 255);
+    neg_path_layer.set_stroke_colour(colour);
+    neg_path_layer.set_visible(true);
 
     layer.show_all_markers();
 
-    let mut map_wrapper = MapWrapper::new(path_layer, point);
+    let mut map_wrapper = MapWrapper::new(pos_path_layer, neg_path_layer, point);
 
     #[allow(clippy::redundant_clone)]
     let thread_info_clone = thread_info.clone();
