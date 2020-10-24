@@ -48,7 +48,6 @@ pub fn gpx_track_start(fd: &mut File, track_name: String) -> Result<(), std::io:
 }
 
 pub fn gpx_track_stop(fd: &mut File) -> Result<(), std::io::Error> {
-    fd.write_all(b"    </trkseg>\n")?;
     fd.write_all(b"  </trk>\n")?;
     Ok(())
 }

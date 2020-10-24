@@ -102,7 +102,7 @@ impl RecordInfo {
         let val = self.save.lock().unwrap().get();
         self.save.lock().unwrap().set(!val);
 
-        if val && self.track_file.read().unwrap().exists() {
+        if self.track_file.read().unwrap().exists() {
             self.toggle_save.lock().unwrap().set(true);
         }
     }
