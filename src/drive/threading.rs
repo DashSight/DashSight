@@ -363,9 +363,10 @@ impl Threading {
 
     pub fn imu_draw_idle_thread(
         &self,
-        imu_rx: &std::sync::mpsc::Receiver<(f64, f64)>,
+        imu_rx: &std::sync::mpsc::Receiver<(f64, f64, Option<f64>, Option<f64>)>,
         me: &gtk::DrawingArea,
         ctx: &cairo::Context,
+        builder: gtk::Builder,
     ) -> glib::signal::Inhibit {
         let timeout = Duration::new(0, 200);
         let rec = imu_rx.recv_timeout(timeout);
@@ -426,7 +427,7 @@ impl Threading {
         ctx.stroke();
 
         match rec {
-            Ok((x_accel, y_accel)) => {
+            Ok((x_accel, y_accel, g_force, max_g_force)) => {
                 ctx.set_source_rgba(0.0, 148.0 / 255.0, 1.0, 1.0);
 
                 ctx.arc(
@@ -437,6 +438,24 @@ impl Threading {
                     std::f64::consts::PI * 2.,
                 );
                 ctx.fill();
+
+                if let Some(gf) = g_force {
+                    let label = builder
+                        .get_object::<gtk::Label>("CurrentGForceValue")
+                        .expect("Can't find CurrentGForceValue in ui file.");
+
+                    let text = format!("{:2.2}", gf);
+                    label.set_text(&text);
+                }
+
+                if let Some(gf) = max_g_force {
+                    let label = builder
+                        .get_object::<gtk::Label>("MaxGForceValue")
+                        .expect("Can't find MaxGForceValue in ui file.");
+
+                    let text = format!("{:2.2}", gf);
+                    label.set_text(&text);
+                }
 
                 Inhibit(false)
             }

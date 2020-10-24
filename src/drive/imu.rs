@@ -36,6 +36,8 @@ struct ImuContext {
     gyro_scale: [f64; 3],
     mag_scale: [f64; 3],
 
+    max_g_force: f64,
+
     rotation_unit_quat: Option<UnitQuaternion<f64>>,
 }
 
@@ -49,6 +51,7 @@ impl Default for ImuContext {
             accel_scale: [0.0, 0.0, 0.0],
             gyro_scale: [0.0, 0.0, 0.0],
             mag_scale: [0.0, 0.0, 0.0],
+            max_g_force: 0.0,
             rotation_unit_quat: None,
         }
     }
@@ -155,6 +158,7 @@ impl ImuContext {
             accel_scale: [0.0, 0.0, 0.0],
             gyro_scale: [0.0, 0.0, 0.0],
             mag_scale: [0.0, 0.0, 0.0],
+            max_g_force: 0.0,
             rotation_unit_quat: None,
         })
     }
@@ -280,8 +284,8 @@ impl ImuContext {
 
 pub fn imu_thread(
     thread_info: ThreadingRef,
-    imu_tx: std::sync::mpsc::Sender<(f64, f64)>,
-    imu_page_tx: std::sync::mpsc::Sender<(f64, f64)>,
+    imu_tx: std::sync::mpsc::Sender<(f64, f64, Option<f64>, Option<f64>)>,
+    imu_page_tx: std::sync::mpsc::Sender<(f64, f64, Option<f64>, Option<f64>)>,
     file_name: &mut PathBuf,
 ) {
     // Create the IIO context
@@ -354,10 +358,25 @@ pub fn imu_thread(
             write!(fd, ",").unwrap();
         }
 
+        // Calculate absolute G force in X and Y
+        let g_force = accel_rotated[0].powi(2) + accel_rotated[1].powi(2);
+        let g_force = g_force.sqrt() / 9.8;
+
+        if g_force > imu_context.max_g_force {
+            imu_context.max_g_force = g_force;
+        }
+
         // Send acceleration data to be drawn on the screen
-        imu_tx.send((accel_rotated[0], accel_rotated[1])).unwrap();
+        imu_tx
+            .send((accel_rotated[0], accel_rotated[1], None, None))
+            .unwrap();
         imu_page_tx
-            .send((accel_rotated[0], accel_rotated[1]))
+            .send((
+                accel_rotated[0],
+                accel_rotated[1],
+                Some(g_force),
+                Some(imu_context.max_g_force),
+            ))
             .unwrap();
 
         // Get and rotate the gyro data

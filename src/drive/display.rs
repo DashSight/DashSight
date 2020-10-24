@@ -58,8 +58,8 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
     let (time_diff_tx, time_diff_rx) = mpsc::channel::<(bool, Duration)>();
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
-    let (imu_tx, imu_rx) = mpsc::channel::<(f64, f64)>();
-    let (imu_page_tx, imu_page_rx) = mpsc::channel::<(f64, f64)>();
+    let (imu_tx, imu_rx) = mpsc::channel::<(f64, f64, Option<f64>, Option<f64>)>();
+    let (imu_page_tx, imu_page_rx) = mpsc::channel::<(f64, f64, Option<f64>, Option<f64>)>();
     let (temp_tx, temp_rx) = mpsc::channel::<Vec<f64>>();
     let thread_info = Threading::new();
 
@@ -162,9 +162,14 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         .expect("Couldn't find AccelDrawingArea in ui file.");
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let display_weak = DisplayRef::downgrade(&display);
     imu_area.connect_draw(move |me, ctx| {
         let thread_info = upgrade_weak!(thread_info_weak, glib::signal::Inhibit(true));
-        thread_info.imu_draw_idle_thread(&imu_rx, me, ctx)
+        let display = upgrade_weak!(display_weak, Inhibit(true));
+
+        let builder = display.builder.clone();
+
+        thread_info.imu_draw_idle_thread(&imu_rx, me, ctx, builder)
     });
 
     let imu_page_accel_area: gtk::DrawingArea = builder
@@ -172,9 +177,14 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
         .expect("Couldn't find IMUPageAcellDraw in ui file.");
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
+    let display_weak = DisplayRef::downgrade(&display);
     imu_page_accel_area.connect_draw(move |me, ctx| {
         let thread_info = upgrade_weak!(thread_info_weak, glib::signal::Inhibit(true));
-        thread_info.imu_draw_idle_thread(&imu_page_rx, me, ctx)
+        let display = upgrade_weak!(display_weak, Inhibit(true));
+
+        let builder = display.builder.clone();
+
+        thread_info.imu_draw_idle_thread(&imu_page_rx, me, ctx, builder)
     });
 
     glib::timeout_add_local(imu::IMU_SAMPLE_FREQ as u32, move || {
