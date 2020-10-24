@@ -255,13 +255,13 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
     let mut pos_path_layer = champlain::path_layer::ChamplainPathLayer::new();
     champlain_view.add_layer(pos_path_layer.borrow_mut_layer());
-    let colour = champlain::clutter_colour::ClutterColor::new(0, 153, 76, 255);
+    let colour = champlain::clutter_colour::ClutterColor::new(204, 60, 0, 255);
     pos_path_layer.set_stroke_colour(colour);
     pos_path_layer.set_visible(true);
 
     let mut neg_path_layer = champlain::path_layer::ChamplainPathLayer::new();
     champlain_view.add_layer(neg_path_layer.borrow_mut_layer());
-    let colour = champlain::clutter_colour::ClutterColor::new(204, 60, 0, 255);
+    let colour = champlain::clutter_colour::ClutterColor::new(0, 153, 76, 255);
     neg_path_layer.set_stroke_colour(colour);
     neg_path_layer.set_visible(true);
 
