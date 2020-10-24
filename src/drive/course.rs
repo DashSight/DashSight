@@ -35,7 +35,7 @@ pub struct Course {
     pub times: Vec<Duration>,
     pub last: Duration,
     pub best: Duration,
-    pub best_times: Vec<(Coord, Duration)>,
+    pub best_times: Vec<Vec<(Coord, Duration)>>,
     pub last_location_time: Option<Duration>,
     pub worst: Duration,
     pub segments: Vec<Segment>,

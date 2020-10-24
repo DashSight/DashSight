@@ -82,7 +82,8 @@ pub fn gpsd_thread(
             .unwrap_or(0.0),
     );
 
-    let mut lap_times: Vec<(Coord, Duration)> = Vec::new();
+    let mut segment_times: Vec<(Coord, Duration)> = Vec::new();
+    let mut lap_times: Vec<Vec<(Coord, Duration)>> = Vec::new();
 
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
@@ -129,7 +130,7 @@ pub fn gpsd_thread(
                                 .send((course_info.last, course_info.best, course_info.worst))
                                 .unwrap();
 
-                            let (_, el) = &course_info.best_times.last().unwrap();
+                            let (_, el) = &course_info.best_times.last().unwrap().last().unwrap();
 
                             // Update the diff display
                             if let Some(diff) = el.checked_sub(elapsed) {
@@ -153,7 +154,7 @@ pub fn gpsd_thread(
                     // Save the current location and time to a vector
                     match thread_info.lap_start.read().unwrap().elapsed() {
                         Ok(elapsed) => {
-                            lap_times.push((
+                            segment_times.push((
                                 Coord {
                                     lat,
                                     lon,
@@ -167,10 +168,22 @@ pub fn gpsd_thread(
                         }
                     }
 
-                    for (loc, el) in &course_info.best_times {
-                        if lat_lon_comp(loc.lat, loc.lon, lat, lon) {
-                            // This point matches a previous point
-                            course_info.last_location_time = Some(*el);
+                    // Split a new segment
+                    for segment in &course_info.segments {
+                        // Check if we match the start of a segment
+                        if lat_lon_comp(segment.start.lat, segment.start.lon, lat, lon) {
+                            lap_times.push(segment_times);
+                            segment_times = Vec::new();
+                        }
+                    }
+
+                    // Check if the current location matches a previous one
+                    for segment in &course_info.best_times {
+                        for (loc, el) in segment {
+                            if lat_lon_comp(loc.lat, loc.lon, lat, lon) {
+                                // This point matches a previous point
+                                course_info.last_location_time = Some(*el);
+                            }
                         }
                     }
 
