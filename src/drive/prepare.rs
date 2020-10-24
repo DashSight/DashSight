@@ -30,7 +30,7 @@ use std::vec::Vec;
 
 pub struct TrackSelection {
     pub track_file: RefCell<std::path::PathBuf>,
-    pub track_points: Cell<Vec<crate::drive::read_track::Coord>>,
+    pub track_points: Cell<Vec<Vec<crate::drive::read_track::Coord>>>,
     pub map_widget: gtk::Widget,
     map_layers: Cell<Vec<champlain::path_layer::ChamplainPathLayer>>,
 }
@@ -74,15 +74,20 @@ impl TrackSelection {
             }
 
             champlain_view.set_zoom_level(17);
-            champlain_view.center_on(track_points[0].lat, track_points[0].lon);
+            champlain_view.center_on(
+                track_points.first().unwrap().first().unwrap().lat,
+                track_points.first().unwrap().first().unwrap().lon,
+            );
 
             // Add the track layer
             let mut path_layer = champlain::path_layer::ChamplainPathLayer::new();
 
-            for coord in track_points.iter() {
-                let mut c_point =
-                    champlain::coordinate::ChamplainCoordinate::new_full(coord.lat, coord.lon);
-                path_layer.add_node(c_point.borrow_mut_location());
+            for points in track_points.iter() {
+                for coord in points.iter() {
+                    let mut c_point =
+                        champlain::coordinate::ChamplainCoordinate::new_full(coord.lat, coord.lon);
+                    path_layer.add_node(c_point.borrow_mut_location());
+                }
             }
 
             champlain_view.add_layer(path_layer.borrow_mut_layer());
@@ -94,9 +99,15 @@ impl TrackSelection {
             let mut path_layer = champlain::path_layer::ChamplainPathLayer::new();
 
             let start_poly = genereate_polygon(
-                track_points.first().unwrap().lat,
-                track_points.first().unwrap().lon,
-                track_points.first().unwrap().head.unwrap_or(0.0),
+                track_points.first().unwrap().first().unwrap().lat,
+                track_points.first().unwrap().first().unwrap().lon,
+                track_points
+                    .first()
+                    .unwrap()
+                    .first()
+                    .unwrap()
+                    .head
+                    .unwrap_or(0.0),
             );
 
             path_layer.set_stroke_colour(champlain::clutter_colour::ClutterColor::new(
@@ -124,9 +135,15 @@ impl TrackSelection {
             let mut path_layer = champlain::path_layer::ChamplainPathLayer::new();
 
             let end_poly = genereate_polygon(
-                track_points.last().unwrap().lat,
-                track_points.last().unwrap().lon,
-                track_points.last().unwrap().head.unwrap_or(0.0),
+                track_points.last().unwrap().last().unwrap().lat,
+                track_points.last().unwrap().last().unwrap().lon,
+                track_points
+                    .last()
+                    .unwrap()
+                    .last()
+                    .unwrap()
+                    .head
+                    .unwrap_or(0.0),
             );
 
             path_layer

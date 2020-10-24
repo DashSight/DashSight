@@ -26,8 +26,9 @@ pub struct Coord {
 
 pub fn get_long_and_lat(
     reader: std::io::BufReader<std::fs::File>,
-) -> Vec<crate::drive::read_track::Coord> {
+) -> Vec<Vec<crate::drive::read_track::Coord>> {
     let mut reader_iterator = reader.lines().map(|l| l.unwrap());
+    let mut track_vec = Vec::new();
     let mut coord_vec = Vec::new();
 
     // Skip the first 13 lines
@@ -75,10 +76,19 @@ pub fn get_long_and_lat(
             lat = 0.0;
             lon = 0.0;
             head = None;
+        } else if trim_line.find("</trkseg").is_some() {
+            track_vec.push(coord_vec);
+            coord_vec = Vec::new()
         }
     }
 
-    coord_vec
+    // This is to maintain backwards compatability with single
+    // segment tracks.
+    if !coord_vec.is_empty() {
+        track_vec.push(coord_vec);
+    }
+
+    track_vec
 }
 
 #[cfg(test)]
@@ -106,6 +116,14 @@ mod tests {
             .open("tests/test-track-cowpalace");
         let reader = BufReader::new(track_file.unwrap());
         let _track_points = get_long_and_lat(reader);
+
+        let track_file = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .create(false)
+            .open("tests/test-track-backyard");
+        let reader = BufReader::new(track_file.unwrap());
+        let _track_points = get_long_and_lat(reader);
     }
 
     #[test]
@@ -119,9 +137,15 @@ mod tests {
         let track_points = get_long_and_lat(reader);
 
         let start_poly = genereate_polygon(
-            track_points.first().unwrap().lat,
-            track_points.first().unwrap().lon,
-            track_points.first().unwrap().head.unwrap_or(0.0),
+            track_points.first().unwrap().first().unwrap().lat,
+            track_points.first().unwrap().first().unwrap().lon,
+            track_points
+                .first()
+                .unwrap()
+                .first()
+                .unwrap()
+                .head
+                .unwrap_or(0.0),
         );
 
         assert_eq!(
