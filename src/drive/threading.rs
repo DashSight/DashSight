@@ -342,7 +342,7 @@ impl Threading {
 
                     map_wrapper.path_layer.set_stroke_colour(colour);
 
-                    let mut coord = champlain::coordinate::ChamplainCoordinate::new_full(lon, lat);
+                    let mut coord = champlain::coordinate::ChamplainCoordinate::new_full(lat, lon);
                     map_wrapper.path_layer.add_node(coord.borrow_mut_location());
                 } else {
                     crate::utils::set_point_colour(&mut map_wrapper.point, status);
