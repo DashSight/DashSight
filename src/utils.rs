@@ -205,7 +205,7 @@ pub fn set_point_colour(point: &mut champlain::point::ChamplainPoint, status: i3
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ncollide2d::query::point_internal::point_query::PointQuery;
+    use ncollide2d::query::PointQuery;
 
     #[test]
     fn test_poly() {

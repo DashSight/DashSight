@@ -85,7 +85,7 @@ pub fn get_long_and_lat(
 mod tests {
     use super::*;
     use crate::utils::genereate_polygon;
-    use ncollide2d::query::point_internal::point_query::PointQuery;
+    use ncollide2d::query::PointQuery;
     use std::fs::OpenOptions;
     use std::io::BufReader;
 

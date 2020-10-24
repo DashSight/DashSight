@@ -20,7 +20,7 @@ use crate::drive::threading::ThreadingRef;
 use crate::utils::{genereate_polygon, lat_lon_comp, right_direction};
 use gpsd_proto::handshake;
 use nalgebra::geometry::{Isometry2, Point2};
-use ncollide2d::query::point_internal::point_query::PointQuery;
+use ncollide2d::query::PointQuery;
 use std::fs::OpenOptions;
 use std::io;
 use std::net::TcpStream;
