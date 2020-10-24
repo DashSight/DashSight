@@ -339,8 +339,10 @@ impl Threading {
                     let colour = match neg {
                         Some(n) => {
                             if n {
+                                println!("NegativeDiff");
                                 champlain::clutter_colour::ClutterColor::new(204, 60, 0, 255)
                             } else {
+                                println!("PositiveDiff");
                                 champlain::clutter_colour::ClutterColor::new(0, 153, 76, 255)
                             }
                         }
