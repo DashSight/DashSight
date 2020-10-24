@@ -24,6 +24,12 @@ pub struct Coord {
     pub head: Option<f32>,
 }
 
+impl Coord {
+    pub fn new(lat: f64, lon: f64, head: Option<f32>) -> Self {
+        Self { lat, lon, head }
+    }
+}
+
 pub fn get_long_and_lat(
     reader: std::io::BufReader<std::fs::File>,
 ) -> Vec<Vec<crate::drive::read_track::Coord>> {

@@ -60,14 +60,26 @@ pub fn gpsd_thread(
     handshake(&mut reader, &mut writer).unwrap();
 
     let start_poly = genereate_polygon(
-        course_info.start.lat,
-        course_info.start.lon,
-        course_info.start.head.unwrap_or(0.0),
+        course_info.segments.first().unwrap().start.lat,
+        course_info.segments.first().unwrap().start.lon,
+        course_info
+            .segments
+            .first()
+            .unwrap()
+            .start
+            .head
+            .unwrap_or(0.0),
     );
     let finish_poly = genereate_polygon(
-        course_info.finish.lat,
-        course_info.finish.lon,
-        course_info.start.head.unwrap_or(0.0),
+        course_info.segments.last().unwrap().finish.lat,
+        course_info.segments.last().unwrap().finish.lon,
+        course_info
+            .segments
+            .last()
+            .unwrap()
+            .finish
+            .head
+            .unwrap_or(0.0),
     );
 
     let mut lap_times: Vec<(Coord, Duration)> = Vec::new();
@@ -80,7 +92,7 @@ pub fn gpsd_thread(
                 // Check to see if we should start the timer
                 if !thread_info.on_track.lock().unwrap().get()
                     && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
-                    && right_direction(course_info.start.head, track)
+                    && right_direction(course_info.segments.first().unwrap().start.head, track)
                 {
                     let mut lap_start = thread_info.lap_start.write().unwrap();
                     *lap_start = SystemTime::now();
@@ -92,7 +104,7 @@ pub fn gpsd_thread(
                 // Check to see if we should stop the timer
                 if thread_info.on_track.lock().unwrap().get()
                     && finish_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
-                    && right_direction(course_info.finish.head, track)
+                    && right_direction(course_info.segments.last().unwrap().finish.head, track)
                 {
                     thread_info.on_track.lock().unwrap().set(false);
 

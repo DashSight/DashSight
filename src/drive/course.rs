@@ -19,6 +19,18 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Serialize, Deserialize)]
+pub struct Segment {
+    pub start: Coord,
+    pub finish: Coord,
+}
+
+impl Segment {
+    pub fn new(start: Coord, finish: Coord) -> Self {
+        Self { start, finish }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Course {
     pub times: Vec<Duration>,
     pub last: Duration,
@@ -26,19 +38,11 @@ pub struct Course {
     pub best_times: Vec<(Coord, Duration)>,
     pub last_location_time: Option<Duration>,
     pub worst: Duration,
-    pub start: Coord,
-    pub finish: Coord,
+    pub segments: Vec<Segment>,
 }
 
 impl Course {
-    pub fn new(
-        start_lat: f64,
-        start_lon: f64,
-        start_head: f32,
-        finish_lat: f64,
-        finish_lon: f64,
-        finish_head: f32,
-    ) -> Course {
+    pub fn new(segments: Vec<Segment>) -> Course {
         Course {
             times: Vec::new(),
             last: Duration::new(0, 0),
@@ -46,16 +50,7 @@ impl Course {
             best_times: Vec::new(),
             last_location_time: None,
             worst: Duration::new(0, 0),
-            start: Coord {
-                lat: start_lat,
-                lon: start_lon,
-                head: Some(start_head),
-            },
-            finish: Coord {
-                lat: finish_lat,
-                lon: finish_lon,
-                head: Some(finish_head),
-            },
+            segments,
         }
     }
 }

@@ -15,11 +15,13 @@
  */
 
 use crate::display::*;
+use crate::drive::course::Segment;
 use crate::drive::course::{Course, MapWrapper};
 use crate::drive::gps;
 use crate::drive::imu;
 use crate::drive::obdii;
 use crate::drive::prepare;
+use crate::drive::read_track::Coord;
 use crate::drive::temp;
 use crate::drive::threading::Threading;
 use crate::drive::threading::ThreadingRef;
@@ -70,27 +72,24 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);
     let _handler_gpsd = thread::spawn(move || {
         let thread_info = upgrade_weak!(thread_info_weak);
+        let mut segments = Vec::new();
 
-        let mut course_info = Course::new(
-            (&track_points).first().unwrap().first().unwrap().lat,
-            (&track_points).first().unwrap().first().unwrap().lon,
-            (&track_points)
-                .first()
-                .unwrap()
-                .first()
-                .unwrap()
-                .head
-                .unwrap_or(0.0),
-            (&track_points).last().unwrap().last().unwrap().lat,
-            (&track_points).last().unwrap().last().unwrap().lon,
-            (&track_points)
-                .last()
-                .unwrap()
-                .last()
-                .unwrap()
-                .head
-                .unwrap_or(0.0),
-        );
+        for points in track_points {
+            segments.push(Segment::new(
+                Coord::new(
+                    (&points).first().unwrap().lat,
+                    (&points).first().unwrap().lon,
+                    (&points).first().unwrap().head,
+                ),
+                Coord::new(
+                    (&points).last().unwrap().lat,
+                    (&points).last().unwrap().lon,
+                    (&points).last().unwrap().head,
+                ),
+            ));
+        }
+
+        let mut course_info = Course::new(segments);
 
         gps::gpsd_thread(
             thread_info,
