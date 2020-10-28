@@ -130,6 +130,14 @@ mod tests {
             .open("tests/test-track-backyard");
         let reader = BufReader::new(track_file.unwrap());
         let _track_points = get_long_and_lat(reader);
+
+        let track_file = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .create(false)
+            .open("tests/test-track-neighbourhood");
+        let reader = BufReader::new(track_file.unwrap());
+        let _track_points = get_long_and_lat(reader);
     }
 
     #[test]
