@@ -33,7 +33,7 @@ macro_rules! upgrade_weak {
 
 pub fn lat_lon_comp(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> bool {
     let earth = 6378.137; // Radius of earth in km
-    let error = 1.0; // Error range, in metres
+    let error = 2.0; // Error range, in metres
 
     let d_lat = (lat2 * std::f64::consts::PI / 180.0) - (lat1 * std::f64::consts::PI / 180.0);
     let d_lon = (lon2 * std::f64::consts::PI / 180.0) - (lon1 * std::f64::consts::PI / 180.0);
