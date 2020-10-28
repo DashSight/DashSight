@@ -98,6 +98,7 @@ pub fn gpsd_thread(
 
     let mut lap_start = SystemTime::now();
     let mut elapsed_time: Duration = Duration::from_secs(0);
+    let mut on_track: bool = false;
 
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
@@ -105,22 +106,24 @@ pub fn gpsd_thread(
         match msg {
             Ok((lat, lon, _alt, status, _time, _speed, track)) => {
                 // Check to see if we should start the timer
-                if !thread_info.on_track.lock().unwrap().get()
+                if !on_track
                     && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                     && right_direction(course_info.segments.first().unwrap().start.head, track)
                 {
                     lap_start = SystemTime::now();
+                    on_track = true;
                     thread_info.on_track.lock().unwrap().set(true);
                     thread_info.start_on_track.lock().unwrap().set(true);
                     lap_times.clear();
                 }
 
                 // Check to see if we should stop the timer
-                if thread_info.on_track.lock().unwrap().get()
+                if on_track
                     && finish_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                     && right_direction(course_info.segments.last().unwrap().finish.head, track)
                 {
                     thread_info.on_track.lock().unwrap().set(false);
+                    on_track = false;
 
                     course_info.times.push(elapsed_time);
                     course_info.last = elapsed_time;
@@ -150,14 +153,14 @@ pub fn gpsd_thread(
                     if let Some(diff) = elapsed_time.checked_sub(course_info.best) {
                         time_diff_tx.send((false, diff)).unwrap();
                     }
-                } else if thread_info.on_track.lock().unwrap().get() {
+                } else if on_track {
                     elapsed_time = lap_start.elapsed().unwrap();
                     elapsed_tx.send(elapsed_time).unwrap();
                 }
 
                 // Save lap time data
                 let mut time_delta_diff: Option<bool> = None;
-                if thread_info.on_track.lock().unwrap().get() {
+                if on_track {
                     // Save the current location and time to a vector
                     segment_times.push((
                         Coord {
