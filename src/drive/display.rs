@@ -57,6 +57,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
     let track_points = track_sel_info.track_points.take();
 
     let (location_tx, location_rx) = mpsc::channel::<(f64, f64, i32, Option<bool>)>();
+    let (elapsed_tx, elapsed_rx) = mpsc::channel::<Duration>();
     let (times_tx, times_rx) = mpsc::channel::<(Duration, Duration, Duration)>();
     let (time_diff_tx, time_diff_rx) = mpsc::channel::<(bool, Duration)>();
     let (obdii_tx, obdii_rx) = mpsc::channel::<obdii::OBDIIData>();
@@ -93,6 +94,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
 
         gps::gpsd_thread(
             thread_info,
+            elapsed_tx,
             times_tx,
             time_diff_tx,
             location_tx,
@@ -136,7 +138,7 @@ pub fn button_press_event(display: DisplayRef, track_sel_info: prepare::TrackSel
             return glib::source::Continue(false);
         }
 
-        thread_info.time_update_idle_thread(&times_rx, &time_diff_rx, builder)
+        thread_info.time_update_idle_thread(&elapsed_rx, &times_rx, &time_diff_rx, builder)
     });
 
     let thread_info_weak = ThreadingRef::downgrade(&thread_info);

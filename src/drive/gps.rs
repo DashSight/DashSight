@@ -30,6 +30,7 @@ use std::vec::Vec;
 
 pub fn gpsd_thread(
     thread_info: ThreadingRef,
+    elapsed_tx: std::sync::mpsc::Sender<Duration>,
     times_tx: std::sync::mpsc::Sender<(Duration, Duration, Duration)>,
     time_diff_tx: std::sync::mpsc::Sender<(bool, Duration)>,
     location_tx: std::sync::mpsc::Sender<(f64, f64, i32, Option<bool>)>,
@@ -96,6 +97,7 @@ pub fn gpsd_thread(
     }
 
     let mut lap_start = SystemTime::now();
+    let mut elapsed_time: Duration = Duration::from_secs(0);
 
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
@@ -120,73 +122,59 @@ pub fn gpsd_thread(
                 {
                     thread_info.on_track.lock().unwrap().set(false);
 
-                    match lap_start.elapsed() {
-                        Ok(elapsed) => {
-                            course_info.times.push(elapsed);
-                            course_info.last = elapsed;
-                            course_info.times.sort_unstable();
-                            if let Some(worst) = course_info.times.last() {
-                                course_info.worst = *worst;
-                            }
-                            if let Some(best) = course_info.times.first() {
-                                course_info.best = *best;
-                                // If we just set the best time, update the
-                                // best_times vector
-                                if *best == elapsed {
-                                    course_info.best_times.clear();
-                                    course_info.best_times.append(&mut lap_times);
-                                }
-                            }
-                            times_tx
-                                .send((course_info.last, course_info.best, course_info.worst))
-                                .unwrap();
-
-                            let mut el = elapsed;
-
-                            for segment in &course_info.best_times {
-                                if let Some(element) = segment.last() {
-                                    el = element.1;
-                                }
-                            }
-
-                            // Update the diff display
-                            if let Some(diff) = el.checked_sub(elapsed) {
-                                time_diff_tx.send((true, diff)).unwrap();
-                            }
-                            // Check if elapsed - best is greater then 0
-                            // In this case we are slower then previous best
-                            if let Some(diff) = elapsed.checked_sub(el) {
-                                time_diff_tx.send((false, diff)).unwrap();
-                            }
-                        }
-                        Err(e) => {
-                            println!("Error: {:?}", e);
+                    course_info.times.push(elapsed_time);
+                    course_info.last = elapsed_time;
+                    course_info.times.sort_unstable();
+                    if let Some(worst) = course_info.times.last() {
+                        course_info.worst = *worst;
+                    }
+                    if let Some(best) = course_info.times.first() {
+                        course_info.best = *best;
+                        // If we just set the best time, update the
+                        // best_times vector
+                        if *best == elapsed_time {
+                            course_info.best_times.clear();
+                            course_info.best_times.append(&mut lap_times);
                         }
                     }
-                } else {
-                    let mut lap_time = thread_info.lap_time.write().unwrap();
-                    *lap_time = lap_start.elapsed().unwrap();
+                    times_tx
+                        .send((course_info.last, course_info.best, course_info.worst))
+                        .unwrap();
+
+                    let mut el = elapsed_time;
+
+                    for segment in &course_info.best_times {
+                        if let Some(element) = segment.last() {
+                            el = element.1;
+                        }
+                    }
+
+                    // Update the diff display
+                    if let Some(diff) = el.checked_sub(elapsed_time) {
+                        time_diff_tx.send((true, diff)).unwrap();
+                    }
+                    // Check if elapsed_time - best is greater then 0
+                    // In this case we are slower then previous best
+                    if let Some(diff) = elapsed_time.checked_sub(el) {
+                        time_diff_tx.send((false, diff)).unwrap();
+                    }
+                } else if thread_info.on_track.lock().unwrap().get() {
+                    elapsed_time = lap_start.elapsed().unwrap();
+                    elapsed_tx.send(elapsed_time).unwrap();
                 }
 
                 // Save lap time data
                 let mut time_delta_diff: Option<bool> = None;
                 if thread_info.on_track.lock().unwrap().get() {
                     // Save the current location and time to a vector
-                    match lap_start.elapsed() {
-                        Ok(elapsed) => {
-                            segment_times.push((
-                                Coord {
-                                    lat,
-                                    lon,
-                                    head: None,
-                                },
-                                elapsed,
-                            ));
-                        }
-                        Err(e) => {
-                            println!("Error: {:?}", e);
-                        }
-                    }
+                    segment_times.push((
+                        Coord {
+                            lat,
+                            lon,
+                            head: None,
+                        },
+                        elapsed_time,
+                    ));
 
                     // Split a new segment
                     for segment in &segment_starts {
@@ -207,32 +195,25 @@ pub fn gpsd_thread(
                         }
                     }
 
-                    match lap_start.elapsed() {
-                        Ok(elapsed) => {
-                            match course_info.last_location_time {
-                                Some(llt) => {
-                                    // Check if best - elapsed is greater then 0
-                                    // In this case we are quicker then previous best
-                                    if let Some(diff) = llt.checked_sub(elapsed) {
-                                        time_delta_diff = Some(true);
-                                        time_diff_tx.send((true, diff)).unwrap();
-                                    }
-                                    // Check if elapsed - best is greater then 0
-                                    // In this case we are slower then previous best
-                                    if let Some(diff) = elapsed.checked_sub(llt) {
-                                        time_delta_diff = Some(false);
-                                        time_diff_tx.send((false, diff)).unwrap();
-                                    }
-                                }
-                                None => {
-                                    // No time data, just reset to +00:00:000
-                                    time_delta_diff = None;
-                                    time_diff_tx.send((false, Duration::new(0, 0))).unwrap();
-                                }
+                    match course_info.last_location_time {
+                        Some(llt) => {
+                            // Check if best - elapsed_time is greater then 0
+                            // In this case we are quicker then previous best
+                            if let Some(diff) = llt.checked_sub(elapsed_time) {
+                                time_delta_diff = Some(true);
+                                time_diff_tx.send((true, diff)).unwrap();
+                            }
+                            // Check if elapsed_time - best is greater then 0
+                            // In this case we are slower then previous best
+                            if let Some(diff) = elapsed_time.checked_sub(llt) {
+                                time_delta_diff = Some(false);
+                                time_diff_tx.send((false, diff)).unwrap();
                             }
                         }
-                        Err(e) => {
-                            println!("Error: {:?}", e);
+                        None => {
+                            // No time data, just reset to +00:00:000
+                            time_delta_diff = None;
+                            time_diff_tx.send((false, Duration::new(0, 0))).unwrap();
                         }
                     }
                 }

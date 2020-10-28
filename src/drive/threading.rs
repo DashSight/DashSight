@@ -29,7 +29,6 @@ use std::sync::RwLock;
 use std::time::Duration;
 
 pub struct Threading {
-    pub(crate) lap_time: RwLock<Duration>,
     pub(crate) close: Mutex<Cell<bool>>,
     pub(crate) start_on_track: Mutex<Cell<bool>>,
     pub(crate) on_track: Mutex<Cell<bool>>,
@@ -43,7 +42,6 @@ pub type ThreadingRef = Arc<Threading>;
 impl Threading {
     pub fn new() -> ThreadingRef {
         ThreadingRef::new(Self {
-            lap_time: RwLock::new(Duration::from_secs(1)),
             close: Mutex::new(Cell::new(false)),
             start_on_track: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
@@ -55,68 +53,75 @@ impl Threading {
 
     pub fn time_update_idle_thread(
         &self,
+        elapsed_rx: &std::sync::mpsc::Receiver<Duration>,
         times_rx: &std::sync::mpsc::Receiver<(Duration, Duration, Duration)>,
         time_diff_rx: &std::sync::mpsc::Receiver<(bool, Duration)>,
         builder: gtk::Builder,
     ) -> glib::source::Continue {
         let timeout = Duration::new(0, 100);
 
-        if self.on_track.lock().unwrap().get() {
-            let elapsed = self.lap_time.read().unwrap();
-            let current_time = builder
-                .get_object::<gtk::Label>("CurrentTime")
-                .expect("Can't find CurrentTime in ui file.");
-            let time = format!(
-                "{:02}:{:02}:{:03}",
-                elapsed.as_secs() / 60,
-                elapsed.as_secs() % 60,
-                elapsed.subsec_millis()
-            );
-            current_time.set_label(&time);
+        let rec = elapsed_rx.recv_timeout(timeout);
+        match rec {
+            Ok(elapsed) => {
+                let current_time = builder
+                    .get_object::<gtk::Label>("CurrentTime")
+                    .expect("Can't find CurrentTime in ui file.");
+                let time = format!(
+                    "{:02}:{:02}:{:03}",
+                    elapsed.as_secs() / 60,
+                    elapsed.as_secs() % 60,
+                    elapsed.subsec_millis()
+                );
+                current_time.set_label(&time);
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => {}
+            _ => {
+                return glib::source::Continue(false);
+            }
+        }
 
-            let rec = time_diff_rx.recv_timeout(timeout);
-            match rec {
-                Ok((neg, diff)) => {
-                    let time_diff = builder
-                        .get_object::<gtk::Label>("BestDiff")
-                        .expect("Can't find BestDiff in ui file.");
-                    let sign = match neg {
-                        true => "-",
-                        false => "+",
-                    };
-                    let time = format!(
-                        "{}{:02}:{:02}:{:03}",
-                        sign,
-                        diff.as_secs() / 60,
-                        diff.as_secs() % 60,
-                        diff.subsec_millis()
-                    );
-                    time_diff.set_label(&time);
+        let rec = time_diff_rx.recv_timeout(timeout);
+        match rec {
+            Ok((neg, diff)) => {
+                let time_diff = builder
+                    .get_object::<gtk::Label>("BestDiff")
+                    .expect("Can't find BestDiff in ui file.");
+                let sign = match neg {
+                    true => "-",
+                    false => "+",
+                };
+                let time = format!(
+                    "{}{:02}:{:02}:{:03}",
+                    sign,
+                    diff.as_secs() / 60,
+                    diff.as_secs() % 60,
+                    diff.subsec_millis()
+                );
+                time_diff.set_label(&time);
 
-                    if neg {
-                        let negbar = builder
-                            .get_object::<gtk::ProgressBar>("NegativeDiff")
-                            .expect("Can't find NegativeDiff in ui file.");
-                        negbar.set_fraction(diff.as_secs_f64() / 10.0);
-                        let posbar = builder
-                            .get_object::<gtk::ProgressBar>("PositiveDiff")
-                            .expect("Can't find PositiveDiff in ui file.");
-                        posbar.set_fraction(0.0);
-                    } else {
-                        let negbar = builder
-                            .get_object::<gtk::ProgressBar>("NegativeDiff")
-                            .expect("Can't find NegativeDiff in ui file.");
-                        negbar.set_fraction(0.0);
-                        let posbar = builder
-                            .get_object::<gtk::ProgressBar>("PositiveDiff")
-                            .expect("Can't find PositiveDiff in ui file.");
-                        posbar.set_fraction(diff.as_secs_f64() / 10.0);
-                    }
+                if neg {
+                    let negbar = builder
+                        .get_object::<gtk::ProgressBar>("NegativeDiff")
+                        .expect("Can't find NegativeDiff in ui file.");
+                    negbar.set_fraction(diff.as_secs_f64() / 10.0);
+                    let posbar = builder
+                        .get_object::<gtk::ProgressBar>("PositiveDiff")
+                        .expect("Can't find PositiveDiff in ui file.");
+                    posbar.set_fraction(0.0);
+                } else {
+                    let negbar = builder
+                        .get_object::<gtk::ProgressBar>("NegativeDiff")
+                        .expect("Can't find NegativeDiff in ui file.");
+                    negbar.set_fraction(0.0);
+                    let posbar = builder
+                        .get_object::<gtk::ProgressBar>("PositiveDiff")
+                        .expect("Can't find PositiveDiff in ui file.");
+                    posbar.set_fraction(diff.as_secs_f64() / 10.0);
                 }
-                Err(mpsc::RecvTimeoutError::Timeout) => {}
-                _ => {
-                    return glib::source::Continue(false);
-                }
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => {}
+            _ => {
+                return glib::source::Continue(false);
             }
         }
 
