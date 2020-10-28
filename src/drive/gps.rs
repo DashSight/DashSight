@@ -21,6 +21,7 @@ use crate::utils::{genereate_polygon, lat_lon_comp, right_direction};
 use gpsd_proto::handshake;
 use nalgebra::geometry::{Isometry2, Point2};
 use ncollide2d::query::PointQuery;
+use ncollide2d::shape::ConvexPolygon;
 use std::fs::OpenOptions;
 use std::io;
 use std::net::TcpStream;
@@ -84,6 +85,15 @@ pub fn gpsd_thread(
 
     let mut segment_times: Vec<(Coord, Duration)> = Vec::new();
     let mut lap_times: Vec<Vec<(Coord, Duration)>> = Vec::new();
+    let mut segment_starts: Vec<ConvexPolygon<f64>> = Vec::new();
+
+    for segment in &course_info.segments {
+        segment_starts.push(genereate_polygon(
+            segment.start.lat,
+            segment.start.lon,
+            segment.start.head.unwrap_or(0.0),
+        ));
+    }
 
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
@@ -175,9 +185,9 @@ pub fn gpsd_thread(
                     }
 
                     // Split a new segment
-                    for segment in &course_info.segments {
+                    for segment in &segment_starts {
                         // Check if we match the start of a segment
-                        if lat_lon_comp(segment.start.lat, segment.start.lon, lat, lon) {
+                        if segment.contains_point(&Isometry2::identity(), &Point2::new(lat, lon)) {
                             lap_times.push(segment_times);
                             segment_times = Vec::new();
                         }
