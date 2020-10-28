@@ -141,21 +141,13 @@ pub fn gpsd_thread(
                         .send((course_info.last, course_info.best, course_info.worst))
                         .unwrap();
 
-                    let mut el = elapsed_time;
-
-                    for segment in &course_info.best_times {
-                        if let Some(element) = segment.last() {
-                            el = element.1;
-                        }
-                    }
-
                     // Update the diff display
-                    if let Some(diff) = el.checked_sub(elapsed_time) {
+                    if let Some(diff) = course_info.best.checked_sub(elapsed_time) {
                         time_diff_tx.send((true, diff)).unwrap();
                     }
                     // Check if elapsed_time - best is greater then 0
                     // In this case we are slower then previous best
-                    if let Some(diff) = elapsed_time.checked_sub(el) {
+                    if let Some(diff) = elapsed_time.checked_sub(course_info.best) {
                         time_diff_tx.send((false, diff)).unwrap();
                     }
                 } else if thread_info.on_track.lock().unwrap().get() {
