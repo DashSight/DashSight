@@ -26,10 +26,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::RwLock;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 pub struct Threading {
-    pub(crate) lap_start: RwLock<std::time::SystemTime>,
+    pub(crate) lap_time: RwLock<Duration>,
     pub(crate) close: Mutex<Cell<bool>>,
     pub(crate) start_on_track: Mutex<Cell<bool>>,
     pub(crate) on_track: Mutex<Cell<bool>>,
@@ -43,7 +43,7 @@ pub type ThreadingRef = Arc<Threading>;
 impl Threading {
     pub fn new() -> ThreadingRef {
         ThreadingRef::new(Self {
-            lap_start: RwLock::new(SystemTime::now()),
+            lap_time: RwLock::new(Duration::from_secs(1)),
             close: Mutex::new(Cell::new(false)),
             start_on_track: Mutex::new(Cell::new(false)),
             on_track: Mutex::new(Cell::new(false)),
@@ -62,23 +62,17 @@ impl Threading {
         let timeout = Duration::new(0, 100);
 
         if self.on_track.lock().unwrap().get() {
-            match self.lap_start.read().unwrap().elapsed() {
-                Ok(elapsed) => {
-                    let current_time = builder
-                        .get_object::<gtk::Label>("CurrentTime")
-                        .expect("Can't find CurrentTime in ui file.");
-                    let time = format!(
-                        "{:02}:{:02}:{:03}",
-                        elapsed.as_secs() / 60,
-                        elapsed.as_secs() % 60,
-                        elapsed.subsec_millis()
-                    );
-                    current_time.set_label(&time);
-                }
-                Err(e) => {
-                    println!("Error: {:?}", e);
-                }
-            }
+            let elapsed = self.lap_time.read().unwrap();
+            let current_time = builder
+                .get_object::<gtk::Label>("CurrentTime")
+                .expect("Can't find CurrentTime in ui file.");
+            let time = format!(
+                "{:02}:{:02}:{:03}",
+                elapsed.as_secs() / 60,
+                elapsed.as_secs() % 60,
+                elapsed.subsec_millis()
+            );
+            current_time.set_label(&time);
 
             let rec = time_diff_rx.recv_timeout(timeout);
             match rec {

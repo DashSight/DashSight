@@ -95,6 +95,8 @@ pub fn gpsd_thread(
         ));
     }
 
+    let mut lap_start = SystemTime::now();
+
     while !thread_info.close.lock().unwrap().get() {
         let msg = crate::utils::get_gps_lat_lon(&mut reader);
 
@@ -105,8 +107,7 @@ pub fn gpsd_thread(
                     && start_poly.contains_point(&Isometry2::identity(), &Point2::new(lat, lon))
                     && right_direction(course_info.segments.first().unwrap().start.head, track)
                 {
-                    let mut lap_start = thread_info.lap_start.write().unwrap();
-                    *lap_start = SystemTime::now();
+                    lap_start = SystemTime::now();
                     thread_info.on_track.lock().unwrap().set(true);
                     thread_info.start_on_track.lock().unwrap().set(true);
                     lap_times.clear();
@@ -119,7 +120,7 @@ pub fn gpsd_thread(
                 {
                     thread_info.on_track.lock().unwrap().set(false);
 
-                    match thread_info.lap_start.read().unwrap().elapsed() {
+                    match lap_start.elapsed() {
                         Ok(elapsed) => {
                             course_info.times.push(elapsed);
                             course_info.last = elapsed;
@@ -162,13 +163,16 @@ pub fn gpsd_thread(
                             println!("Error: {:?}", e);
                         }
                     }
+                } else {
+                    let mut lap_time = thread_info.lap_time.write().unwrap();
+                    *lap_time = lap_start.elapsed().unwrap();
                 }
 
                 // Save lap time data
                 let mut time_delta_diff: Option<bool> = None;
                 if thread_info.on_track.lock().unwrap().get() {
                     // Save the current location and time to a vector
-                    match thread_info.lap_start.read().unwrap().elapsed() {
+                    match lap_start.elapsed() {
                         Ok(elapsed) => {
                             segment_times.push((
                                 Coord {
@@ -203,7 +207,7 @@ pub fn gpsd_thread(
                         }
                     }
 
-                    match thread_info.lap_start.read().unwrap().elapsed() {
+                    match lap_start.elapsed() {
                         Ok(elapsed) => {
                             match course_info.last_location_time {
                                 Some(llt) => {
