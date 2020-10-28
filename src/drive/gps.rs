@@ -115,6 +115,7 @@ pub fn gpsd_thread(
                     thread_info.on_track.lock().unwrap().set(true);
                     thread_info.start_on_track.lock().unwrap().set(true);
                     lap_times.clear();
+                    segment_times.clear();
                 }
 
                 // Check to see if we should stop the timer
