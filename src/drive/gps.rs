@@ -130,7 +130,13 @@ pub fn gpsd_thread(
                                 .send((course_info.last, course_info.best, course_info.worst))
                                 .unwrap();
 
-                            let (_, el) = &course_info.best_times.last().unwrap().last().unwrap();
+                            let mut el = elapsed;
+
+                            for segment in &course_info.best_times {
+                                if let Some(element) = segment.last() {
+                                    el = element.1;
+                                }
+                            }
 
                             // Update the diff display
                             if let Some(diff) = el.checked_sub(elapsed) {
@@ -138,7 +144,7 @@ pub fn gpsd_thread(
                             }
                             // Check if elapsed - best is greater then 0
                             // In this case we are slower then previous best
-                            if let Some(diff) = elapsed.checked_sub(*el) {
+                            if let Some(diff) = elapsed.checked_sub(el) {
                                 time_diff_tx.send((false, diff)).unwrap();
                             }
                         }
