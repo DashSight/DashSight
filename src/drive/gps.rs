@@ -185,22 +185,25 @@ pub fn gpsd_thread(
                         for (loc, el) in segment {
                             if lat_lon_comp(loc.lat, loc.lon, lat, lon) {
                                 // This point matches a previous point
-                                course_info.last_location_time = Some(*el);
+                                course_info.last_location_time =
+                                    Some(*el - segment.first().unwrap().1);
                             }
                         }
                     }
 
+                    let segment_diff = elapsed_time - lap_times.last().unwrap().first().unwrap().1;
+
                     match course_info.last_location_time {
                         Some(llt) => {
-                            // Check if best - elapsed_time is greater then 0
+                            // Check if best - segment_diff is greater then 0
                             // In this case we are quicker then previous best
-                            if let Some(diff) = llt.checked_sub(elapsed_time) {
+                            if let Some(diff) = llt.checked_sub(segment_diff) {
                                 time_delta_diff = Some(true);
                                 time_diff_tx.send((true, diff)).unwrap();
                             }
-                            // Check if elapsed_time - best is greater then 0
+                            // Check if segment_diff - best is greater then 0
                             // In this case we are slower then previous best
-                            if let Some(diff) = elapsed_time.checked_sub(llt) {
+                            if let Some(diff) = segment_diff.checked_sub(llt) {
                                 time_delta_diff = Some(false);
                                 time_diff_tx.send((false, diff)).unwrap();
                             }
