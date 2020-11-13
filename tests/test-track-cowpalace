@@ -11,6 +11,7 @@
   </metadata>
   <trk>
     <name>test-track-from-home</name>
+    <trkseg>
       <trkpt lat="37.7060849" lon="-122.4209836">
         <ele>30.75</ele>
         <time>2020-10-17T14:49:10.000Z</time>
@@ -7161,7 +7162,6 @@
         <time>2020-10-17T15:02:30.000Z</time>
         <degreesType>40.31</degreesType>
       </trkpt>
-    </trkseg>
     </trkseg>
   </trk>
 </gpx>
