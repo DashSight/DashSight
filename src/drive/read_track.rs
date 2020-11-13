@@ -113,7 +113,8 @@ mod tests {
             .create(false)
             .open("tests/test-track-carpark");
         let reader = BufReader::new(track_file.unwrap());
-        let _track_points = get_long_and_lat(reader);
+        let track_points = get_long_and_lat(reader);
+        track_points.first().unwrap().first().unwrap();
 
         let track_file = OpenOptions::new()
             .read(true)
@@ -121,7 +122,8 @@ mod tests {
             .create(false)
             .open("tests/test-track-cowpalace");
         let reader = BufReader::new(track_file.unwrap());
-        let _track_points = get_long_and_lat(reader);
+        let track_points = get_long_and_lat(reader);
+        track_points.first().unwrap().first().unwrap();
 
         let track_file = OpenOptions::new()
             .read(true)
@@ -129,7 +131,8 @@ mod tests {
             .create(false)
             .open("tests/test-track-backyard");
         let reader = BufReader::new(track_file.unwrap());
-        let _track_points = get_long_and_lat(reader);
+        let track_points = get_long_and_lat(reader);
+        track_points.first().unwrap().first().unwrap();
 
         let track_file = OpenOptions::new()
             .read(true)
@@ -137,7 +140,8 @@ mod tests {
             .create(false)
             .open("tests/test-track-neighbourhood");
         let reader = BufReader::new(track_file.unwrap());
-        let _track_points = get_long_and_lat(reader);
+        let track_points = get_long_and_lat(reader);
+        track_points.first().unwrap().first().unwrap();
     }
 
     #[test]
