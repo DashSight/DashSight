@@ -61,24 +61,24 @@ pub fn genereate_polygon(lat: f64, lon: f64, track: f32) -> ConvexPolygon<f64> {
     //    - 111,111 * cos(lat) meters is 1 degree longitude
 
     let top_left_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
-        - (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+        - (3.5 * (track * std::f32::consts::PI / 180.0).sin());
     let top_left_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
-        + (1.0 * (track * std::f32::consts::PI / 180.0).cos());
+        + (3.5 * (track * std::f32::consts::PI / 180.0).cos());
 
     let bot_left_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
-        + (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+        + (0.5 * (track * std::f32::consts::PI / 180.0).sin());
     let bot_left_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
-        - (1.0 * (track * std::f32::consts::PI / 180.0).cos());
+        - (0.5 * (track * std::f32::consts::PI / 180.0).cos());
 
     let top_right_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
-        + (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+        + (3.5 * (track * std::f32::consts::PI / 180.0).sin());
     let top_right_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
-        - (1.0 * (track * std::f32::consts::PI / 180.0).cos());
+        - (3.5 * (track * std::f32::consts::PI / 180.0).cos());
 
     let bot_right_x = (5.0 * (track * std::f32::consts::PI / 180.0).cos())
-        - (1.0 * (track * std::f32::consts::PI / 180.0).sin());
+        - (0.5 * (track * std::f32::consts::PI / 180.0).sin());
     let bot_right_y = (5.0 * (track * std::f32::consts::PI / 180.0).sin())
-        + (1.0 * (track * std::f32::consts::PI / 180.0).cos());
+        + (0.5 * (track * std::f32::consts::PI / 180.0).cos());
 
     let top_left = nalgebra::geometry::Point2::new(
         lat + (top_left_y as f64 / 111111.0),
