@@ -1,0 +1,44 @@
+name: DashSight-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          default: true
+          components: rustfmt, clippy
+
+    - name: Install system dependencies
+      run: |
+        sudo apt update -q
+        sudo apt install -y libchamplain-0.12-dev libgtk-3-dev libiio-dev libchamplain-0.12-dev libchamplain-gtk-0.12-dev libclutter-1.0-dev libclutter-gtk-1.0-dev
+
+      - name: Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
