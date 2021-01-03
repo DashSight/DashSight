@@ -33,6 +33,12 @@ DashSight runs on any standard Linux environment. It also run on specialised har
 
 DashSight can run on any Linux device. This includes Linux phones such as the PinePhone.
 
+Installing dependencies
+
+```
+pacman -Sy libchamplain libiio python
+```
+
 ### Running on the specialised board
 
 Currently DashSight runs best on open source [specilised hardware](https://github.com/DashSight/Pine64-Mezzanine-Card/wiki/Bill-of-Materials).
