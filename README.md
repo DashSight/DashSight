@@ -29,12 +29,14 @@ DashSight runs on any standard Linux environment. It also run on specialised har
 
 ## Using DashSight
 
-Currently DashSight runs best on the following specilised hardware.
+### Running on a Linux device
+
+DashSight can run on any Linux device. This includes Linux phones such as the PinePhone.
+
+### Running on the specialised board
+
+Currently DashSight runs best on open source [specilised hardware](https://github.com/DashSight/Pine64-Mezzanine-Card/wiki/Bill-of-Materials).
 
 DashSight runs on the Pine64 Single Board Computer (SBC). This provides the CPU, GPU and WiFi for the device. DashSight then uses an expansion board to add GPS and OBDII to the Pine64 SBC. The schematics and design for the board can be found in the [DashSight Mezzanine Card repo](https://github.com/DashSight/DashSight-Mezzanine-Card)
-
-You can see a production run of the board below:
-
-![Pine64 Mezzanine Card v3 Render](https://github.com/DashSight/Pine64-Mezzanine-Card/blob/master/PCB-Fabrication/v3.0/Photos/PCB-Render-1.png "Pine64 Mezzanine Card v3 Render")
 
 DashSight uses Yocto/OpenEmbedded to build images that can be directly deployed to the board. This uses the [meta-pine64 layer](https://github.com/alistair23/meta-pine64.git) and the [meta-dashsight layer](https://github.com/DashSight/meta-dashsight).
