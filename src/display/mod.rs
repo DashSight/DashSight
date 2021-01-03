@@ -16,10 +16,10 @@
 
 use crate::drive;
 use crate::record;
+use gdk::prelude::*;
+use gdk_pixbuf::Pixbuf;
 use gio::prelude::*;
 use gtk::prelude::*;
-use gdk_pixbuf::Pixbuf;
-use gdk::prelude::*;
 use std::process::{exit, Command};
 use std::rc::Rc;
 
@@ -86,11 +86,11 @@ impl Display {
                     ctx.set_source_pixbuf(&buf, width / 4.0, height / 4.0);
                     ctx.paint();
                     Inhibit(false)
-                },
+                }
                 Err(_) => {
                     println!("Unable to find icons/SplashPage.png");
                     Inhibit(true)
-                },
+                }
             }
         });
 
