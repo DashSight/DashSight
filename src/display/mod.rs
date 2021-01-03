@@ -77,7 +77,7 @@ impl Display {
             .expect("Can't find SplashImag in ui file.");
         main_image.connect_draw(move |me, ctx| {
             let width = me.get_allocated_width() as f64;
-            let height = me.get_allocated_width() as f64 * 0.5;
+            let height = me.get_allocated_width() as f64 * 0.2;
 
             let pixbuf = Pixbuf::from_file("icons/SplashPage.png");
 
