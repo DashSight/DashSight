@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=DashSigh
+Type=Application
+Icon=~/DashSight/src/display/icons/DriveLine.png
+Exec=~//DashSight/target/debug/dashsight
+Path=~//DashSight/src/display/
+Categories=Utility;
