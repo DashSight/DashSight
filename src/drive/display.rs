@@ -25,6 +25,7 @@ use crate::drive::read_track::Coord;
 use crate::drive::temp;
 use crate::drive::threading::Threading;
 use crate::drive::threading::ThreadingRef;
+use dissolve::strip_html_tags;
 use gtk::prelude::*;
 use gtk::ResponseType;
 use plotters::prelude::*;
@@ -464,6 +465,77 @@ impl Threading {
                 .unwrap();
 
             Inhibit(true)
+        });
+
+        // Setup the fonts
+        let best_diff = builder
+            .get_object::<gtk::Label>("BestDiff")
+            .expect("Can't find BestDiff in ui file.");
+        best_diff.connect_size_allocate({
+            move |me, allocation| {
+                let markup = format!(
+                    "<span font_desc=\"{}\">{}</span>",
+                    allocation.width / 8,
+                    strip_html_tags(&me.get_text()).first().unwrap()
+                );
+                me.set_markup(&markup);
+            }
+        });
+
+        let current_time = builder
+            .get_object::<gtk::Label>("CurrentTime")
+            .expect("Can't find CurrentTime in ui file.");
+        current_time.connect_size_allocate({
+            move |me, allocation| {
+                let markup = format!(
+                    "<span font_desc=\"{}\">{}</span>",
+                    allocation.width / 7,
+                    strip_html_tags(&me.get_text()).first().unwrap()
+                );
+                me.set_markup(&markup);
+            }
+        });
+
+        let last_time = builder
+            .get_object::<gtk::Label>("LastTime")
+            .expect("Can't find LastTime in ui file.");
+        last_time.connect_size_allocate({
+            move |me, allocation| {
+                let markup = format!(
+                    "<span font_desc=\"{}\" foreground=\"#c4c4a0a00000\">{}</span>",
+                    allocation.width / 8,
+                    strip_html_tags(&me.get_text()).first().unwrap()
+                );
+                me.set_markup(&markup);
+            }
+        });
+
+        let best_time = builder
+            .get_object::<gtk::Label>("BestTime")
+            .expect("Can't find BestTime in ui file.");
+        best_time.connect_size_allocate({
+            move |me, allocation| {
+                let markup = format!(
+                    "<span font_desc=\"{}\" foreground=\"#0b7dac5e165c\">{}</span>",
+                    allocation.width / 8,
+                    strip_html_tags(&me.get_text()).first().unwrap()
+                );
+                me.set_markup(&markup);
+            }
+        });
+
+        let worst_time = builder
+            .get_object::<gtk::Label>("WorstTime")
+            .expect("Can't find WorstTime in ui file.");
+        worst_time.connect_size_allocate({
+            move |me, allocation| {
+                let markup = format!(
+                    "<span font_desc=\"{}\" foreground=\"#a4a400000000\">{}</span>",
+                    allocation.width / 8,
+                    strip_html_tags(&me.get_text()).first().unwrap()
+                );
+                me.set_markup(&markup);
+            }
         });
     }
 }

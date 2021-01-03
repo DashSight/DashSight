@@ -125,9 +125,6 @@
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">00:00:000</property>
             <property name="track-visited-links">False</property>
-            <attributes>
-              <attribute name="font-desc" value="Droid Sans Mono 55"/>
-            </attributes>
           </object>
           <packing>
             <property name="left-attach">0</property>
@@ -141,11 +138,8 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">00:00:000</property>
+            <property name="use-markup">True</property>
             <property name="track-visited-links">False</property>
-            <attributes>
-              <attribute name="font-desc" value="Droid Sans Mono 35"/>
-              <attribute name="foreground" value="#0b7dac5e165c"/>
-            </attributes>
           </object>
           <packing>
             <property name="left-attach">6</property>
@@ -158,11 +152,8 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">00:00:000</property>
+            <property name="use-markup">True</property>
             <property name="track-visited-links">False</property>
-            <attributes>
-              <attribute name="font-desc" value="Droid Sans Mono 35"/>
-              <attribute name="foreground" value="#a4a400000000"/>
-            </attributes>
           </object>
           <packing>
             <property name="left-attach">6</property>
@@ -176,10 +167,6 @@
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">00:00:000</property>
             <property name="track-visited-links">False</property>
-            <attributes>
-              <attribute name="font-desc" value="Droid Sans Mono 40"/>
-              <attribute name="foreground" value="#c4c4a0a00000"/>
-            </attributes>
           </object>
           <packing>
             <property name="left-attach">3</property>
@@ -468,11 +455,9 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">+00:00:000</property>
+            <property name="use-markup">True</property>
             <property name="justify">center</property>
             <property name="track-visited-links">False</property>
-            <attributes>
-              <attribute name="font-desc" value="Droid Sans Mono 35"/>
-            </attributes>
           </object>
           <packing>
             <property name="left-attach">3</property>
