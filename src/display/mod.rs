@@ -18,6 +18,8 @@ use crate::drive;
 use crate::record;
 use gio::prelude::*;
 use gtk::prelude::*;
+use gdk_pixbuf::Pixbuf;
+use gdk::prelude::*;
 use std::process::{exit, Command};
 use std::rc::Rc;
 
@@ -68,6 +70,29 @@ impl Display {
             .get_object::<gtk::Box>("SplashImage")
             .expect("Can't find SplashImage in ui file.");
         stack.add_named(&child, "SplashImage");
+
+        /* Add the image */
+        let main_image = builder
+            .get_object::<gtk::DrawingArea>("SplashImag")
+            .expect("Can't find SplashImag in ui file.");
+        main_image.connect_draw(move |me, ctx| {
+            let width = me.get_allocated_width() as f64;
+            let height = me.get_allocated_width() as f64 * 0.5;
+
+            let pixbuf = Pixbuf::from_file("icons/SplashPage.png");
+
+            match pixbuf {
+                Ok(buf) => {
+                    ctx.set_source_pixbuf(&buf, width / 4.0, height / 4.0);
+                    ctx.paint();
+                    Inhibit(false)
+                },
+                Err(_) => {
+                    println!("Unable to find icons/SplashPage.png");
+                    Inhibit(true)
+                },
+            }
+        });
 
         /* Setup the record page */
         let record_page: gtk::Paned = builder
